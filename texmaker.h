@@ -53,7 +53,13 @@
 #include "pdfviewer.h"
 #include "encodingprober/qencodingprober.h"
 
-
+//////////////////////
+//Extra Features: Auto Save and Recovery
+//This header is just for create HIDDEN recovery file.
+#ifdef Q_WS_WIN
+#include "windows.h"
+#endif
+//////////////////////
 
 typedef  QMap<LatexEditorView*, QString> FilesMap;
 typedef  QMap<QString,QString> KeysMap;
@@ -107,7 +113,7 @@ QStackedWidget *LeftPanelStackedWidget;
 XmlTagsListWidget *MpListWidget, *PsListWidget, *leftrightWidget, *tikzWidget, *asyWidget;
 SymbolListWidget *RelationListWidget, *ArrowListWidget, *MiscellaneousListWidget, *DelimitersListWidget, *GreekListWidget, *MostUsedListWidget, *FavoriteListWidget;
 QTreeWidget *StructureTreeWidget;
-QVBoxLayout *OutputLayoutV, *CentralLayoutBis,*LeftPanelLayoutBis,;
+QVBoxLayout *OutputLayoutV, *CentralLayoutBis,*LeftPanelLayoutBis;
 QHBoxLayout *OutputLayoutH, *LeftPanelLayout, *CentralLayout;
 QTableWidget *OutputTableWidget;
 //menu-toolbar
@@ -176,6 +182,17 @@ Hunspell * spellChecker;
 bool spelldicExist();
 QStringList translationList;
 QActionGroup *translationGroup, *appearanceGroup;
+
+/////////////////////////////////////////////////
+//Extra Features: Auto Save and Recovery
+QTimer *autoSaveTimer;
+QStringList recoveredFiles;
+int autoSaveInterval;
+bool autoSaveFlag;
+///////////////////////
+//Extra Features: Location Commands
+QToolBar *commandToolBar;
+/////////////////////////////////////////////////
 
 private slots:
 LatexEditorView *currentEditorView() const;
@@ -390,6 +407,15 @@ void ShowOutputView(bool change);
 void ShowPdfView(bool change);
 void ToggleFullScreen(); 
 void EditUserCompletion();
+
+/////////////////////////////////////////////////
+//Extra Features: Auto Save and Recovery
+void autoSaveDocs();
+///////////////////////
+//Extra Features: Location Commands
+void locationCommand();
+/////////////////////////////////////////////////
+
 protected:
 void dragEnterEvent(QDragEnterEvent *event);
 void dropEvent(QDropEvent *event);
