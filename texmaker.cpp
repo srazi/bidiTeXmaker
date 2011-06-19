@@ -98,6 +98,8 @@
 #include "x11fontdialog.h"
 #endif
 
+QBiDiInitializer *LatexEditor::BiDiBase = 0;
+
 Texmaker::Texmaker(QWidget *parent, Qt::WFlags flags)
     : QMainWindow(parent, flags)
 {
@@ -114,11 +116,12 @@ ReadSettings();
 untitled_id=1;
 
 
-#ifdef Q_WS_MACX
-setWindowIcon(QIcon(":/images/logo128.png"));
-#else
-setWindowIcon(QIcon(":/images/appicon.png"));
-#endif
+//#ifdef Q_WS_MACX
+//setWindowIcon(QIcon(":/images/logo128.png"));
+//#else
+//setWindowIcon(QIcon(":/images/appicon.png"));
+//#endif
+setWindowIcon(QIcon(":/images/Texmaker-BiDi.png"));
 
 setIconSize(QSize(22,22 ));
  
@@ -572,7 +575,20 @@ sizes << 180 << (int) (width()-180)*0.5 << (int) (width()-180)*0.5;
 splitter1->setSizes( sizes );
 //setCentralWidget(centralFrameBis);
 
-
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+//EditorView->setUsesScrollButtons(true);//BUG
+//creates primary BiDi instance
+if (QBiDiExtender::bidiEnabled)
+	{
+	LatexEditor::BiDiBase= new QBiDiInitializer(EditorView, ":/images/BiDi-Logo.png");
+	connect(EditorView, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged()));
+	connect(LatexEditor::BiDiBase, SIGNAL(doStoppedThings()), this, SLOT(doQueuededSteps()));
+	}
+else
+	LatexEditor::BiDiBase=0;
+/////////////////////////////////////////////////
 
 createStatusBar();
 setupMenus();
@@ -679,6 +695,33 @@ Act = new QAction(tr("Restore previous session"), this);
 connect(Act, SIGNAL(triggered()), this, SLOT(fileRestoreSession()));
 fileMenu->addAction(Act);
 Act->setEnabled(!sessionFilesList.isEmpty());
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Extra Features: FarsiTeX Import (for Persian users)
+/*********************************
+if there is not suitable file in 
+the right location then this menu item 
+will not appears.
+**********************************/
+	QFileInfo exeFtx(QCoreApplication::applicationDirPath()+"/ftx2uni/ftx2uni.exe");
+#if defined( Q_WS_X11 )
+	QFileInfo pyFtx(PREFIX"/share/texmaker/ftx2uni.py");
+#endif
+#if defined( Q_WS_MACX )
+	QFileInfo pyFtx(QCoreApplication::applicationDirPath() + "/../Resources/ftx2uni.py");
+#endif
+#if defined(Q_WS_WIN)
+	QFileInfo pyFtx(QCoreApplication::applicationDirPath()+"/ftx2uni.py");
+#endif
+	if (exeFtx.exists() || pyFtx.exists())
+		{
+		fileMenu->addSeparator();
+		Act = new QAction(tr("Import FTX File(s)"), this);
+		connect(Act, SIGNAL(triggered()), this, SLOT(ftx2Unicode()));
+		fileMenu->addAction(Act);
+		}
+/////////////////////////////////////////////////
 
 SaveAct = new QAction(QIcon(":/images/filesave.png"), tr("Save"), this);
 SaveAct->setShortcut(Qt::CTRL+Qt::Key_S);
@@ -1638,6 +1681,15 @@ FullScreenAct->setChecked(false);
 connect(FullScreenAct, SIGNAL(triggered()), this, SLOT(ToggleFullScreen()));
 viewMenu->addAction(FullScreenAct);
 
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+	 /*********************
+			Bi-Directional Menu
+			*********************/
+if (QBiDiExtender::bidiEnabled && LatexEditor::BiDiBase)
+	LatexEditor::BiDiBase->applicationBiDiMenu(menuBar(), 0, "BIDI_MAIN_MENU");
+/////////////////////////////////////////////////
 
 optionsMenu = menuBar()->addMenu(tr("&Options"));
 Act = new QAction(QIcon(":/images/configure.png"), tr("Configure Texmaker"), this);
@@ -1695,6 +1747,14 @@ helpMenu->addSeparator();
 Act = new QAction(QIcon(":/images/appicon.png"), tr("About Texmaker"), this);
 connect(Act, SIGNAL(triggered()), this, SLOT(HelpAbout()));
 helpMenu->addAction(Act);
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+//BiDi Help SubMenu
+if (QBiDiExtender::bidiEnabled && LatexEditor::BiDiBase)
+	LatexEditor::BiDiBase->applicationBiDiMenu(menuBar(), helpMenu, "BIDI_HELP_MENU");
+/////////////////////////////////////////////////
 
 QList<QAction *> listaction;
 if (shortcuts.isEmpty())
@@ -1983,7 +2043,7 @@ else
    UndoAct->setEnabled(false);
    RedoAct->setEnabled(false);
    CopyAct->setEnabled(false);
-   CutAct->setEnabled(false);    
+   CutAct->setEnabled(false);
 
 	/////////////////////////////////////////////////
 	//Extra Features: Location Commands
@@ -2063,7 +2123,19 @@ comboFiles->setItemIcon(index,QIcon(":/images/empty.png"));
 void Texmaker::load( const QString &f )
 {
 if (FileAlreadyOpen(f) || !QFile::exists( f )) return;
-QFile file( f );
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+QString fn=f;
+if (QBiDiExtender::bidiEnabled && QBiDiExtender::ptdSupportFlag)
+	fn = LatexEditor::BiDiBase->openPtdFile(f, QTextCodec::codecForName(input_encoding.toLatin1()) );
+
+QFile file( fn );
+
+//QFile file( f );
+/////////////////////////////////////////////////
+
 if ( !file.open( QIODevice::ReadOnly ) )
 	{
 	QMessageBox::warning( this,tr("Error"), tr("You do not have read permission to this file."));
@@ -2124,7 +2196,14 @@ if (hasDecodingError) edit->editor->setEncoding(new_encoding);
 else edit->editor->setEncoding(input_encoding);
 if (completion) edit->editor->setCompleter(completer);
 else edit->editor->setCompleter(0);
-edit->editor->setPlainText(text);
+
+if ( file.fileName().endsWith(".ptd", Qt::CaseInsensitive) )
+	{
+	edit->editor->setHtml(text);
+	}
+else
+	edit->editor->setPlainText(text);
+
 filenames.remove( edit);
 filenames.insert( edit, f );
 edit->editor->document()->setModified(false);
@@ -2132,14 +2211,35 @@ connect(edit->editor->document(), SIGNAL(modificationChanged(bool)), this, SLOT(
 connect(edit->editor, SIGNAL(spellme()), this, SLOT(editSpell()));
 connect(edit->editor, SIGNAL(tooltiptab()), this, SLOT(editTipTab()));
 connect(edit->editor, SIGNAL(requestpdf(int)),this, SLOT(jumpToPdfline(int)));
-connect(edit->editor, SIGNAL(requestUpdateStructure()), this, SLOT(UpdateStructure()));
+//connect(edit->editor, SIGNAL(requestUpdateStructure()), this, SLOT(UpdateStructure()));
 currentEditorView()->editor->setLastNumLines(currentEditorView()->editor->numoflines());
-connect(edit->editor, SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
+connect(edit->editor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
 connect(edit->editor->document(), SIGNAL(undoAvailable(bool)),UndoAct, SLOT(setEnabled(bool)));
 connect(edit->editor->document(), SIGNAL(redoAvailable(bool)),RedoAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(copyAvailable(bool)), CutAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(copyAvailable(bool)), CopyAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(requestGotoStructure(int)),this, SLOT(jumpToStructure(int)));
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+//start of codes
+if (QBiDiExtender::bidiEnabled)
+	{
+	if ( file.fileName().endsWith(".ptd", Qt::CaseInsensitive) )
+		{
+		QBiDiExtender::ptdOpenFlag = true;
+		}
+	else
+		QBiDiExtender::ptdOpenFlag = false;
+
+	edit->editor->BiDiForEditor->initBiDi();//new
+	
+	if (edit->editor->BiDiForEditor)
+		edit->editor->BiDiForEditor->applyBiDiModeToEditor(edit->editor->BiDiForEditor->editorLastBiDiModeApplied);
+	}
+/////////////////////////////////////////////////
+
 
 if (wordwrap) {edit->editor->setWordWrapMode(QTextOption::WordWrap);}
 else {edit->editor->setWordWrapMode(QTextOption::NoWrap);}
@@ -2167,6 +2267,7 @@ edit->editor->setFocus();
 edit->editor->document()->setMetaInformation(QTextDocument::DocumentUrl, f);
 commandToolBar->setEnabled(true);
 /////////////////////////////////////////////////
+connect(edit->editor, SIGNAL(requestUpdateStructure()), this, SLOT(UpdateStructure()));
 }
 
 void Texmaker::setLine( const QString &line )
@@ -2205,12 +2306,23 @@ connect(edit->editor, SIGNAL(tooltiptab()), this, SLOT(editTipTab()));
 connect(edit->editor, SIGNAL(requestUpdateStructure()), this, SLOT(UpdateStructure()));
 connect(edit->editor, SIGNAL(requestpdf(int)),this, SLOT(jumpToPdfline(int)));
 currentEditorView()->editor->setLastNumLines(currentEditorView()->editor->numoflines());
-connect(edit->editor, SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
+connect(edit->editor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
 connect(edit->editor->document(), SIGNAL(undoAvailable(bool)),UndoAct, SLOT(setEnabled(bool)));
 connect(edit->editor->document(), SIGNAL(redoAvailable(bool)),RedoAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(copyAvailable(bool)), CutAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(copyAvailable(bool)), CopyAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(requestGotoStructure(int)),this, SLOT(jumpToStructure(int)));
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+if (QBiDiExtender::bidiEnabled) 
+	{
+	QBiDiExtender::ptdOpenFlag = false;
+	edit->editor->BiDiForEditor->initBiDi();
+	}
+/////////////////////////////////////////////////
+
 UpdateCaption();
 NewDocumentStatus(false);
 edit->editor->setFocus();
@@ -2258,18 +2370,29 @@ connect(edit->editor, SIGNAL(tooltiptab()), this, SLOT(editTipTab()));
 currentEditorView()->editor->setLastNumLines(currentEditorView()->editor->numoflines());
 connect(edit->editor, SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
 connect(edit->editor, SIGNAL(requestpdf(int)),this, SLOT(jumpToPdfline(int)));
-connect(edit->editor, SIGNAL(requestUpdateStructure()), this, SLOT(UpdateStructure()));
+//connect(edit->editor, SIGNAL(requestUpdateStructure()), this, SLOT(UpdateStructure()));
 connect(edit->editor->document(), SIGNAL(undoAvailable(bool)),UndoAct, SLOT(setEnabled(bool)));
 connect(edit->editor->document(), SIGNAL(redoAvailable(bool)),RedoAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(copyAvailable(bool)), CutAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(copyAvailable(bool)), CopyAct, SLOT(setEnabled(bool)));
 connect(edit->editor, SIGNAL(requestGotoStructure(int)),this, SLOT(jumpToStructure(int)));
 
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+if (QBiDiExtender::bidiEnabled) 
+	{
+	QBiDiExtender::ptdOpenFlag = false;
+	edit->editor->BiDiForEditor->initBiDi();
+	}
+/////////////////////////////////////////////////
+
 UpdateCaption();
 NewDocumentStatus(true);
 UpdateStructure();
 UpdateBibliography();
 edit->editor->setFocus();
+connect(edit->editor, SIGNAL(requestUpdateStructure()), this, SLOT(UpdateStructure()));
 }
 
 void Texmaker::fileOpen()
@@ -2359,8 +2482,9 @@ if (fItems.size()>0 )
       isblocks_expanded=fItems.at(0)->isExpanded();
       }
   }  
-LatexEditorView *temp = new LatexEditorView(EditorView,EditorFont,showline,colorMath,colorCommand,colorKeyword,inlinespellcheck,spell_ignored_words,spellChecker);
-temp=currentEditorView();
+//We just need backup the pointer, and construct a new object is unnecessary!
+//LatexEditorView *temp = new LatexEditorView(EditorView,EditorFont,showline,colorMath,colorCommand,colorKeyword,inlinespellcheck,spell_ignored_words,spellChecker);
+LatexEditorView *temp=currentEditorView();
 FilesMap::Iterator it;
 QString fn;
 int choice;
@@ -2545,7 +2669,23 @@ else
 	QTextStream ts( &file );
 	QTextCodec* codec = QTextCodec::codecForName(currentEditorView()->editor->getEncoding().toLatin1());
 	ts.setCodec(codec ? codec : QTextCodec::codecForLocale());
-	ts << currentEditorView()->editor->toPlainText();
+
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		QString tmp = currentEditorView()->editor->toPlainText();
+		//Remove Unicode Control Characters
+		tmp.remove(QChar(LRM)).remove(QChar(RLM)).remove(QChar(LRE)).remove(QChar(RLE)).remove(QChar(PDF));
+		ts << tmp;
+		file.close();
+		if (QBiDiExtender::ptdSupportFlag)
+			currentEditorView()->editor->BiDiForEditor->savePtdFile(*filenames.find( currentEditorView() ), codec);
+		}
+	else	/////////////////////////////////////////////////
+		//just for temp:because of last bug document was saved with some of LRM characters!
+		ts << currentEditorView()->editor->toPlainText().remove(QChar(LRM)).remove(QChar(RLM)).remove(QChar(LRE)).remove(QChar(RLE)).remove(QChar(PDF));
+		//ts << currentEditorView()->editor->toPlainText();
+	
 	file.close();
 	currentEditorView()->editor->setLastSavedTime(QDateTime::currentDateTime());
 	currentEditorView()->editor->document()->setModified(false);
@@ -2817,7 +2957,7 @@ void Texmaker::closeEvent(QCloseEvent *e)
 SaveSettings();
 if (browserWindow) browserWindow->close();
 if (pdfviewerWidget) {StackedViewers->removeWidget(pdfviewerWidget);delete(pdfviewerWidget);} 
-if (pdfviewerWindow) pdfviewerWindow->close(); 
+if (pdfviewerWindow) pdfviewerWindow->close();
 bool accept=true;
 while (currentEditorView() && accept)
 	{
@@ -3596,7 +3736,9 @@ if( !favoriteSymbolSettings.isEmpty())
 colorMath=config->value("Color/Math",QColor(0x00,0x80, 0x00)).value<QColor>();
 colorCommand=config->value("Color/Command",QColor(0x80, 0x00, 0x00)).value<QColor>();
 colorKeyword=config->value("Color/Keyword",QColor(0x00, 0x00, 0xCC)).value<QColor>();
+
 /////////////////////////////////////////////////
+//added by S. R. Alavizadeh
 //Extra Features: Auto Save and Recovery
 autoSaveFlag=config->value("Editor/Auto Save",true).toBool();
 autoSaveInterval=config->value( "Editor/Auto Save Interval",10).toInt();
@@ -3613,6 +3755,12 @@ if (config->contains("Editor/RecoveredFile/0"))
 	config->endGroup();
 	}
 /////////////////////////////////////////////////
+//Bi-Di Support
+config->beginGroup("Editor");
+QBiDiExtender::readBiDiSettings(config);
+config->endGroup();
+/////////////////////////////////////////////////
+
 config->endGroup();
 }
 
@@ -3778,11 +3926,17 @@ config.setValue("Color/Command",colorCommand);
 config.setValue("Color/Keyword",colorKeyword);
 
 /////////////////////////////////////////////////
+//added by S. R. Alavizadeh
 //Extra Features: Auto Save and Recovery
 config.setValue("Editor/Auto Save",autoSaveFlag);
 config.setValue("Editor/Auto Save Interval",autoSaveInterval);
 if (config.contains("Editor/RecoveredFile/0"))
 	config.remove("Editor/RecoveredFile");//because texmaker is closed in a safe form it doesn't need to keep filenames!
+/////////////////////////////////////////////////
+//Bi-Di Support
+config.beginGroup("Editor");
+QBiDiExtender::saveBiDiSettings(&config);
+config.endGroup();
 /////////////////////////////////////////////////
 
 config.endGroup();
@@ -3869,6 +4023,12 @@ QString current;
 if (StructureTreeWidget->currentItem()) current=StructureTreeWidget->currentItem()->text(0);
 StructureTreeWidget->clear();
 if ( !currentEditorView() ) return;
+
+//if ( QBiDiExtender::bidiEnabled &&
+//	 currentEditorView()->editor->BiDiForEditor &&
+//	 currentEditorView()->editor->BiDiForEditor->mustSkipedForcely() ) return;
+if (QBiDiExtender::forceSkiped)
+	return;
 
 QString shortName = getName();
 if ((shortName.right(4)!=".tex") && (!shortName.startsWith("untitled")))  return;
@@ -4343,6 +4503,28 @@ int pos=cur.position();
 Entity.replace("{}","{"+QString(0x2022)+"}");
 Entity.replace("[]","["+QString(0x2022)+"]");
 Entity.replace("\n\n","\n"+QString(0x2022)+"\n");
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+if (QBiDiExtender::bidiEnabled)
+	{
+	disconnect(currentEditorView()->editor->document(), SIGNAL(contentsChanged()), currentEditorView()->editor->BiDiForEditor, SLOT(addLRMinTyping()));
+
+	if ( Entity == "$"+QString(0x2022)+"$" ) 
+		{
+		currentEditorView()->editor->BiDiForEditor->processInputLang(false, true);
+		currentEditorView()->editor->BiDiForEditor->changeKbdLayout();
+		if (currentEditorView()->editor->BiDiForEditor->lastInputLangBeforeLTR_Text == 0)
+			currentEditorView()->editor->BiDiForEditor->lastInputLangBeforeLTR_Text = currentEditorView()->editor->BiDiForEditor->lastInputLang;
+		}
+
+	Entity.prepend(QChar(LRM)).append(QChar(LRM));
+	++dx;
+	currentEditorView()->editor->BiDiForEditor->appendLRM=true;
+	}
+/////////////////////////////////////////////////
+
 currentEditorView()->editor->insertPlainText(Entity);
 cur.setPosition(pos,QTextCursor::MoveAnchor);
 if (Entity.contains(QString(0x2022))) 
@@ -4360,6 +4542,13 @@ else
 currentEditorView()->editor->setFocus();
 OutputTableWidget->hide();
 logpresent=false;
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+if (QBiDiExtender::bidiEnabled && QBiDiExtender::flagAutoLRM)
+	connect(currentEditorView()->editor->document(), SIGNAL(contentsChanged()), currentEditorView()->editor->BiDiForEditor, SLOT(addLRMinTyping()));
+/////////////////////////////////////////////////
 }
 
 void Texmaker::InsertSymbol(QTableWidgetItem *item)
@@ -7063,6 +7252,27 @@ else {confDlg->ui.checkBoxCompletion->setChecked(false);}
 if (inlinespellcheck) {confDlg->ui.checkBoxInlineSpell->setChecked(true);}
 else {confDlg->ui.checkBoxInlineSpell->setChecked(false);}
 
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+/////////////////////////////
+//if (QBiDiExtender::docBiDiAlgorithm=="BiDiAlgorithmDefault")
+//	confDlg->ui.radioButtonBestView->setChecked(true);
+//else if (QBiDiExtender::docBiDiAlgorithm=="BiDiAlgorithmNotepadpp")
+//	confDlg->ui.radioButtonNotepad->setChecked(true);
+if (QBiDiExtender::bidiEnabled)
+    {
+    confDlg->ui.checkBoxBidiEnabled->setChecked(true);
+    //confDlg->ui.groupBoxBiDi->setEnabled(true);
+    }
+else
+    {
+    confDlg->ui.checkBoxBidiEnabled->setChecked(false);
+    //confDlg->ui.groupBoxBiDi->setEnabled(false);
+    }
+//QBiDiExtender::docBiDiAlgorithm="BiDiAlgorithmDefault";
+/////////////////////////////////////////////////
+
 confDlg->ui.lineEditAspellCommand->setText(spell_dic);
 
 confDlg->ui.pushButtonColorMath->setPalette(QPalette(colorMath));
@@ -7205,6 +7415,52 @@ if (confDlg->exec())
 	
 	wordwrap=confDlg->ui.checkBoxWordwrap->isChecked();
 
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	//Bi-Di Support
+	bool menuNeedsUpdate=false;
+	/*if (confDlg->ui.radioButtonBestView->isChecked())
+		BiDiSettings_newDocBiDiAlgorithm="BiDiAlgorithmDefault";
+	else if (confDlg->ui.radioButtonNotepad->isChecked())
+		BiDiSettings_newDocBiDiAlgorithm="BiDiAlgorithmNotepadpp";
+	if (!currentEditorView())
+		{
+	if (QBiDiExtender::docBiDiAlgorithm!=BiDiSettings_newDocBiDiAlgorithm)
+		{
+		QBiDiExtender::docBiDiAlgorithm=BiDiSettings_newDocBiDiAlgorithm;
+		menuNeedsUpdate=true;
+		}
+		if (QBiDiExtender::bidiEnabled && LatexEditor::BiDiBase)
+			QBiDiExtender::docBiDiAlgorithm=QBiDiExtender::docBiDiAlgorithm;
+		}*/
+	if (QBiDiExtender::bidiEnabled != confDlg->ui.checkBoxBidiEnabled->isChecked())
+		{
+		QBiDiExtender::bidiEnabled=confDlg->ui.checkBoxBidiEnabled->isChecked();
+		if (QBiDiExtender::bidiEnabled)
+			{
+			if (!LatexEditor::BiDiBase)
+				LatexEditor::BiDiBase = new QBiDiInitializer(EditorView, ":/images/BiDi-Logo.png");
+			}
+		else
+			{
+			delete LatexEditor::BiDiBase;
+			LatexEditor::BiDiBase=0;
+			}
+		menuNeedsUpdate=true;
+		}
+		if (menuNeedsUpdate)
+			{
+			//if (QBiDiExtender::bidiEnabled) bidiMenu->setVisible(true);
+			//else bidiMenu->setVisible(false);
+			menuBar()->clear();
+			setupMenus();//this is needed for disabling some of menu items
+			UpdateRecentFile();
+			//bidiFlag = true;
+			}
+
+	disconnect(EditorView, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged()));
+	/////////////////////////////////////////////////
+
 	completion=confDlg->ui.checkBoxCompletion->isChecked();
 	showline=confDlg->ui.checkBoxLinenumber->isChecked();
 	inlinespellcheck=confDlg->ui.checkBoxInlineSpell->isChecked();
@@ -7223,7 +7479,8 @@ if (confDlg->exec())
 	if(!codec) codec = QTextCodec::codecForLocale();
 	if (currentEditorView())
 		{
-		LatexEditorView *temp = new LatexEditorView( EditorView,EditorFont,showline,colorMath,colorCommand,colorKeyword,inlinespellcheck,spell_ignored_words,spellChecker);
+		//We just need backup the pointer, and construct a new object is unnecessary!
+		LatexEditorView *temp;// = new LatexEditorView( EditorView,EditorFont,showline,colorMath,colorCommand,colorKeyword,inlinespellcheck,spell_ignored_words,spellChecker);
 		temp=currentEditorView();
 		FilesMap::Iterator it;
 		for( it = filenames.begin(); it != filenames.end(); ++it )
@@ -7241,7 +7498,7 @@ if (confDlg->exec())
 			disconnect(currentEditorView()->editor->document(), SIGNAL(redoAvailable(bool)),RedoAct, SLOT(setEnabled(bool)));
 			disconnect(currentEditorView()->editor, SIGNAL(copyAvailable(bool)), CutAct, SLOT(setEnabled(bool)));
 			disconnect(currentEditorView()->editor, SIGNAL(copyAvailable(bool)), CopyAct, SLOT(setEnabled(bool)));
-			disconnect(currentEditorView()->editor, SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
+			disconnect(currentEditorView()->editor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
 			disconnect(currentEditorView()->editor, SIGNAL(requestGotoStructure(int)),this, SLOT(jumpToStructure(int)));
 			currentEditorView()->editor->setSpellChecker(spellChecker);
 			currentEditorView()->editor->highlighter->setSpellChecker(spellChecker);
@@ -7255,7 +7512,52 @@ if (confDlg->exec())
 			currentEditorView()->editor->highlighter->setColors(colorMath,colorCommand,colorKeyword);
 			QTextStream ts( &tmp,QIODevice::ReadOnly );
 			ts.setCodec(codec);
-			currentEditorView()->editor->setPlainText( ts.readAll() );
+
+			/////////////////////////////////////////////////
+			//added by S. R. Alavizadeh
+			//Bi-Di Support
+			QString tmpContent = ts.readAll();
+			if (!QBiDiExtender::bidiEnabled)
+				{
+				delete currentEditorView()->editor->BiDiForEditor;//new
+				currentEditorView()->editor->BiDiForEditor=0;
+				}
+			else
+				{
+				if (LatexEditor::BiDiBase && currentEditorView()->editor->BiDiForEditor)
+					{
+					//LatexEditor::BiDiBase->setEditor(currentEditorView()->editor);
+					currentEditorView()->editor->BiDiForEditor->unInitBiDi();
+					}
+				}
+
+			//added by S. R. Alavizadeh
+			//Bi-Di Support
+			bool needReload=false;//new
+			if (QBiDiExtender::bidiEnabled)
+				{
+				if (!currentEditorView()->editor->BiDiForEditor)
+					{
+					currentEditorView()->editor->BiDiForEditor = new QBiDiExtender(currentEditorView()->editor, LatexEditor::BiDiBase);
+					//LatexEditor::BiDiBase->setEditor(currentEditorView()->editor);
+					}
+				else
+					needReload=true;
+				//LatexEditor::BiDiBase->initBiDi();
+				currentEditorView()->editor->BiDiForEditor->firstTimeBiDi=false;
+				currentEditorView()->editor->BiDiForEditor->initBiDi();
+				}
+//////////////////
+#ifdef Q_WS_WIN
+			else
+				disconnect(currentEditorView()->editor, SIGNAL(callSumatraForwadSearch()), this, SLOT(SumatraForwardSearch()));
+#endif
+			if (QBiDiExtender::bidiEnabled && currentEditorView()->editor->BiDiForEditor && true/*QBiDiExtender::docBiDiAlgorithm=="BiDiAlgorithmDefault"*/)
+				currentEditorView()->editor->BiDiForEditor->insertLRMtoString(&tmpContent);
+
+			currentEditorView()->editor->setPlainText( tmpContent );
+
+			//currentEditorView()->editor->setPlainText( ts.readAll() );
 			currentEditorView()->editor->setLastSavedTime(QDateTime::currentDateTime());
 			if( MODIFIED ) currentEditorView()->editor->document()->setModified(TRUE );
 			else currentEditorView()->editor->document()->setModified( FALSE );
@@ -7269,12 +7571,18 @@ if (confDlg->exec())
 			connect(currentEditorView()->editor, SIGNAL(copyAvailable(bool)), CutAct, SLOT(setEnabled(bool)));
 			connect(currentEditorView()->editor, SIGNAL(copyAvailable(bool)), CopyAct, SLOT(setEnabled(bool)));
 			currentEditorView()->editor->setLastNumLines(currentEditorView()->editor->numoflines());
-			connect(currentEditorView()->editor, SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
+			connect(currentEditorView()->editor->document(), SIGNAL(blockCountChanged(int)), this, SLOT(refreshAllFromCursor(int)));
 			connect(currentEditorView()->editor, SIGNAL(requestGotoStructure(int)),this, SLOT(jumpToStructure(int)));
 			UpdateStructure();
 			UpdateBibliography();
 			QApplication::restoreOverrideCursor();
 			}
+		/////////////////////////////////////////////////
+		//added by S. R. Alavizadeh
+		//Bi-Di Support
+		if (QBiDiExtender::bidiEnabled)
+			connect(EditorView, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged()));
+		/////////////////////////////////////////////////
 		EditorView->setCurrentIndex(EditorView->indexOf(temp));
 		UpdateCaption();
 		OutputTextEdit->clear();
@@ -7861,7 +8169,8 @@ void Texmaker::autoSaveDocs()
 {
 if (currentEditorView())
 	{
-    LatexEditorView *temp = new LatexEditorView( EditorView,EditorFont,showline,colorMath,colorCommand,colorKeyword,inlinespellcheck,spell_ignored_words,spellChecker);
+	//We just need backup the pointer, and construct a new object is unnecessary!
+    LatexEditorView *temp;// = new LatexEditorView( EditorView,EditorFont,showline,colorMath,colorCommand,colorKeyword,inlinespellcheck,spell_ignored_words,spellChecker);
     temp=currentEditorView();
     FilesMap::Iterator it;
     int i=1;
@@ -7910,18 +8219,18 @@ if (currentEditorView())
 	    ts << currentEditorView()->editor->toPlainText();
 		autoSaveFile.close();
 		config->setValue("Editor/RecoveredFile/"+QString::number(i), autoSaveFileName);
-#if defined(Q_WS_WIN)
-		//This part of code sets the hidden flag of file to true.
-		autoSaveFileName.replace(QChar('/'), QChar('\\'));
-		autoSaveFileName="\\\\?\\"+autoSaveFileName;
-		const ushort *winFileName=autoSaveFileName.utf16();
-		DWORD dwAttrs= GetFileAttributes(winFileName);
-		if (dwAttrs==INVALID_FILE_ATTRIBUTES) continue;
-		 if (!(dwAttrs & FILE_ATTRIBUTE_HIDDEN))
-			{
-			SetFileAttributes(winFileName, dwAttrs | FILE_ATTRIBUTE_HIDDEN); 
-			}
-#endif
+//#if defined(Q_WS_WIN)
+//		//This part of code sets the hidden flag of file to true.
+//		autoSaveFileName.replace(QChar('/'), QChar('\\'));
+//		autoSaveFileName="\\\\?\\"+autoSaveFileName;
+//		const ushort *winFileName=autoSaveFileName.utf16();
+//		DWORD dwAttrs= GetFileAttributes(winFileName);
+//		if (dwAttrs==INVALID_FILE_ATTRIBUTES) continue;
+//		 if (!(dwAttrs & FILE_ATTRIBUTE_HIDDEN))
+//			{
+//			SetFileAttributes(winFileName, dwAttrs | FILE_ATTRIBUTE_HIDDEN); 
+//			}
+//#endif
 	    ++i;
 		}
 	config->endGroup();
@@ -7963,3 +8272,136 @@ if (commandName=="CMD Here")
 		}
 }
 /////////////////////////////////////////////////
+//Extra Features: FarsiTeX Import (for Persian users)
+void Texmaker::ftx2Unicode()
+{
+QString exeConvertorPath="";
+#if defined( Q_WS_X11 )
+QString pyConvertorPath=PREFIX"/share/texmaker/ftx2uni.py";
+#endif
+#if defined( Q_WS_MACX )
+QString pyConvertorPath=QCoreApplication::applicationDirPath()+"/../Resources/ftx2uni.py";
+#endif
+#if defined(Q_WS_WIN)
+exeConvertorPath=QCoreApplication::applicationDirPath()+"/ftx2uni/ftx2uni.exe";
+QString pyConvertorPath=QCoreApplication::applicationDirPath()+"/ftx2uni.py";
+#endif
+QString currentDir=QDir::homePath();
+if (!lastDocument.isEmpty())
+	{
+	QFileInfo fi(lastDocument);
+	if (fi.exists() && fi.isReadable()) currentDir=fi.absolutePath();
+	}
+QStringList inputFTX = QFileDialog::getOpenFileNames(this,tr("Import FarsiTeX File"),currentDir,"FrasiTeX files (*.ftx)");
+for (int i=0;i<inputFTX.size();++i)
+	{
+	if ( !inputFTX.at(i).isEmpty() ) 
+		{
+		QProcess ftxConvertor;
+		QString outputUNI = inputFTX.at(i).left(inputFTX.at(i).size()-4)+".tex";
+		if (QFile::exists(outputUNI))
+			{
+				switch(  QMessageBox::warning(this, tr("Warning!"),
+					tr("The output file \"%1\" already exists. Do you want to replace it?").arg(outputUNI),
+					tr("Yes"), tr("No"), tr("Cancel"),0,2 ) )
+					{
+					case 0:
+						QFile::QFile(outputUNI).close();
+						QFile::QFile(outputUNI).remove();
+						break;
+					case 1:
+						outputUNI = QFileDialog::getSaveFileName(this,tr("Import As"),currentDir,"TeX file (*.tex)");
+						//outputUNI = outputUNI.left(outputUNI.size()-4)+".tex";//new
+						break;
+					case 2:
+					default:
+						return;
+						break;
+					}
+			}
+		QString tmpInput=inputFTX.at(i).left(inputFTX.at(i).size()-4)+"886EA178-B648-4840-A21A-AFFADE5AD3E5";
+		QFile::QFile(inputFTX.at(i)).copy(tmpInput+".ftx");//new
+		ftxConvertor.execute("python", QStringList() << pyConvertorPath << "-x" <<  tmpInput+".ftx");
+		if (!QFile::QFile(tmpInput+".tex").exists())
+		{
+			if (!exeConvertorPath.isEmpty())
+			{
+				ftxConvertor.execute(exeConvertorPath, QStringList() << "-x" << tmpInput+".ftx" );
+				if (!QFile::QFile(tmpInput+".tex").exists())
+					{
+						QMessageBox::warning(this, "Texmaker",tr("Error! Convert is not successful. Please check contents of \"ftx2uni\" directory or check your python installation and your path environment."));
+						return;
+					}
+			}
+			else
+			{
+				QMessageBox::warning(this, "Texmaker",tr("Error! Convert is not successful. Please check your python installation and your path environment."));
+				return;
+			}
+		}
+		QFile::QFile(tmpInput+".tex").rename(outputUNI);
+		QFile::QFile(tmpInput+".ftx").remove();
+		if (FileAlreadyOpen(outputUNI))
+			{
+			filenames.remove(currentEditorView());
+			delete currentEditorView();
+			}
+		load( outputUNI );
+		}
+	}
+}
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//start of codes
+//Bi-Di Support
+/**************************
+		This Function configures
+		LatexEditor::BiDiBase for changed Tab
+	****************************/
+void Texmaker::doQueuededSteps()
+{
+UpdateStructure();
+}
+
+void Texmaker::currentTabChanged()
+{
+if ( !currentEditorView() )
+	{
+	commandToolBar->setEnabled(false);
+
+	LatexEditor::BiDiBase->setEditorActionState(false);
+
+//	if (LatexEditor::BiDiBase)
+//		LatexEditor::BiDiBase->setEditor(0); //it's needed when last tab is closed. 
+	return;
+	}
+
+	LatexEditor::BiDiBase->setEditorActionState(true);
+
+//currentEditorView()->editor->BiDiForEditor->lastInputLangBeforeLTR_Text = 0;//it's static, we don't want static version!
+
+if (currentEditorView()->editor->document()->metaInformation(QTextDocument::DocumentUrl).isEmpty())
+	commandToolBar->setEnabled(false);
+else
+	commandToolBar->setEnabled(true);
+//if (LatexEditor::BiDiBase) LatexEditor::BiDiBase->setEditor(currentEditorView()->editor);
+//////////////////
+#ifdef Q_WS_WIN
+//connect(currentEditorView()->editor, SIGNAL(callSumatraForwadSearch()), this, SLOT(SumatraForwardSearch()));
+#endif
+
+//bidiModeToggled is connected to all object!
+//if (currentEditorView()->editor->BiDiForEditor && currentEditorView()->editor->BiDiForEditor->editorLastBiDiModeApplied != QBiDiExtender::bidiMode)
+//	currentEditorView()->editor->BiDiForEditor->applyBiDiModeToEditor(QBiDiExtender::bidiMode);
+
+//disconnect old connections and connect to current BiDiForEditor!
+disconnect(LatexEditor::BiDiBase, SIGNAL(	doCurrentLineRTL()	)			, 0, 0);
+disconnect(LatexEditor::BiDiBase, SIGNAL(	doCurrentLineLTR()	)			, 0, 0);
+disconnect(LatexEditor::BiDiBase, SIGNAL(	insertedLTR()	)				, 0, 0);
+
+connect(LatexEditor::BiDiBase, SIGNAL(	doCurrentLineRTL()	)			, currentEditorView()->editor->BiDiForEditor, SLOT(	currentLineRTL()			));
+connect(LatexEditor::BiDiBase, SIGNAL(	doCurrentLineLTR()	)			, currentEditorView()->editor->BiDiForEditor, SLOT(	currentLineLTR()			));
+connect(LatexEditor::BiDiBase, SIGNAL(	insertedLTR()	)				, currentEditorView()->editor->BiDiForEditor, SLOT(	insertLTR()					));
+}
+//end of codes

@@ -4,7 +4,7 @@ TARGET	 = texmaker
 QT += network \
       xml \
       webkit
-CONFIG	+= qt warn_off release
+CONFIG	+= qt warn_off
 TEXMAKERVERSION=3.0.2
 DEFINES += TEXMAKERVERSION=\\\"$${TEXMAKERVERSION}\\\"
 DEFINES += HAVE_SPLASH
@@ -350,9 +350,14 @@ INSTALLS += icon
 }
 ################################
 win32 {
-INCLUDEPATH += C:\QtSDK\mingw\include
-INCLUDEPATH += C:\poppler
-LIBS         += -LC:\poppler -lpoppler-qt4
+# INCLUDEPATH += C:\QtSDK\mingw\include
+# INCLUDEPATH += C:\poppler
+# LIBS         += -LC:\poppler -lpoppler-qt4
+##MY SYSTEM PATH
+# INCLUDEPATH += -I"D:/Z[Other]/msysgit/msysgit/mingw/include"
+# INCLUDEPATH += E:/KDE-minGW/KDE-minGW-Install/include/poppler
+# INCLUDEPATH += E:/KDE-minGW/KDE-minGW-Install/include/poppler/qt4
+# LIBS         += -LE:/KDE-minGW/KDE-minGW-Install/lib -lpoppler-qt4
 RC_FILE = win.rc
 
 #DEFINES += USB_VERSION
@@ -431,20 +436,20 @@ utilities.files =doc/doc1.png \
 	dictionaries/it_IT.dic 
 INSTALLS += utilities
 
-others.path = texmakerwin32
+#others.path = texmakerwin32
 #others.path = texmakerwin32usb
 
-others.files = texmaker.ico \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\mingwm10.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\libgcc_s_dw2-1.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtCore4.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtGui4.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtWebKit4.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtXml4.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtXmlPatterns4.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\phonon4.dll \
-		C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtNetwork4.dll 
-INSTALLS += others
+# others.files = texmaker.ico \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\mingwm10.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\libgcc_s_dw2-1.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtCore4.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtGui4.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtWebKit4.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtXml4.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtXmlPatterns4.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\phonon4.dll \
+		# C:\QtSDK\Desktop\Qt\4.7.2\mingw\bin\QtNetwork4.dll 
+#INSTALLS += others
 }
 ###############################
 macx {
@@ -542,4 +547,77 @@ QMAKE_BUNDLE_DATA += utilities
 INSTALLS += utilities
 ICON = texmaker.icns
 QMAKE_INFO_PLIST =Info.plist
+}
+
+win32 {
+##MY SYSTEM PATH
+INCLUDEPATH += E:/Qt/QtSDK/mingw/include
+#D:/Z[Other]/msysgit/msysgit/mingw/include
+INCLUDEPATH += I:/KDE/minGW4/include/poppler/qt4
+INCLUDEPATH += I:/KDE/minGW4/include
+LIBS         += -L"I:/KDE/minGW4/lib" -llibpoppler-qt4 -llibpoppler
+#LIBS         += -lC:\KDE\minGW4\lib\libpoppler.dll.a
+#LIBS         += -LE:\KDE-minGW\KDE-minGW-Install\lib\libpoppler.dll.a
+
+# INCLUDEPATH += D:\Z[Other]\msysgit\msysgit\mingw\include
+# INCLUDEPATH += E:\KDE-minGW\KDE-minGW-Install\include\poppler
+# INCLUDEPATH += E:\KDE-minGW\KDE-minGW-Install\include\poppler\qt4
+# LIBS         += -L"E:\KDE-minGW\KDE-minGW-Install\lib\" -llibpoppler-qt4.dll.a -llibpoppler.dll.a
+#LIBS         += -LE:\KDE-minGW\KDE-minGW-Install\lib\libpoppler.dll.a
+
+# INCLUDEPATH  += D:\Z[Work]\A-TeXworks\KDE\include\poppler\qt4
+# INCLUDEPATH  += D:\z[other]\cross-tools\usr\local\include\zlib-1.2.3
+# LIBS         += -lD:\Z[Work]\A-TeXworks\KDE\lib\poppler-qt4
+# LIBS         += -lD:\Z[Work]\A-TeXworks\KDE\lib\poppler
+}
+
+
+###################################################################
+#My BiDi Class source files
+#for shared lib comment out the below line.
+DEFINES += QBIDIEXTENDER_EMBED
+win32 {
+LIBS += -luser32
+#LIBS += -l"W:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib\User32" -l"W:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib\Uuid" -l"W:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib\kernel32"
+#INCLUDEPATH += ./ ./debug/_ui
+GUID = {AE276D93-FB6D-3DF7-8512-F8A027A84100}
+HEADERS	+= D:/Z[Work]/QBiDiExtender2/qbidiextender2.h
+SOURCES	+= D:/Z[Work]/QBiDiExtender2/qbidiextender2.cpp
+#INCLUDEPATH += "I:/Program Files/Microsoft SDKs/Windows/v6.0A/Include"
+#INCLUDEPATH += "C:/Program Files/Microsoft SDKs/Windows/v6.0A/Include"
+INCLUDEPATH += D:/Z[Work]/QBiDiExtender2/
+	# Release{
+	# LIBS += -l"D:\Z[Work]\QBiDiExtender\release\QBiDiExtender"
+	# }
+	# Debug{
+	# LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
+	# }
+}
+unix:!macx {
+HEADERS	+= /media/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.h \
+						/media/DATA1/Z[Work]/QBiDiExtender2/xkb/XKeyboard.h \
+						/media/DATA1/Z[Work]/QBiDiExtender2/xkb/X11Exception.h
+SOURCES	+= /media/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.cpp \
+						/media/DATA1/Z[Work]/QBiDiExtender2/xkb/XKeyboard.cpp
+INCLUDEPATH += /media/DATA1/Z[Work]/QBiDiExtender2
+#Release{
+#LIBS += -L/media/DATA1/Z[Work]/QBiDiExtender
+	#LIBS += -lQBiDiExtender
+#	}
+#Debug{
+	#LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
+#}
+}
+macx {
+HEADERS	+= /Volume/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.h
+SOURCES	+= /Volume/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.cpp
+INCLUDEPATH += /Volume/DATA1/Z[Work]/QBiDiExtender2
+INCLUDEPATH += /Users/srazi/Document/bidiTexmaker2_build/
+#Release{
+#LIBS += -L/media/DATA1/Z[Work]/QBiDiExtender
+	#LIBS += -lQBiDiExtender
+#	}
+#Debug{
+	#LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
+#}
 }

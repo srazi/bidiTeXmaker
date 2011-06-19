@@ -33,7 +33,7 @@
 #include <QFile>
 #include "blockdata.h"
 
-LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker) : QPlainTextEdit(parent),c(0)
+LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker) : /*QPlainTextEdit*/QTextEdit(parent),c(0)
 {
 QPalette p = palette();
 p.setColor(QPalette::Inactive, QPalette::Highlight,p.color(QPalette::Active, QPalette::Highlight));
@@ -69,6 +69,16 @@ if (wordsfile.open(QFile::ReadOnly))
 	    }
     }
 /********************************/
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+//creates BiDi instance for editor
+if (QBiDiExtender::bidiEnabled)
+	BiDiForEditor = new QBiDiExtender(this, LatexEditor::BiDiBase);
+else
+	BiDiForEditor=0;
+/////////////////////////////////////////////////
 
 highlighter = new LatexHighlighter(document(),inlinespelling,ignoredWords,spellChecker);
 highlighter->SetEditor(this);
@@ -112,7 +122,7 @@ else
   painter.fillRect(rect, brush);
   painter.end();
   }
-QPlainTextEdit::paintEvent(event);
+/*QPlainTextEdit*/QTextEdit::paintEvent(event);
 }
 
 void LatexEditor::contextMenuEvent(QContextMenuEvent *e)
@@ -220,6 +230,19 @@ a = menu->addAction(tr("Select All"), this, SLOT(selectAll()));
 a->setShortcut(Qt::CTRL+Qt::Key_A);
 a->setEnabled(!document()->isEmpty());
 menu->addSeparator();
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//start of codes
+//Bi-directional context menu
+if (QBiDiExtender::bidiEnabled)
+	{
+	BiDiForEditor->editorBiDiMenu(menu, "BIDI_CONTEXT_MENU");
+	}
+//end of codes
+//added by S. R. Alavizadeh
+/////////////////////////////////////////////////
+
 if (!document()->isEmpty() && !inlinecheckSpelling)
 {
 a = menu->addAction(tr("Check Spelling Word"), this, SLOT(checkSpellingWord()));
@@ -888,6 +911,24 @@ if (c && c->popup()->isVisible())
 		break;
 		}
 	}
+
+/////////////////////////////////////
+//start of codes
+//handling pressed key
+//Bi-Di Support
+if (QBiDiExtender::bidiEnabled)
+	{
+	if (!BiDiForEditor->pressedKeyEvent(e))
+		{
+		e->ignore();
+		return;
+		}
+	}
+//end of codes
+//added by S. R. Alavizadeh
+/////////////////////////////////////////////////
+
+
 if ( e->key()==Qt::Key_Tab) 
     {
     QTextCursor cursor=textCursor();
@@ -913,7 +954,7 @@ if ( e->key()==Qt::Key_Tab)
 	    return;		
 	    }
 	}
-    QPlainTextEdit::keyPressEvent(e);
+    /*QPlainTextEdit*/QTextEdit::keyPressEvent(e);
     }
 else if ( e->key()==Qt::Key_Backtab) 
     {
@@ -958,7 +999,7 @@ else if ( e->key()==Qt::Key_Backtab)
 // 	}
 else if ((e->key()==Qt::Key_Enter)||(e->key()==Qt::Key_Return))
 	{
-	QPlainTextEdit::keyPressEvent(e);
+	/*QPlainTextEdit*/QTextEdit::keyPressEvent(e);
 	QTextCursor cursor=textCursor();
 	cursor.joinPreviousEditBlock();
 	QTextBlock block=cursor.block();
@@ -980,7 +1021,7 @@ else if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->ke
   {
   emit requestpdf(textCursor().blockNumber() + 1);
   }
-else QPlainTextEdit::keyPressEvent(e);
+else /*QPlainTextEdit*/QTextEdit::keyPressEvent(e);
 if (c && !c->popup()->isVisible()) 
 	{
 	switch (e->key()) 
@@ -1090,14 +1131,23 @@ if (completion.contains(rbb))
 	}
 else
 	{
-	tc.insertText(insert_word);
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled && QBiDiExtender::flagAutoLRM)
+		{
+		tc.insertText(QChar(LRM)+insert_word+QChar(LRM));
+		pos=pos+2;
+		}
+	else	/////////////////////////////////////////////////
+		tc.insertText(insert_word);
 	tc.setPosition(pos,QTextCursor::MoveAnchor);
 	setTextCursor(tc);
 	if (!search(QString(0x2022) ,true,true,true,true))
-	  {
-	  tc.setPosition(pos+completion.length(),QTextCursor::MoveAnchor);
-	  setTextCursor(tc);
-	  }
+		{
+		tc.setPosition(pos+completion.length(),QTextCursor::MoveAnchor);
+		setTextCursor(tc);
+		}
 	 else emit tooltiptab();
 	} 
 
@@ -1106,7 +1156,7 @@ else
 void LatexEditor::insertNewLine()
 {
 QKeyEvent e(QEvent::KeyPress,Qt::Key_Enter,Qt::NoModifier);
-QPlainTextEdit::keyPressEvent(&e);
+/*QPlainTextEdit*/QTextEdit::keyPressEvent(&e);
 QTextCursor cursor=textCursor();
 cursor.joinPreviousEditBlock();
 QTextBlock block=cursor.block();
@@ -1127,7 +1177,7 @@ cursor.endEditBlock();
  void LatexEditor::focusInEvent(QFocusEvent *e)
 {
 if (c) c->setWidget(this);
-QPlainTextEdit::focusInEvent(e);
+/*QPlainTextEdit*/QTextEdit::focusInEvent(e);
 }
 
  void LatexEditor::setSpellChecker(Hunspell * checker)
@@ -1582,3 +1632,22 @@ return blockBoundingGeometry(block).translated(contentOffset());
 //if (rec.isValid()) return rec.translated(contentOffset());
 //else return QRectF();
 }*/
+
+bool LatexEditor::event(QEvent *e)
+{
+if (QBiDiExtender::bidiEnabled)
+	{
+	if ( e->type() == QEvent::KeyboardLayoutChange )
+		{
+//#if defined( Q_WS_WIN )
+		////when user manually change language app needs to clear last language info
+		if (!BiDiForEditor->lastLangAutoChanged)
+			BiDiForEditor->processInputLang(false, true);
+			//BiDiForEditor->lastInputLang=0;
+//#endif
+		BiDiForEditor->kbdLayoutChangingCanEmited = true;
+		BiDiForEditor->layoutChanged = true;
+		}
+	}
+return QTextEdit::event(e);
+}

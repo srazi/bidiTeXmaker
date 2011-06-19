@@ -17,7 +17,7 @@
 #include <QWidget>
 #include <QString>
 #include <QTextEdit>
-#include <QPlainTextEdit>
+//#include <QPlainTextEdit>
 #include <QTextDocument>
 #include <QTextCursor>
 #include <QTextBlock>
@@ -30,7 +30,7 @@
 
 typedef  int UserBookmarkList[3];
 
-class LatexEditor : public QPlainTextEdit  {
+class LatexEditor : public /*QPlainTextEdit*/QTextEdit  {
    Q_OBJECT
 public:
 LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling=false, QString ignoredWords="",Hunspell *spellChecker=0);
@@ -64,7 +64,7 @@ Hunspell * pChecker;
 void insertNewLine();
 void fold(int start, int end);
 void unfold(int start, int end);
-QRectF blockGeometry(const QTextBlock & block) {return blockBoundingGeometry(block).translated(contentOffset());}
+//QRectF blockGeometry(const QTextBlock & block) {return blockBoundingGeometry(block).translated(contentOffset());}
 //const QRectF blockGeometry(const QTextBlock & block);
 //const QRectF blockRect(const QTextBlock & block) {return blockBoundingRect(block).translated(contentOffset());};
 QMap<int,int> foldedLines;
@@ -99,7 +99,6 @@ public slots:
 void matchAll();
 void setHightLightLine();
 void clearHightLightLine();
-
 
 private:
 QDateTime lastSavedTime;
@@ -154,6 +153,21 @@ void setBlockRange(int,int);
 void updatelineWidget();
 void requestUpdateStructure();
 void requestGotoStructure(int);
+
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+public:
+	QBiDiExtender *BiDiForEditor;
+	static QBiDiInitializer *BiDiBase;
+
+protected:
+//#ifdef Q_WS_WIN
+	//void mouseDoubleClickEvent( QMouseEvent *ev );
+	//void mousePressEvent( QMouseEvent *ev );
+//#endif
+	bool event(QEvent *e);
 };
 
 #endif

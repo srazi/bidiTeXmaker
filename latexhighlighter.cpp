@@ -64,7 +64,7 @@ ColorKeyword=colKeyword;
 }
 
 void LatexHighlighter::highlightBlock(const QString &text)
-{
+{//return;
 QRegExp rxSweave("<<(.*)>>=");
 QStringList types;
 types << QLatin1String("article") << QLatin1String("book")
@@ -1306,14 +1306,23 @@ if (pChecker)
 		  }
 		if ( (buffer.length() > 1) && (!ignoredwordList.contains(buffer)) && (!hardignoredwordList.contains(buffer)))
 		      {
-		      if (format(i - buffer.length()-offset).foreground()==brushverbatim) spellingErrorFormat.setForeground(brushverbatim);
+			  /////////////////////////////////////////////////
+			  //added by S. R. Alavizadeh
+			  //Bi-Di Support
+			  QString tmpBuffer = buffer;
+			  //This just skips Unicode Control Characters.
+			  if (QBiDiExtender::bidiEnabled)	tmpBuffer.remove(QChar(LRM)).remove(QChar(RLM)).remove(QChar(LRE)).remove(QChar(RLE)).remove(QChar(PDF));
+		     // encodedString = codec->fromUnicode(tmpBuffer);
+			  //encodedString = codec->fromUnicode(buffer);
+			  /////////////////////////////////////////////////
+		      if (format(i - tmpBuffer.length()-offset).foreground()==brushverbatim) spellingErrorFormat.setForeground(brushverbatim);
 		      else spellingErrorFormat.setForeground(brushstandard);
-		      encodedString = codec->fromUnicode(buffer);
+		      encodedString = codec->fromUnicode(tmpBuffer);
 		      check = pChecker->spell(encodedString.data());
 		      if (!check) 
 			{
-			if (checkSpelling) setFormat(i - buffer.length()-offset, buffer.length(), spellingErrorFormat);
-			for (int k=i - buffer.length()-offset;  k< i-offset; k++) blockData->misspelled[k]=true;
+			if (checkSpelling) setFormat(i - tmpBuffer.length()-offset, tmpBuffer.length(), spellingErrorFormat);
+			for (int k=i - tmpBuffer.length()-offset;  k< i-offset; k++) blockData->misspelled[k]=true;
 			}
 		      }
 		i++;
