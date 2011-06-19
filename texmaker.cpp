@@ -614,6 +614,33 @@ stat3->setText(QString(" %1 ").arg(input_encoding));
 
 setAcceptDrops(true);
 connect(this, SIGNAL(windowActivated()),this, SLOT(mainWindowActivated()));
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Extra Features: Auto Save and Recovery
+autoSaveTimer = new QTimer(this);
+if (autoSaveFlag)
+    {
+    connect(autoSaveTimer, SIGNAL(timeout()), this, SLOT(autoSaveDocs()));
+    autoSaveTimer->start(autoSaveInterval*60000);
+    }
+if (recoveredFiles.size()>1)
+	{
+	QString mbText;
+	if (recoveredFiles.size()==2)
+		mbText=tr("There is one file recovered from last session. Do you want to open this file?");
+	else
+		mbText=tr("There are %1 files recovered from last session. Do you want to open these files?").arg(recoveredFiles.size()-1);
+	if ( QMessageBox::information(this, tr("Recovered from Last Session"), mbText, tr("Yes"), tr("No"), 0 , 0, 1) == 0 )
+		{
+		for (int i=0; i<recoveredFiles.size(); ++i)
+			{
+			load(recoveredFiles.at(i));
+			if (currentEditorView())
+				currentEditorView()->editor->document()->setModified(true);
+			}
+		}
+	}
+/////////////////////////////////////////////////
 }
 
 Texmaker::~Texmaker(){
@@ -1859,6 +1886,23 @@ connect(StopAct, SIGNAL(triggered()), this, SLOT(stopProcess()));
 logToolBar->addAction(StopAct);
 StopAct->setEnabled(false);
 
+/////////////////////////////////////////////////
+//Extra Features: Location Commands
+//added by S. Razi Alavizadeh
+commandToolBar = addToolBar("Command");
+commandToolBar->setObjectName("Command");
+
+#ifndef Q_WS_MACX//I don't implement starting Terminal from a predefined directory on MAC OS X.
+Act = new QAction(QIcon(":/images/cmd.png"), tr("CMD Here"), this);
+connect(Act, SIGNAL(triggered()), this, SLOT(locationCommand()));
+commandToolBar->addAction(Act);
+#endif
+
+Act = new QAction(QIcon(":/images/openlocation.png"), tr("Open File Location"), this);
+connect(Act, SIGNAL(triggered()), this, SLOT(locationCommand()));
+commandToolBar->addAction(Act);
+commandToolBar->setEnabled(false);
+/////////////////////////////////////////////////
 }
 
 
@@ -1924,6 +1968,14 @@ if   (currentEditorView())
    CopyAct->setEnabled(currentEditorView()->editor->textCursor().hasSelection());
    CutAct->setEnabled(currentEditorView()->editor->textCursor().hasSelection());
    stat3->setText(QString(" %1 ").arg(currentEditorView()->editor->getEncoding()));
+
+	/////////////////////////////////////////////////
+	//Extra Features: Location Commands
+	if (currentEditorView()->editor->document()->metaInformation(QTextDocument::DocumentUrl).isEmpty())
+		commandToolBar->setEnabled(false);
+	else
+		commandToolBar->setEnabled(true);
+	/////////////////////////////////////////////////
   }
 else
   {
@@ -1932,6 +1984,11 @@ else
    RedoAct->setEnabled(false);
    CopyAct->setEnabled(false);
    CutAct->setEnabled(false);    
+
+	/////////////////////////////////////////////////
+	//Extra Features: Location Commands
+   commandToolBar->setEnabled(false);
+	/////////////////////////////////////////////////
   }
 if (currentEditorView()) currentEditorView()->editor->setFocus();
 }
@@ -2104,6 +2161,12 @@ setFocus();
 //#endif
 #endif
 edit->editor->setFocus();
+
+/////////////////////////////////////////////////
+//Extra Features: Location Commands : open file location
+edit->editor->document()->setMetaInformation(QTextDocument::DocumentUrl, f);
+commandToolBar->setEnabled(true);
+/////////////////////////////////////////////////
 }
 
 void Texmaker::setLine( const QString &line )
@@ -2488,6 +2551,16 @@ else
 	currentEditorView()->editor->document()->setModified(false);
 	fn=getName();
 	AddRecentFile(fn);
+	/////////////////////////////////////////////////
+	//Extra Features: Auto Save and Recovery
+	//remove autosaved document.
+	QString	autoSaveFileName= getName()+"~";
+	QFile::remove(autoSaveFileName);
+	/////////////////////////////////////////////////
+	//Extra Features: Location Commands : open file location
+	currentEditorView()->editor->document()->setMetaInformation(QTextDocument::DocumentUrl, fn);
+	commandToolBar->setEnabled(true);
+	/////////////////////////////////////////////////
 	}
 UpdateCaption();
 }
@@ -2830,13 +2903,31 @@ if (action)
 
 void Texmaker::AddRecentFile(const QString &f)
 {
-if (recentFilesList.contains(f)) return;
-
-if (recentFilesList.count() < 10) recentFilesList.prepend(f);
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+/***********************************
+BUG:Recent Files repeated items:
+For example:
+In Windows OS opened documents
+with double click use '\\' in their
+path-name and when drag&drop path-name
+uses Qt default, i.e. '/' 
+**************************************/
+QString nativeFileName = QDir::toNativeSeparators(f);
+///////////////////////////////
+//Extra Features: The last opened document will be first item in Recent File Menu.
+if (recentFilesList.contains(nativeFileName))
+	{
+	recentFilesList.move(recentFilesList.indexOf(nativeFileName), 0);
+	UpdateRecentFile();
+	return;
+	}
+/////////////////////////////////////////////////
+if (recentFilesList.count() < 10) recentFilesList.prepend(nativeFileName);
 else
 	{
 	recentFilesList.removeLast();
-	recentFilesList.prepend(f);
+	recentFilesList.prepend(nativeFileName);
 	}
 UpdateRecentFile();
 }
@@ -3505,7 +3596,23 @@ if( !favoriteSymbolSettings.isEmpty())
 colorMath=config->value("Color/Math",QColor(0x00,0x80, 0x00)).value<QColor>();
 colorCommand=config->value("Color/Command",QColor(0x80, 0x00, 0x00)).value<QColor>();
 colorKeyword=config->value("Color/Keyword",QColor(0x00, 0x00, 0xCC)).value<QColor>();
-
+/////////////////////////////////////////////////
+//Extra Features: Auto Save and Recovery
+autoSaveFlag=config->value("Editor/Auto Save",true).toBool();
+autoSaveInterval=config->value( "Editor/Auto Save Interval",10).toInt();
+recoveredFiles.clear();
+if (config->contains("Editor/RecoveredFile/0"))
+	{
+	config->beginGroup("Editor/RecoveredFile");
+	recoveredFiles=config->allKeys();
+	int RecoveredFileCount=recoveredFiles.size();
+	for (int i=0; i<RecoveredFileCount; ++i)
+		{
+		recoveredFiles[i]=config->value(recoveredFiles.at(i), "0").toString();
+		}
+	config->endGroup();
+	}
+/////////////////////////////////////////////////
 config->endGroup();
 }
 
@@ -3670,6 +3777,13 @@ config.setValue("Color/Math",colorMath);
 config.setValue("Color/Command",colorCommand);
 config.setValue("Color/Keyword",colorKeyword);
 
+/////////////////////////////////////////////////
+//Extra Features: Auto Save and Recovery
+config.setValue("Editor/Auto Save",autoSaveFlag);
+config.setValue("Editor/Auto Save Interval",autoSaveInterval);
+if (config.contains("Editor/RecoveredFile/0"))
+	config.remove("Editor/RecoveredFile");//because texmaker is closed in a safe form it doesn't need to keep filenames!
+/////////////////////////////////////////////////
 
 config.endGroup();
 }
@@ -4207,7 +4321,10 @@ if (item)
 		if (pdfviewerWidget->pdf_file!=fic.absolutePath()+"/"+basename+".pdf") pdfviewerWidget->openFile(fic.absolutePath()+"/"+basename+".pdf",viewpdf_command,ghostscript_command);
 		StackedViewers->setCurrentWidget(pdfviewerWidget);
 		pdfviewerWidget->show();
-		if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWidget->jumpToPdfFromSource(finame,structure.at(index).cursor.block().blockNumber()+1);
+		if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+			(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+			(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+			pdfviewerWidget->jumpToPdfFromSource(finame,structure.at(index).cursor.block().blockNumber()+1);
 		}
 	      }
 	  }
@@ -5468,7 +5585,10 @@ if (builtinpdfview && (comd==viewpdf_command))
 	StackedViewers->setCurrentWidget(pdfviewerWidget);
 	//pdfviewerWidget->raise();
 	pdfviewerWidget->show();
-	if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWidget->jumpToPdfFromSource(getName(),currentline);
+	if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWidget->jumpToPdfFromSource(getName(),currentline);
 	}
       else
 	{
@@ -5483,7 +5603,10 @@ if (builtinpdfview && (comd==viewpdf_command))
 	//pdfviewerWidget->raise();
 	pdfviewerWidget->show();
 	pdfviewerWidget->openFile(fi.absolutePath()+"/"+basename+".pdf",viewpdf_command,ghostscript_command);
-	if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWidget->jumpToPdfFromSource(getName(),currentline);
+	if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWidget->jumpToPdfFromSource(getName(),currentline);
 	}
       return;
       }
@@ -5494,7 +5617,10 @@ if (builtinpdfview && (comd==viewpdf_command))
       pdfviewerWindow->openFile(fi.absolutePath()+"/"+basename+".pdf",viewpdf_command,ghostscript_command);
       pdfviewerWindow->raise();
       pdfviewerWindow->show();
-      if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWindow->jumpToPdfFromSource(getName(),currentline);
+	  if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWindow->jumpToPdfFromSource(getName(),currentline);
       }
     else
       {
@@ -5505,7 +5631,10 @@ if (builtinpdfview && (comd==viewpdf_command))
       connect(pdfviewerWindow, SIGNAL(sendPaperSize(const QString&)), this, SLOT(setPrintPaperSize(const QString&)));
       pdfviewerWindow->raise();
       pdfviewerWindow->show();
-      if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWindow->jumpToPdfFromSource(getName(),currentline);
+	  if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWindow->jumpToPdfFromSource(getName(),currentline);
       }
     return;     
     }
@@ -5535,8 +5664,19 @@ proc->setProcessEnvironment(env);
 #ifdef Q_WS_WIN
 #if (QT_VERSION >= 0x0406)
 QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-QFileInfo figs(ghostscript_command);
-env.insert("PATH", env.value("PATH") + ":"+figs.absolutePath());
+
+//bug: QFile and QFileInfo don't support filenames including '"'! 
+QString tmp = ghostscript_command;
+tmp.remove("\"");
+QFileInfo figs(tmp);
+
+//bug: When file doesn't exist the behavior of QFileInfo::absolutePath() is  undefined! 
+if (figs.exists())
+	tmp = figs.absolutePath();
+else
+	tmp = "";
+
+env.insert("PATH", env.value("PATH") + ";"+ tmp);
 proc->setProcessEnvironment(env);
 #endif
 #endif
@@ -5581,7 +5721,8 @@ if (waitendprocess)
 	QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 	while (!FINPROCESS) 
 		{
-		qApp->instance()->processEvents(QEventLoop::AllEvents);
+		//bug: Consuming huge CPU resources is resolved by OR-ing QEventLoop::WaitForMoreEvents
+		qApp->instance()->processEvents(QEventLoop::AllEvents|QEventLoop::WaitForMoreEvents);
 		if (STOPPROCESS && proc && proc->state()==QProcess::Running) 
 		  {
 		  proc->kill();
@@ -6233,7 +6374,11 @@ if (embedinternalpdf)
       StackedViewers->setCurrentWidget(pdfviewerWidget);
       //pdfviewerWidget->raise();
       pdfviewerWidget->show();
-      if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWidget->jumpToPdfFromSource(finame,line);
+
+	  if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWidget->jumpToPdfFromSource(finame,line);
       pdfviewerWidget->getFocus();
       }
     else
@@ -6249,7 +6394,11 @@ if (embedinternalpdf)
       //pdfviewerWidget->raise();
       pdfviewerWidget->show();
       pdfviewerWidget->openFile(fi.absolutePath()+"/"+basename+".pdf",viewpdf_command,ghostscript_command);
-      if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWidget->jumpToPdfFromSource(finame,line);
+
+	  if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWidget->jumpToPdfFromSource(finame,line);
       pdfviewerWidget->getFocus();
       }
     }
@@ -6260,7 +6409,11 @@ else
       if (pdfviewerWindow->pdf_file!=fi.absolutePath()+"/"+basename+".pdf") pdfviewerWindow->openFile(fi.absolutePath()+"/"+basename+".pdf",viewpdf_command,ghostscript_command);
       pdfviewerWindow->raise();
       pdfviewerWindow->show();
-      if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWindow->jumpToPdfFromSource(finame,line);
+
+	  if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWindow->jumpToPdfFromSource(finame,line);
       }
     else
       {
@@ -6271,7 +6424,11 @@ else
       connect(pdfviewerWindow, SIGNAL(sendPaperSize(const QString&)), this, SLOT(setPrintPaperSize(const QString&)));
       pdfviewerWindow->raise();
       pdfviewerWindow->show();
-      if ( (pdflatex_command.contains("synctex=1")) || (latex_command.contains("synctex=1")) ) pdfviewerWindow->jumpToPdfFromSource(finame,line);
+
+	  if ( ( quickmode==6 && (userquick_command.contains("synctex=1") || userquick_command.contains("synctex=-1") )) ||
+		(pdflatex_command.contains("synctex=1"))  || (latex_command.contains("synctex=1")) ||
+		(pdflatex_command.contains("synctex=-1")) || (latex_command.contains("synctex=-1")) )
+		pdfviewerWindow->jumpToPdfFromSource(finame,line);
       }  
     }
 }
@@ -6324,6 +6481,9 @@ if (fic.exists() && fic.isReadable() )
 	if ( f.open(QIODevice::ReadOnly) )
 		{
 		QTextStream t( &f );
+		//For UTF-8 TeX document, Log file is in UTF-8 encoding!
+		if (currentEditorView() && currentEditorView()->editor->getEncoding()=="UTF-8")
+			t.setCodec(QTextCodec::codecForName("UTF-8"));
 //		OutputTextEdit->setPlainText( t.readAll() );
 		while ( !t.atEnd() )
 			{
@@ -6952,6 +7112,19 @@ for( its = shortcuts.begin(); its != shortcuts.end(); ++its )
 confDlg->ui.shorttableWidget->horizontalHeader()->resizeSection( 0, 250 );
 confDlg->ui.shorttableWidget->verticalHeader()->hide();
 
+/////////////////////////////////////////////////
+//Extra Features: Auto Save and Recovery
+if (autoSaveFlag)
+    {
+    confDlg->ui.groupBoxAutoSave->setChecked(true);
+    }
+else
+    {
+    confDlg->ui.groupBoxAutoSave->setChecked(false);
+    }
+confDlg->ui.spinBoxAutoSaveInterval->setValue(autoSaveInterval);
+//////////////////////////////////////////////////////////////////
+
 if (confDlg->exec())
 	{
 	listViewerCommands.clear();
@@ -6964,6 +7137,19 @@ if (confDlg->exec())
 		shortcuts.insert(itemdata,itemshortcut);
 	}
 	ModifyShortcuts();
+
+	/////////////////////////////////////////////////
+	//Extra Features: Auto Save and Recovery
+	killTimer(autoSaveTimer->timerId());
+	autoSaveFlag=confDlg->ui.groupBoxAutoSave->isChecked();
+	disconnect(autoSaveTimer, SIGNAL(timeout()), this, SLOT(autoSaveDocs()));
+	if (autoSaveFlag)
+	    {
+	    autoSaveInterval=confDlg->ui.spinBoxAutoSaveInterval->value();
+	    connect(autoSaveTimer, SIGNAL(timeout()), this, SLOT(autoSaveDocs()));
+	    autoSaveTimer->start(autoSaveInterval*60000);
+	    }
+	/////////////////////////////////////////////////
 
 	if (confDlg->ui.radioButton1->isChecked()) quickmode=1;
 	if (confDlg->ui.radioButton2->isChecked()) quickmode=2;
@@ -7668,3 +7854,112 @@ if ( ucDlg->exec() )
 	}
 }
 
+/////////////////////////////////
+//added by S. R. Alavizadeh
+//Extra Features: Auto Save and Recovery
+void Texmaker::autoSaveDocs()
+{
+if (currentEditorView())
+	{
+    LatexEditorView *temp = new LatexEditorView( EditorView,EditorFont,showline,colorMath,colorCommand,colorKeyword,inlinespellcheck,spell_ignored_words,spellChecker);
+    temp=currentEditorView();
+    FilesMap::Iterator it;
+    int i=1;
+
+#ifdef USB_VERSION
+	QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmaker.ini",QSettings::IniFormat); //for USB-stick version :
+#else
+	QSettings *config=new QSettings(QSettings::IniFormat,QSettings::UserScope,"xm1","texmaker");
+#endif
+
+	config->beginGroup( "texmaker" );
+	if (config->contains("Editor/RecoveredFile/0"))
+		config->remove("Editor/RecoveredFile");//clean old file list
+
+	config->setValue("Editor/RecoveredFile/0", "0");//just a flag
+
+    for( it = filenames.begin(); it != filenames.end(); ++it )
+		{
+	    EditorView->setCurrentIndex(EditorView->indexOf(it.key()));
+	    if (!currentEditorView()->editor->document()->isModified())  continue;
+	    QString curFileName, autoSaveFileName;
+		QString getNameUnixName=getName().replace(QChar('\\'), QChar('/'));
+
+		if (getName().endsWith("~")) continue;
+		
+		if (!getName().startsWith("untitled") )
+			{
+			curFileName = getNameUnixName.right( getNameUnixName.size()-getNameUnixName.lastIndexOf(QChar('/'))-1 );
+			curFileName=curFileName+"~";
+			autoSaveFileName= getNameUnixName.left( getNameUnixName.lastIndexOf(QChar('/'))+1 )+curFileName;
+			}
+	    else
+			{
+			curFileName = getName();
+			curFileName = curFileName+".tex~";
+			autoSaveFileName=QDir::tempPath()+"/"+curFileName;
+			}
+	    QFile autoSaveFile( autoSaveFileName );
+	    if ( !autoSaveFile.open( QIODevice::WriteOnly ) )
+			{
+			continue;
+			}
+	    QTextStream ts( &autoSaveFile );
+	    QTextCodec* codec = QTextCodec::codecForName(currentEditorView()->editor->getEncoding().toLatin1());
+	    ts.setCodec(codec ? codec : QTextCodec::codecForLocale());
+	    ts << currentEditorView()->editor->toPlainText();
+		autoSaveFile.close();
+		config->setValue("Editor/RecoveredFile/"+QString::number(i), autoSaveFileName);
+#if defined(Q_WS_WIN)
+		//This part of code sets the hidden flag of file to true.
+		autoSaveFileName.replace(QChar('/'), QChar('\\'));
+		autoSaveFileName="\\\\?\\"+autoSaveFileName;
+		const ushort *winFileName=autoSaveFileName.utf16();
+		DWORD dwAttrs= GetFileAttributes(winFileName);
+		if (dwAttrs==INVALID_FILE_ATTRIBUTES) continue;
+		 if (!(dwAttrs & FILE_ATTRIBUTE_HIDDEN))
+			{
+			SetFileAttributes(winFileName, dwAttrs | FILE_ATTRIBUTE_HIDDEN); 
+			}
+#endif
+	    ++i;
+		}
+	config->endGroup();
+    EditorView->setCurrentIndex(EditorView->indexOf(temp));
+    UpdateCaption();
+    currentEditorView()->editor->setFocus();
+	}
+}
+
+///////////////////////
+//Extra Features: Location Commands
+void Texmaker::locationCommand()
+{
+if (!currentEditorView())	return;
+QAction *action = qobject_cast<QAction *>(sender());
+QString docLocation=currentEditorView()->editor->document()->metaInformation(QTextDocument::DocumentUrl);
+if (docLocation.isEmpty()) return;
+
+QString commandName = action->text();
+docLocation.replace(QChar('\\'), QChar('/'));
+if (commandName=="CMD Here")
+	{
+	QString curDir = QDir::toNativeSeparators(docLocation.left( docLocation.lastIndexOf(QChar('/')) ));
+	QProcess process;
+#if defined(Q_WS_WIN)
+	process.startDetached("cmd", QStringList()<< "/k" << "cd" << curDir << "&" << curDir.left(2) );
+#endif
+#if defined( Q_WS_X11 )
+	if (!process.startDetached("gnome-terminal --working-directory=\""+curDir+"\""))
+		if (!process.startDetached("konsole --workdir \""+curDir+"\""))
+			process.startDetached("xterm -lc -u8 -e \"cd \'"+curDir+"\' && /bin/bash\"");
+#endif
+//TODO: Start Terminal from a predefined directory on MAC OS X!!!
+	}
+	else if (commandName=="Open File Location")
+		{
+		QUrl docUrl("file:///"+docLocation.left( docLocation.lastIndexOf(QChar('/')) ));
+		QDesktopServices::openUrl(docUrl);
+		}
+}
+/////////////////////////////////////////////////
