@@ -22,6 +22,12 @@
 //#include "latexeditor.h"
 #include "hunspell/hunspell.hxx"
 
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+#include "qbidiextender2.h"
+/////////////////////////////////////////////////
+
 class QTextDocument;
 class LatexEditor;
 

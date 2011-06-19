@@ -15,12 +15,17 @@
 #include "texmakerapp.h"
 #include <QStringList>
 
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Extra Feature: easy portable
+bool isPortable;
+/////////////////////////////////////////////////
 
 int main( int argc, char ** argv )
 {
 TexmakerApp app("TexMaker", argc, argv ); // This is a dummy constructor so that the programs loads fast.
 
-QStringList args = QCoreApplication::arguments();//add by S. R. Alavizadeh
+QStringList args = QCoreApplication::arguments();
 //for ( int i=0; i < argc; i++) args += QString::fromLocal8Bit(argv[i]);
 
 if ( app.isRunning() ) 

@@ -57,7 +57,7 @@
 //Extra Features: Auto Save and Recovery
 //This header is just for create HIDDEN recovery file.
 #ifdef Q_WS_WIN
-#include "windows.h"
+//#include "windows.h"//"C:/Qt/qtcreator-2.0.0/mingw/include/windows.h"
 #endif
 //////////////////////
 
@@ -414,6 +414,9 @@ void autoSaveDocs();
 ///////////////////////
 //Extra Features: Location Commands
 void locationCommand();
+///////////////////////
+//Extra Features: FarsiTeX Import (for Persian users)
+void ftx2Unicode();
 /////////////////////////////////////////////////
 
 protected:
@@ -423,7 +426,10 @@ virtual void changeEvent(QEvent *e);
 
 signals:
 void windowActivated();
-    
+
+private slots:
+	void currentTabChanged();
+	void doQueuededSteps();
 };
 
 #endif

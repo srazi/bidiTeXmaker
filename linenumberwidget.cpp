@@ -12,7 +12,7 @@
 #include "linenumberwidget.h"
 #include <QTextDocument>
 #include <QTextCursor>
-#include <QPlainTextEdit>
+#include <QTextEdit>/*QPlainTextEdit*/
 #include <QTextBlock>
 #include "blockdata.h"
 
@@ -68,8 +68,39 @@ int rmax=-1;
 int realmin=-1;
 int top;
 int delta;
+
+int yOffset = m_editor->verticalScrollBar()->value();
+
 while ( p.isValid()) 
-	{
+{
+//Version 2.0.1
+QPointF point = p.layout()->position();
+	if ( point.y() + 20 - yOffset < 0 ) 
+		{
+		i++;
+		p = p.next();
+		continue;
+		}		
+	if ( (int)(point.y()) - yOffset > height() ) break;
+	for (int j = 0; j < 3; ++j)
+		{
+		if (m_editor->UserBookmark[j]==i) 
+ 			{
+			const QBrush brush(QColor("#1B8EA6"));
+			painter.fillRect(2, (int)(point.y()) - yOffset,fm.width("0")+6,fm.lineSpacing(), brush);
+			const QPen pen(QColor("#FFFFFF"));
+			painter.setPen(pen);
+			painter.drawText(4, (int)(point.y()) - yOffset,width()-4,fm.lineSpacing(),Qt::AlignLeft | Qt::AlignTop,QString::number(j+1));
+ 			}
+		}
+	painter.setPen(oldpen);
+	numtext=QString::number(i);
+	painter.drawText(0, (int)(point.y()) - yOffset,width()-4,fm.lineSpacing(),Qt::AlignRight | Qt::AlignTop,numtext);
+	l= fm.width(numtext)+18+fm.width("0");
+	if (l>max) max=l;
+	i++;
+	p = p.next();
+/* //Version 3.0.2 QPlainTextEdit
 	if (p.isVisible()) top = (int) m_editor->blockGeometry(p).top();
 	np=p.next();
 	if ( np.isValid() && np.isVisible()) delta= (int) m_editor->blockGeometry(np).top()-top;
@@ -123,11 +154,11 @@ while ( p.isValid())
 	  painter.setPen(rangepen);
 	  }
 	p = p.next();
-	i++;
+	i++;*/
 	}
 if (i>=10000) setFixedWidth(max);	
 //const QBrush rangebrush(QColor("#FF8000"));
-
+/*
 painter.setPen(rangepen);
 if ((rmin>=0) && (rmax>=0)) 
     {
@@ -164,7 +195,7 @@ if ((rmin>=0) && (rmax>=0))
       //painter.drawLine(width()-6,rmin,width()-6,qMin(rmax,height()));
       
     }
-    }
+    }*/
 painter.end();
 }
 
