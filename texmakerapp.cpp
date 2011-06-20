@@ -112,21 +112,59 @@ return QApplication::event(event);
 
 void TexmakerApp::ReadSettings()
 {
-#ifdef USB_VERSION
-QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmakerapp.ini",QSettings::IniFormat); //for USB-stick version
-#else
-QSettings *config=new QSettings(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerapp");
-#endif
+///////////////////////////////////////
+QFileInfo texmakerini(QCoreApplication::applicationDirPath()+"/settings/texmaker.ini");
+if (texmakerini.exists() && texmakerini.isWritable())
+	isPortable = true;
+else
+	isPortable = false;
+
+QString organization = "xm1";
+QSettings::Format settingsFormat = QSettings::IniFormat;
+if (isPortable)
+	{
+	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
+	organization = "settings";
+	}
+QSettings *config = new QSettings(settingsFormat,QSettings::UserScope, organization, "texmakerapp");
+///////////////////////////////////////
+
+//#ifdef USB_VERSION
+//QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmakerapp.ini",QSettings::IniFormat); //for USB-stick version
+//#else
+//QSettings *config=new QSettings(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerapp");
+//#endif
 
 language=config->value("Language",QString(QLocale::system().name())).toString();
 }
 
 void TexmakerApp::SaveSettings()
 {
-#ifdef USB_VERSION
-QSettings config(QCoreApplication::applicationDirPath()+"/texmakerapp.ini",QSettings::IniFormat); //for USB-stick version 
-#else
-QSettings config(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerapp");
-#endif
+///////////////////////////////////////
+//maybe ReadSettings has not called
+QFileInfo texmakerini(QCoreApplication::applicationDirPath()+"/settings/texmaker.ini");
+if (texmakerini.exists() && texmakerini.isWritable())
+	isPortable = true;
+else
+	isPortable = false;
+
+QString organization = "xm1";
+QSettings::Format settingsFormat = QSettings::IniFormat;
+if (isPortable)
+	{
+	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
+	organization = "settings";
+	}
+QCoreApplication::setApplicationName("texmakerapp");
+QCoreApplication::setOrganizationName(organization);
+QSettings::setDefaultFormat(settingsFormat);
+QSettings config;
+///////////////////////////////////////
+
+//#ifdef USB_VERSION
+//QSettings config(QCoreApplication::applicationDirPath()+"/texmakerapp.ini",QSettings::IniFormat); //for USB-stick version 
+//#else
+//QSettings config(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerapp");
+//#endif
 config.setValue( "Language",language);
 }
