@@ -592,6 +592,7 @@ INCLUDEPATH += D:/Z[Work]/QBiDiExtender2/
 	# Debug{
 	# LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
 	# }
+RESOURCES += D:/Z[Work]/QBiDiExtender2/qbidiextender2.qrc
 }
 unix:!macx {
 HEADERS	+= /media/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.h \
@@ -607,6 +608,7 @@ INCLUDEPATH += /media/DATA1/Z[Work]/QBiDiExtender2
 #Debug{
 	#LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
 #}
+RESOURCES += /media/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.qrc
 }
 macx {
 HEADERS	+= /Volume/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.h
@@ -620,4 +622,5 @@ INCLUDEPATH += /Users/srazi/Document/bidiTexmaker2_build/
 #Debug{
 	#LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
 #}
+RESOURCES += /Volume/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.qrc
 }

@@ -121,7 +121,9 @@ untitled_id=1;
 //#else
 //setWindowIcon(QIcon(":/images/appicon.png"));
 //#endif
-setWindowIcon(QIcon(":/images/Texmaker-BiDi.png"));
+QPixmap texmakerLogo(":/images/logo128.png");
+QBiDiExtender::stampedBiDiLogoToImage(&texmakerLogo);
+setWindowIcon(QIcon(texmakerLogo));
 
 setIconSize(QSize(22,22 ));
  
@@ -582,7 +584,7 @@ splitter1->setSizes( sizes );
 //creates primary BiDi instance
 if (QBiDiExtender::bidiEnabled)
 	{
-	LatexEditor::BiDiBase= new QBiDiInitializer(EditorView, ":/images/BiDi-Logo.png");
+	LatexEditor::BiDiBase= new QBiDiInitializer(EditorView);
 	connect(EditorView, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged()));
 	connect(LatexEditor::BiDiBase, SIGNAL(doStoppedThings()), this, SLOT(doQueuededSteps()));
 	}
@@ -7439,7 +7441,7 @@ if (confDlg->exec())
 		if (QBiDiExtender::bidiEnabled)
 			{
 			if (!LatexEditor::BiDiBase)
-				LatexEditor::BiDiBase = new QBiDiInitializer(EditorView, ":/images/BiDi-Logo.png");
+				LatexEditor::BiDiBase = new QBiDiInitializer(EditorView);
 			}
 		else
 			{
