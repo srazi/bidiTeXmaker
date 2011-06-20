@@ -21,6 +21,13 @@
 #include <QTimer>
 #include "poppler-qt4.h"
 
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Extra Feature: easy portable
+extern bool isPortable;
+/////////////////////////////////////////////////
+
 class PdfDocumentWidget : public QLabel
 {
     Q_OBJECT

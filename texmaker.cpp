@@ -2008,6 +2008,14 @@ else
 	title="Document : "+getName();
 	//input_encoding=currentEditorView()->editor->getEncoding();
 	}
+
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Extra Feature: easy portable
+if (isPortable)
+	title.prepend(tr("[Portable Mode] "));
+/////////////////////////////////////////////////
+
 setWindowTitle(title);
 UpdateStructure();
 if (singlemode)
@@ -3348,12 +3356,23 @@ OutputTextEdit->insertLine("Use the Tab key to reach the next "+QString(0x2022)+
 /////////////// CONFIG ////////////////////
 void Texmaker::ReadSettings()
 {
-#ifdef USB_VERSION
-QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmaker.ini",QSettings::IniFormat); //for USB-stick version :
-#else
-QSettings *config=new QSettings(QSettings::IniFormat,QSettings::UserScope,"xm1","texmaker");
-#endif
-if (!config->contains("IniMode")) 
+///////////////////////////////////////
+QString organization = "xm1";
+QSettings::Format settingsFormat = QSettings::IniFormat;
+if (isPortable)
+	{
+	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
+	organization = "settings";
+	}
+QSettings *config = new QSettings(settingsFormat, QSettings::UserScope, organization, "texmaker");
+///////////////////////////////////////
+
+//#ifdef USB_VERSION
+//QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmaker.ini",QSettings::IniFormat); //for USB-stick version :
+//#else
+//QSettings *config=new QSettings(QSettings::NativeFormat /*QSettings::IniFormat*/,QSettings::UserScope,"xm1","texmaker");
+//#endif
+if (!config->contains("IniMode") && !isPortable) 
 	{
 	delete config;
 	config=new QSettings("xm1","texmaker");
@@ -3768,11 +3787,25 @@ config->endGroup();
 
 void Texmaker::SaveSettings()
 {
-#ifdef USB_VERSION
-QSettings config(QCoreApplication::applicationDirPath()+"/texmaker.ini",QSettings::IniFormat); //for USB-stick version 
-#else
-QSettings config(QSettings::IniFormat,QSettings::UserScope,"xm1","texmaker");
-#endif
+///////////////////////////////////////
+QString organization = "xm1";
+QSettings::Format settingsFormat = QSettings::IniFormat;
+if (isPortable)
+	{
+	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
+	organization = "settings";
+	}
+QCoreApplication::setApplicationName("texmaker");
+QCoreApplication::setOrganizationName(organization);
+QSettings::setDefaultFormat(settingsFormat);
+QSettings config;
+///////////////////////////////////////
+
+//#ifdef USB_VERSION
+//QSettings config(QCoreApplication::applicationDirPath()+"/texmaker.ini",QSettings::IniFormat); //for USB-stick version 
+//#else
+//QSettings config(QSettings::NativeFormat /*QSettings::IniFormat*/,QSettings::UserScope,"xm1","texmaker");
+//#endif
 
 config.setValue( "IniMode",true);
 config.beginGroup( "texmaker" );
@@ -8177,11 +8210,22 @@ if (currentEditorView())
     FilesMap::Iterator it;
     int i=1;
 
-#ifdef USB_VERSION
-	QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmaker.ini",QSettings::IniFormat); //for USB-stick version :
-#else
-	QSettings *config=new QSettings(QSettings::IniFormat,QSettings::UserScope,"xm1","texmaker");
-#endif
+	///////////////////////////////////////
+	QString organization = "xm1";
+	QSettings::Format settingsFormat = QSettings::IniFormat;
+	if (isPortable)
+		{
+		QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
+		organization = "settings";
+		}
+	QSettings *config = new QSettings(settingsFormat, QSettings::UserScope, organization, "texmaker");
+	///////////////////////////////////////
+
+	//#ifdef USB_VERSION
+	//	QSettings config(QCoreApplication::applicationDirPath()+"/texmaker.ini",QSettings::IniFormat); //for USB-stick version 
+	//#else
+	//	QSettings config(QSettings::NativeFormat /*QSettings::IniFormat*/,QSettings::UserScope,"xm1","texmaker");
+	//#endif
 
 	config->beginGroup( "texmaker" );
 	if (config->contains("Editor/RecoveredFile/0"))

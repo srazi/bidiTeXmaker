@@ -39,11 +39,22 @@ setWindowIcon(QIcon(":/images/logo128.png"));
 setWindowIcon(QIcon(":/images/appicon.png"));
 #endif
 
-#ifdef USB_VERSION
-QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmakerpdfview.ini",QSettings::IniFormat); //for USB-stick version :
-#else
-QSettings *config=new QSettings(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerpdfview");
-#endif
+///////////////////////////////////////
+QString organization = "xm1";
+QSettings::Format settingsFormat = QSettings::IniFormat;
+if (isPortable)
+	{
+	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
+	organization = "settings";
+	}
+QSettings *config = new QSettings(settingsFormat, QSettings::UserScope, organization, "texmakerpdfview");
+///////////////////////////////////////
+
+//#ifdef USB_VERSION
+//QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmakerpdfview.ini",QSettings::IniFormat); //for USB-stick version :
+//#else
+//QSettings *config=new QSettings(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerpdfview");
+//#endif
 config->beginGroup( "pdfviewer" );
 QRect screen = QApplication::desktop()->screenGeometry();
 int w= config->value( "Geometries/MainwindowWidth",screen.width()/2).toInt();
@@ -264,11 +275,25 @@ if (proc && proc->state()==QProcess::Running)
 
 void PdfViewer::closeEvent(QCloseEvent *e)
 {
-#ifdef USB_VERSION
-QSettings config(QCoreApplication::applicationDirPath()+"/texmakerpdfview.ini",QSettings::IniFormat); //for USB-stick version 
-#else
-QSettings config(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerpdfview");
-#endif
+///////////////////////////////////////
+QString organization = "xm1";
+QSettings::Format settingsFormat = QSettings::IniFormat;
+if (isPortable)
+	{
+	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
+	organization = "settings";
+	}
+QCoreApplication::setApplicationName("texmakerpdfview");
+QCoreApplication::setOrganizationName(organization);
+QSettings::setDefaultFormat(settingsFormat);
+QSettings config;
+///////////////////////////////////////
+
+//#ifdef USB_VERSION
+//QSettings config(QCoreApplication::applicationDirPath()+"/texmakerpdfview.ini",QSettings::IniFormat); //for USB-stick version 
+//#else
+//QSettings config(QSettings::IniFormat,QSettings::UserScope,"xm1","texmakerpdfview");
+//#endif
 config.beginGroup( "pdfviewer" );
 config.setValue("MainWindowState",saveState(0));
 config.setValue("Geometries/MainwindowWidth", width() );
