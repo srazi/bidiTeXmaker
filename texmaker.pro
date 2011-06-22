@@ -1,12 +1,14 @@
 TEMPLATE	= app
 LANGUAGE	= C++
-TARGET	 = texmaker
+TARGET	 = bidiTeXmaker
 QT += network \
       xml \
       webkit
 CONFIG	+= qt warn_off
 TEXMAKERVERSION=3.0.2
 DEFINES += TEXMAKERVERSION=\\\"$${TEXMAKERVERSION}\\\"
+bidiTEXMAKERVERSION=3.0.2-3
+DEFINES += bidiTEXMAKERVERSION=\\\"$${bidiTEXMAKERVERSION}\\\"
 DEFINES += HAVE_SPLASH
 ###############################
 HEADERS	+= texmaker.h \
