@@ -430,6 +430,7 @@ void windowActivated();
 private slots:
 	void currentTabChanged();
 	void doQueuededSteps();
+	void loadByInternalViewer(const QString &fileName);
 };
 
 #endif

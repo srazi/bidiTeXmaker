@@ -587,6 +587,7 @@ if (QBiDiExtender::bidiEnabled)
 	LatexEditor::BiDiBase= new QBiDiInitializer(EditorView);
 	connect(EditorView, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged()));
 	connect(LatexEditor::BiDiBase, SIGNAL(doStoppedThings()), this, SLOT(doQueuededSteps()));
+	connect(LatexEditor::BiDiBase, SIGNAL(openApplicationViewer(const QString &)), this, SLOT(loadByInternalViewer(const QString &)));
 	}
 else
 	LatexEditor::BiDiBase=0;
@@ -1746,7 +1747,7 @@ Act = new QAction(QIcon(":/images/help.png"), tr("User Manual"), this);
 connect(Act, SIGNAL(triggered()), this, SLOT(UserManualHelp()));
 helpMenu->addAction(Act);
 helpMenu->addSeparator();
-Act = new QAction(QIcon(":/images/appicon.png"), tr("About Texmaker"), this);
+Act = new QAction(QIcon(":/images/appicon.png"), tr("About Texmaker(bidiTeXmaker)"), this);
 connect(Act, SIGNAL(triggered()), this, SLOT(HelpAbout()));
 helpMenu->addAction(Act);
 
@@ -8405,6 +8406,17 @@ for (int i=0;i<inputFTX.size();++i)
 		This Function configures
 		LatexEditor::BiDiBase for changed Tab
 	****************************/
+void Texmaker::loadByInternalViewer(const QString &fileName)
+{
+QBiDiExtender::applicationViewerLoadIt = true;
+PdfViewer *pdfViewerWindow =new PdfViewer(fileName, viewpdf_command, "", "a4", this);
+//connect(pdfviewerWindow, SIGNAL(openDocAtLine(const QString&, int, bool)), this, SLOT(fileOpenAndGoto(const QString&, int, bool)));
+//connect(pdfviewerWindow, SIGNAL(sendFocusToEditor()), this, SLOT(getFocusToEditor()));
+//connect(pdfviewerWindow, SIGNAL(sendPaperSize(const QString&)), this, SLOT(setPrintPaperSize(const QString&)));
+pdfViewerWindow->raise();
+pdfViewerWindow->show();
+}
+
 void Texmaker::doQueuededSteps()
 {
 UpdateStructure();
