@@ -2766,7 +2766,23 @@ else
 	QTextStream ts( &file );
 	QTextCodec* codec = QTextCodec::codecForName(currentEditorView()->editor->getEncoding().toLatin1());
 	ts.setCodec(codec ? codec : QTextCodec::codecForLocale());
-	ts << currentEditorView()->editor->toPlainText();
+
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		QString tmp = currentEditorView()->editor->toPlainText();
+		//Remove Unicode Control Characters
+		tmp.remove(QChar(LRM)).remove(QChar(RLM)).remove(QChar(LRE)).remove(QChar(RLE)).remove(QChar(PDF));
+		ts << tmp;
+		file.close();
+		if (QBiDiExtender::ptdSupportFlag)
+			currentEditorView()->editor->BiDiForEditor->savePtdFile(*filenames.find( currentEditorView() ), codec);
+		}
+	else	/////////////////////////////////////////////////
+		//just for temp:because of last bug document was saved with some of LRM characters!
+		ts << currentEditorView()->editor->toPlainText().remove(QChar(LRM)).remove(QChar(RLM)).remove(QChar(LRE)).remove(QChar(RLE)).remove(QChar(PDF));
+
+	//ts << currentEditorView()->editor->toPlainText();
 	file.close();
 	currentEditorView()->editor->setLastSavedTime(QDateTime::currentDateTime());
 	currentEditorView()->editor->document()->setModified(false);
