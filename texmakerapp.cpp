@@ -113,22 +113,21 @@ return QApplication::event(event);
 void TexmakerApp::ReadSettings()
 {
 ///////////////////////////////////////
-QFileInfo texmakerini(QCoreApplication::applicationDirPath()+"/settings/texmaker.ini");
-if (texmakerini.exists() && texmakerini.isWritable())
+QFileInfo biditexmakerini(QCoreApplication::applicationDirPath()+"/settings/biditexmaker.ini");
+if (biditexmakerini.exists() && biditexmakerini.isWritable())
 	isPortable = true;
 else
 	isPortable = false;
 
-QString organization = "xm1";
+QString organization = "biditexmaker";
 QSettings::Format settingsFormat = QSettings::IniFormat;
 if (isPortable)
 	{
 	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
 	organization = "settings";
 	}
-QSettings *config = new QSettings(settingsFormat,QSettings::UserScope, organization, "texmakerapp");
+QSettings *config = new QSettings(settingsFormat,QSettings::UserScope, organization, "biditexmakerapp");
 ///////////////////////////////////////
-
 //#ifdef USB_VERSION
 //QSettings *config=new QSettings(QCoreApplication::applicationDirPath()+"/texmakerapp.ini",QSettings::IniFormat); //for USB-stick version
 //#else
@@ -142,25 +141,24 @@ void TexmakerApp::SaveSettings()
 {
 ///////////////////////////////////////
 //maybe ReadSettings has not called
-QFileInfo texmakerini(QCoreApplication::applicationDirPath()+"/settings/texmaker.ini");
-if (texmakerini.exists() && texmakerini.isWritable())
+QFileInfo biditexmakerini(QCoreApplication::applicationDirPath()+"/settings/biditexmaker.ini");
+if (biditexmakerini.exists() && biditexmakerini.isWritable())
 	isPortable = true;
 else
 	isPortable = false;
 
-QString organization = "xm1";
+QString organization = "biditexmaker";
 QSettings::Format settingsFormat = QSettings::IniFormat;
 if (isPortable)
 	{
 	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
 	organization = "settings";
 	}
-QCoreApplication::setApplicationName("texmakerapp");
+QCoreApplication::setApplicationName("biditexmakerapp");
 QCoreApplication::setOrganizationName(organization);
 QSettings::setDefaultFormat(settingsFormat);
 QSettings config;
 ///////////////////////////////////////
-
 //#ifdef USB_VERSION
 //QSettings config(QCoreApplication::applicationDirPath()+"/texmakerapp.ini",QSettings::IniFormat); //for USB-stick version 
 //#else

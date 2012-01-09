@@ -38,6 +38,7 @@
 #include <QTableWidget>
 #include <QTranslator>
 #include <QToolButton>
+#include <QTimer>
 
 #include "latexeditorview.h"
 #include "minisplitter.h"
@@ -45,21 +46,18 @@
 #include "symbollistwidget.h"
 #include "xmltagslistwidget.h"
 #include "logeditor.h"
-#include "gotolinedialog.h"
-#include "replacedialog.h"
 #include "hunspell/hunspell.hxx"
 #include "browser.h"
 #include "pdfviewerwidget.h"
 #include "pdfviewer.h"
+#include "sourceview.h"
 #include "encodingprober/qencodingprober.h"
 
-//////////////////////
-//Extra Features: Auto Save and Recovery
-//This header is just for create HIDDEN recovery file.
-#ifdef Q_WS_WIN
-//#include "windows.h"//"C:/Qt/qtcreator-2.0.0/mingw/include/windows.h"
-#endif
-//////////////////////
+////DDE Support
+//#ifdef Q_WS_WIN
+//#include "windows.h"
+//#include "winuser.h"
+//#endif
 
 typedef  QMap<LatexEditorView*, QString> FilesMap;
 typedef  QMap<QString,QString> KeysMap;
@@ -102,8 +100,8 @@ KeysMap shortcuts, actionstext;
 //gui
 QFrame *LeftPanelFrameBis, *Outputframe;
 MiniSplitter *splitter1, *splitter2 ;
-PlayerButton *toggleStructureButton, *toggleLogButton, *togglePdfButton; 
-bool embedinternalpdf;
+PlayerButton *toggleStructureButton, *toggleLogButton, *togglePdfButton, *toggleSourceButton; 
+bool embedinternalpdf,winmaximized;
 
 QStackedWidget *EditorView;
 QStackedWidget *StackedViewers;
@@ -128,33 +126,37 @@ QMenu *optionsMenu, *translationMenu, *appearanceMenu;
 QMenu *helpMenu;
 
 QToolBar *fileToolBar, *editToolBar, *runToolBar, *formatToolBar, *logToolBar, *LeftPanelToolBar,*LeftPanelToolBarBis, *centralToolBar, *centralToolBarBis;
-QAction *recentFileActs[10], *ToggleAct, *StopAct, *UndoAct, *RedoAct, *SaveAct, *CutAct, *CopyAct,*PasteAct, *ToggleDocAct, *ViewStructurePanelAct, *ViewLogPanelAct, *ViewPdfPanelAct, *FullScreenAct ;
+QAction *recentFileActs[10], *ToggleAct, *StopAct, *UndoAct, *RedoAct, *SaveAct, *CutAct, *CopyAct,*PasteAct, *ToggleDocAct, *ViewStructurePanelAct, *ViewLogPanelAct, *ViewPdfPanelAct, *ViewSourcePanelAct, *FullScreenAct ;
 QComboBox *comboCompil, *comboView, *comboFiles;
-QLabel *stat1, *stat3, *titleLeftPanel;
+QLabel *stat1, *stat3, *titleLeftPanel, *posLabel;
 QPushButton *pb1, *pb2, *pb3;
 QString MasterName;
 bool logpresent;
 QStringList recentFilesList, sessionFilesList;
+
+
 //settings
-int split1_right, split1_left, split2_top, split2_bottom, quickmode;
-bool singlemode, wordwrap, parenmatch, showline, showoutputview, showstructview, showpdfview, ams_packages, makeidx_package, completion, inlinespellcheck, modern_style, new_gui, builtinpdfview, singleviewerinstance ;
-QString document_class, typeface_size, paper_size, document_encoding, author;
+int split1_right, split1_left, split2_top, split2_bottom, quickmode, tabwidth;
+bool singlemode, wordwrap, parenmatch, showline, showoutputview, showstructview, showpdfview, showsourceview, ams_packages, makeidx_package, completion, inlinespellcheck, modern_style, new_gui, builtinpdfview, singleviewerinstance, babel_package, geometry_package, graphicx_package, watchfiles, autosave, tabspaces ;
+QString document_class, typeface_size, paper_size, document_encoding, author, geometry_options, babel_default;
 QString latex_command, viewdvi_command, dvips_command, dvipdf_command, metapost_command, psize;
-QString viewps_command, ps2pdf_command, makeindex_command, bibtex_command, pdflatex_command, viewpdf_command, userquick_command, ghostscript_command, asymptote_command, latexmk_command;
+QString viewps_command, ps2pdf_command, makeindex_command, bibtex_command, pdflatex_command, viewpdf_command, userquick_command, ghostscript_command, asymptote_command, latexmk_command, sweave_command;
+///////////////
+//Xindy Make
+QString xindy_makeglossaries_command, xindy_makeindex_command;
+///////////////
 QString spell_dic, spell_ignored_words;
 QString lastDocument, input_encoding, lastChild;
 QString struct_level1, struct_level2, struct_level3, struct_level4, struct_level5;
-QStringList userClassList, userPaperList, userEncodingList, userOptionsList, userCompletionList;
+QStringList userClassList, userPaperList, userEncodingList, userOptionsList, userCompletionList, userBabelList;
 QStringList labelitem, bibitem, listbibfiles, listchildfiles;
 Userlist UserMenuName, UserMenuTag;
 UserCd UserToolName, UserToolCommand;
 //dialogs
-QPointer<ReplaceDialog> replaceDialog;
-QPointer<GotoLineDialog> gotoLineDialog;
 QPointer<Browser> browserWindow;
 QPointer<PdfViewerWidget> pdfviewerWidget;
 QPointer<PdfViewer> pdfviewerWindow;
-
+SourceView* sourceviewerWidget;
 //tools
 QProcess *proc;
 bool FINPROCESS, ERRPROCESS, STOPPROCESS;
@@ -182,16 +184,17 @@ Hunspell * spellChecker;
 bool spelldicExist();
 QStringList translationList;
 QActionGroup *translationGroup, *appearanceGroup;
+QTimer *autosaveTimer;
 
 /////////////////////////////////////////////////
-//Extra Features: Auto Save and Recovery
-QTimer *autoSaveTimer;
-QStringList recoveredFiles;
-int autoSaveInterval;
-bool autoSaveFlag;
-///////////////////////
 //Extra Features: Location Commands
 QToolBar *commandToolBar;
+/////////////////////////////
+//DDE Support
+#ifdef Q_WS_WIN
+unsigned long int pidInst;
+bool executeDDE(QString ddePseudoURL);
+#endif
 /////////////////////////////////////////////////
 
 private slots:
@@ -202,6 +205,7 @@ void fileOpen();
 void checkModifiedOutsideAll();
 void fileSave();
 void fileSaveAll();
+void fileBackupAll();
 void fileSaveAs();
 void fileRestoreSession();
 void fileClose();
@@ -335,11 +339,17 @@ void ViewPDF();
 void CleanAll();
 void MakeBib();
 void MakeIndex();
+/////////////////
+//Xindy Make
+void XindyMakeIndex();
+void XindyMakeGlossaries();
+/////////////////
 void PStoPDF();
 void DVItoPDF();
 void MetaPost();
 void Asymptote();
 void LatexMk();
+void Sweave();
 void AsyFile(QString asyfile);
 void UserTool1();
 void UserTool2();
@@ -385,6 +395,7 @@ void RemoveFavoriteSymbols();
 
 void ModifyShortcuts();
 
+void initCompleter();
 void updateCompleter();
 void updateTranslation();
 void updateAppearance();
@@ -402,21 +413,33 @@ void mainWindowActivated();
 void ToggleStructurePanel();
 void ToggleLogPanel();
 void TogglePdfPanel();
+void ToggleSourcePanel();
 void ShowStructView(bool change);
 void ShowOutputView(bool change);
 void ShowPdfView(bool change);
+void ShowSourceView(bool change);
 void ToggleFullScreen(); 
 void EditUserCompletion();
+void addBibFiles(QString param);
+void addIncludeFiles(QString param);
+void loadIncludeFiles(QString param, QString extension);
+void showCursorPos(int li, int col);
 
 /////////////////////////////////////////////////
-//Extra Features: Auto Save and Recovery
-void autoSaveDocs();
-///////////////////////
 //Extra Features: Location Commands
 void locationCommand();
 ///////////////////////
 //Extra Features: FarsiTeX Import (for Persian users)
 void ftx2Unicode();
+//////////////////
+//Extra Features: Forward Search
+#ifdef Q_WS_WIN
+void SumatraForwardSearch(int line = -1);
+#endif
+///////////////////////
+void currentTabChanged();
+void doQueuededSteps();
+void loadByInternalViewer(const QString &fileName);
 /////////////////////////////////////////////////
 
 protected:
@@ -426,11 +449,7 @@ virtual void changeEvent(QEvent *e);
 
 signals:
 void windowActivated();
-
-private slots:
-	void currentTabChanged();
-	void doQueuededSteps();
-	void loadByInternalViewer(const QString &fileName);
+    
 };
 
 #endif

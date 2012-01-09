@@ -31,9 +31,10 @@
 #include <QScrollBar>
 #include <QTextCodec>
 #include <QFile>
+#include <QInputContext>
 #include "blockdata.h"
 
-LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker) : /*QPlainTextEdit*/QTextEdit(parent),c(0)
+LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces,int tabwidth) : QTextEdit(parent),c(0)
 {
 QPalette p = palette();
 p.setColor(QPalette::Inactive, QPalette::Highlight,p.color(QPalette::Active, QPalette::Highlight));
@@ -46,7 +47,9 @@ setFrameShape(QFrame::NoFrame);
 for (int i = 0; i < 3; ++i) UserBookmark[i]=0;
 encoding="";
 setFont(efont);
-setTabStopWidth(fontMetrics().width("    "));
+tabWidth=tabwidth;
+tabSpaces=tabspaces;
+setTabStopWidth(fontMetrics().width(" ")*tabWidth);
 setTabChangesFocus(false);
 endBlock=-1;
 foldableLines.clear();
@@ -72,6 +75,9 @@ if (wordsfile.open(QFile::ReadOnly))
 
 /////////////////////////////////////////////////
 //added by S. R. Alavizadeh
+//Extra Feature: Forward Search
+ignoreRightClickEvent = false;
+
 //Bi-Di Support
 //creates BiDi instance for editor
 if (QBiDiExtender::bidiEnabled)
@@ -87,6 +93,7 @@ highlighter->setColors(colMath,colCommand,colKeyword);
 //c=0;
 //connect(this, SIGNAL(cursorPositionChanged()), viewport(), SLOT(update()));
 connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(matchAll()));
+connect(this->document(), SIGNAL(blockCountChanged(int)), this, SLOT(requestNewNumLines(int)));
 //connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(matchLat()));
 //grabShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Tab), Qt::WidgetShortcut);
 //setCenterOnScroll(true);
@@ -96,6 +103,7 @@ lastSavedTime=QDateTime::currentDateTime();
 highlightLine=false;
 highlightRemover.setSingleShot(true);
 connect(&highlightRemover, SIGNAL(timeout()), this, SLOT(clearHightLightLine()));
+emit poshaschanged(1,1);
 }
 LatexEditor::~LatexEditor(){
 //delete pChecker;
@@ -122,12 +130,24 @@ else
   painter.fillRect(rect, brush);
   painter.end();
   }
-/*QPlainTextEdit*/QTextEdit::paintEvent(event);
+QTextEdit::paintEvent(event);
 }
 
 void LatexEditor::contextMenuEvent(QContextMenuEvent *e)
 {
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	//Extra Feature: Forward Search
+	if (ignoreRightClickEvent)
+		{
+		ignoreRightClickEvent = false;
+		e->ignore();
+		return;
+		}
+	/////////////////////////////////////////////////
+	
 QMenu *menu=new QMenu(this);
+//menu = createStandardContextMenu();
 QAction *a;
 /*******************************************/
 if (inlinecheckSpelling && pChecker)
@@ -267,10 +287,23 @@ if (endBlock>=0)
   }
 menu->addSeparator();
 a=new QAction(tr("Jump to pdf"),menu);
+#ifdef Q_WS_MACX
+a->setShortcut(Qt::CTRL+Qt::Key_Dollar);
+#else
 a->setShortcut(Qt::CTRL+Qt::Key_Space);
+#endif
 a->setData(QVariant(cursorForPosition(e->pos()).blockNumber() + 1));
 connect(a, SIGNAL(triggered()), this, SLOT(jumpToPdf()));
 menu->addAction(a);
+
+QInputContext *qic = inputContext();
+if (qic) 
+    {
+    QList<QAction *> imActions = qic->actions();
+    for (int i = 0; i < imActions.size(); ++i)
+    menu->addAction(imActions.at(i));
+    }
+
 menu->exec(e->globalPos());
 delete menu;
 }
@@ -359,17 +392,37 @@ bool go=true;
 QTextCursor cur=textCursor();
 if (cur.hasSelection())
 	{
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		disconnect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
 	int start=cur.selectionStart();
 	int end=cur.selectionEnd();
+	cur.beginEditBlock();//new//added by S. R. Alavizadeh
 	cur.setPosition(start,QTextCursor::MoveAnchor);
 	cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::MoveAnchor);
 	while ( cur.position() < end && go)
 		{
+		int tempPos=cur.position()+1;//Bi-Di Support
 		cur.insertText("%");
+		if (QBiDiExtender::bidiEnabled)	cur.setPosition(tempPos, QTextCursor::MoveAnchor);//Bi-Di Support
 		end++;
 		go=cur.movePosition(QTextCursor::NextBlock,QTextCursor::MoveAnchor);
 		}
-      }	
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	cur.endEditBlock();//new
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		connect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
+	}	
 }
 
 void LatexEditor::indentSelection()
@@ -378,16 +431,36 @@ bool go=true;
 QTextCursor cur=textCursor();
 if (cur.hasSelection())
 	{
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		disconnect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
 	int start=cur.selectionStart();
 	int end=cur.selectionEnd();
+	cur.beginEditBlock();//new//added by S. R. Alavizadeh
 	cur.setPosition(start,QTextCursor::MoveAnchor);
 	cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::MoveAnchor);
 	while ( cur.position() < end && go)
 		{
+		int tempPos=cur.position()+1;//Bi-Di Support
 		cur.insertText("\t");
+		if (QBiDiExtender::bidiEnabled)	cur.setPosition(tempPos, QTextCursor::MoveAnchor);//Bi-Di Support
 		end++;
 		go=cur.movePosition(QTextCursor::NextBlock,QTextCursor::MoveAnchor);
 		}
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	cur.endEditBlock();//new
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		connect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
 	}
 }
 
@@ -397,20 +470,51 @@ bool go=true;
 QTextCursor cur=textCursor();
 if (cur.hasSelection())
 	{
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		disconnect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
 	int start=cur.selectionStart();
 	int end=cur.selectionEnd();
+	cur.beginEditBlock();//new//added by S. R. Alavizadeh
 	cur.setPosition(start,QTextCursor::MoveAnchor);
 	cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::MoveAnchor);
 	while ( cur.position() < end && go)
 		{
 		cur.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor);
+		/////////////////////////////////////////////////
+		//Bi-Di Support
+		if (QBiDiExtender::bidiEnabled)
+			{
+			while (cur.selectedText()==QString(QChar(LRM)) && cur.position() <= end)
+				{
+				cur.clearSelection();
+				cur.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor);
+				}
+			}
+		/////////////////////////////////////////////////
 		if (cur.selectedText()=="%") 
 			{
+			int tempPos=cur.anchor();//Bi-Di Support
 			cur.removeSelectedText();
+			if (QBiDiExtender::bidiEnabled)	cur.setPosition(tempPos, QTextCursor::MoveAnchor);//Bi-Di Support
 			end--;
 			}
 		go=cur.movePosition(QTextCursor::NextBlock,QTextCursor::MoveAnchor);
 		}
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	cur.endEditBlock();//new
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		connect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
 	}
 }
 
@@ -420,20 +524,51 @@ bool go=true;
 QTextCursor cur=textCursor();
 if (cur.hasSelection())
 	{
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		disconnect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
 	int start=cur.selectionStart();
 	int end=cur.selectionEnd();
+	cur.beginEditBlock();//new//added by S. R. Alavizadeh
 	cur.setPosition(start,QTextCursor::MoveAnchor);
 	cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::MoveAnchor);
 	while ( cur.position() < end && go)
 		{
 		cur.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor);
+		/////////////////////////////////////////////////
+		//Bi-Di Support
+		if (QBiDiExtender::bidiEnabled)
+			{
+			while (cur.selectedText()==QString(QChar(LRM)) && cur.position() <= end)
+				{
+				cur.clearSelection();
+				cur.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor);
+				}
+			}
+		/////////////////////////////////////////////////
 		if (cur.selectedText()=="\t") 
 			{
+			int tempPos=cur.anchor();//Bi-Di Support
 			cur.removeSelectedText();
+			if (QBiDiExtender::bidiEnabled)	cur.setPosition(tempPos, QTextCursor::MoveAnchor);//Bi-Di Support
 			end--;
 			}
 		go=cur.movePosition(QTextCursor::NextBlock,QTextCursor::MoveAnchor);
 		}
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	cur.endEditBlock();//new
+	//Bi-Di Support
+	if (QBiDiExtender::bidiEnabled)
+		{
+		connect(document(), SIGNAL(contentsChanged()), BiDiForEditor, SLOT(addLRMinTyping()));
+		}
+	/////////////////////////////////////////////////
 	}
 }
 
@@ -612,7 +747,7 @@ if (index >= text.length()) return "";
 int start=index;
 int end=index;
 QChar	ch = text.at(index);
-#define IS_WORD_BACK(ch) (ch.isLetter() || ch.isMark() || ch=='{' || ch=='[')
+#define IS_WORD_BACK(ch) (ch.isLetter() || ch.isMark() || ch=='{' || ch=='[' || ch==':')
 #define IS_WORD_FORWARD(ch) (ch.isLetter() || ch.isMark() )
 bool isControlSeq = false; // becomes true if we include an @ sign or a leading backslash
 bool includesApos = false; // becomes true if we include an apostrophe
@@ -755,7 +890,7 @@ const QString text = block.text();
 if (text.length() < 1) return (QStringList() << "" << QString::number(index) << QString::number(start) << QString::number(end));
 if (index >= text.length()) return (QStringList() << "" << QString::number(index) << QString::number(start) << QString::number(end));
 QChar	ch = text.at(index);
-#define IS_WORD_FORMING(ch) (ch.isLetter() || ch.isMark() || ch=='{' || ch=='[' || ch=='}' || ch==']')
+#define IS_WORD_FORMING(ch) (ch.isLetter() || ch.isMark() || ch=='{' || ch=='[' || ch=='}' || ch==']' || ch==':')
 //#define IS_WORD_FORMING(ch) (ch.isLetter() || ch.isMark() || ch=='{' || ch=='[' || ch=='}' || ch==']')
 bool isControlSeq = false; // becomes true if we include an @ sign or a leading backslash
 bool includesApos = false; // becomes true if we include an apostrophe
@@ -928,7 +1063,6 @@ if (QBiDiExtender::bidiEnabled)
 //added by S. R. Alavizadeh
 /////////////////////////////////////////////////
 
-
 if ( e->key()==Qt::Key_Tab) 
     {
     QTextCursor cursor=textCursor();
@@ -954,7 +1088,8 @@ if ( e->key()==Qt::Key_Tab)
 	    return;		
 	    }
 	}
-    /*QPlainTextEdit*/QTextEdit::keyPressEvent(e);
+    if (tabSpaces) insertPlainText(QString().fill(' ', tabWidth));
+    else QTextEdit::keyPressEvent(e);
     }
 else if ( e->key()==Qt::Key_Backtab) 
     {
@@ -999,7 +1134,7 @@ else if ( e->key()==Qt::Key_Backtab)
 // 	}
 else if ((e->key()==Qt::Key_Enter)||(e->key()==Qt::Key_Return))
 	{
-	/*QPlainTextEdit*/QTextEdit::keyPressEvent(e);
+	QTextEdit::keyPressEvent(e);
 	QTextCursor cursor=textCursor();
 	cursor.joinPreviousEditBlock();
 	QTextBlock block=cursor.block();
@@ -1017,11 +1152,18 @@ else if ((e->key()==Qt::Key_Enter)||(e->key()==Qt::Key_Return))
 		}
 	cursor.endEditBlock();
 	}
+#ifdef Q_WS_MACX
+else if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Dollar) 
+  {
+  emit requestpdf(textCursor().blockNumber() + 1);
+  }
+#else
 else if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Space) 
   {
   emit requestpdf(textCursor().blockNumber() + 1);
   }
-else /*QPlainTextEdit*/QTextEdit::keyPressEvent(e);
+#endif
+else QTextEdit::keyPressEvent(e);
 if (c && !c->popup()->isVisible()) 
 	{
 	switch (e->key()) 
@@ -1144,10 +1286,10 @@ else
 	tc.setPosition(pos,QTextCursor::MoveAnchor);
 	setTextCursor(tc);
 	if (!search(QString(0x2022) ,true,true,true,true))
-		{
-		tc.setPosition(pos+completion.length(),QTextCursor::MoveAnchor);
-		setTextCursor(tc);
-		}
+	  {
+	  tc.setPosition(pos+completion.length(),QTextCursor::MoveAnchor);
+	  setTextCursor(tc);
+	  }
 	 else emit tooltiptab();
 	} 
 
@@ -1156,7 +1298,7 @@ else
 void LatexEditor::insertNewLine()
 {
 QKeyEvent e(QEvent::KeyPress,Qt::Key_Enter,Qt::NoModifier);
-/*QPlainTextEdit*/QTextEdit::keyPressEvent(&e);
+QTextEdit::keyPressEvent(&e);
 QTextCursor cursor=textCursor();
 cursor.joinPreviousEditBlock();
 QTextBlock block=cursor.block();
@@ -1177,7 +1319,7 @@ cursor.endEditBlock();
  void LatexEditor::focusInEvent(QFocusEvent *e)
 {
 if (c) c->setWidget(this);
-/*QPlainTextEdit*/QTextEdit::focusInEvent(e);
+QTextEdit::focusInEvent(e);
 }
 
  void LatexEditor::setSpellChecker(Hunspell * checker)
@@ -1208,7 +1350,7 @@ bool LatexEditor::isWordSeparator(QChar c) const
     case ',':
     case '?':
     case '!':
-    case ':':
+//    case ':':
     case ';':
     case '-':
     case '<':
@@ -1252,6 +1394,8 @@ setExtraSelections(selections);
 matchPar();
 matchLat();
 if (foldableLines.keys().contains(textCursor().block().blockNumber())) emit requestGotoStructure(textCursor().block().blockNumber());
+//emit poshaschanged(textCursor().blockNumber() + 1,textCursor().position() - document()->findBlock(textCursor().selectionStart()).position()+1);
+emit poshaschanged(textCursor().blockNumber() + 1,textCursor().position() - textCursor().block().position()+1);
 }
 
 void LatexEditor::matchPar() 
@@ -1522,6 +1666,31 @@ emit updatelineWidget();
 ensureCursorVisible();
 }
 
+void LatexEditor::setOldStructureItem()
+{
+OldStructItemsList=StructItemsList;
+}
+
+bool LatexEditor::StructureHasChanged()
+{
+QList<StructItem> tempStructItemsList, tempOldStructItemsList;
+tempStructItemsList=StructItemsList;
+tempOldStructItemsList=OldStructItemsList;
+qSort(tempOldStructItemsList.begin(),tempOldStructItemsList.end());
+qSort(tempStructItemsList.begin(), tempStructItemsList.end());
+/*if (tempStructItemsList!=tempOldStructItemsList)
+{
+qDebug() << tempOldStructItemsList.count() << tempStructItemsList.count();
+for (int i=0;i<tempOldStructItemsList.count();i++)
+{
+qDebug() <<  tempOldStructItemsList[i].line << tempStructItemsList[i].line;
+qDebug() <<  tempOldStructItemsList[i].item << tempStructItemsList[i].item;
+qDebug() <<  tempOldStructItemsList[i].type << tempStructItemsList[i].type;
+}
+}*/
+return (tempStructItemsList!=tempOldStructItemsList);
+}
+
 void LatexEditor::removeStructureItem(int offset,int len, int line)
 {
 bool r=false;
@@ -1539,7 +1708,8 @@ for ( int j=StructItemsList.count()-1;j>=0; --j )
     r=true;
     }
   }
-if (r) {emit requestUpdateStructure();}
+
+//if (r && update) {qDebug() << "update remove" << line  ;emit requestUpdateStructure();}
 }
 
 void LatexEditor::appendStructureItem(int line,QString item,int type,const QTextCursor& cursor)
@@ -1552,12 +1722,18 @@ while (j < StructItemsList.count())
   ++j;
   }
 StructItemsList.insert(j,StructItem(line,item,type,cursor));
-//qDebug() << "add" << StructItemsList[j].item;
+//qDebug() << "update append" << line ;
+//if (update) emit requestUpdateStructure();
+}
+
+void LatexEditor::setStructureDirty()
+{
 emit requestUpdateStructure();
 }
 
 void LatexEditor::ensureFinalNewLine()//Qt 4.7.1 bug
 {
+disconnect(this->document(), SIGNAL(blockCountChanged(int)), this, SLOT(requestNewNumLines(int)));
 QTextCursor cursor = textCursor();
 cursor.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
 bool emptyFile = !cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor);
@@ -1566,6 +1742,8 @@ if (!emptyFile && cursor.selectedText().at(0) != QChar::ParagraphSeparator)
     cursor.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
     cursor.insertText(QLatin1String("\n"));
     }
+setLastNumLines(document()->blockCount());
+connect(this->document(), SIGNAL(blockCountChanged(int)), this, SLOT(requestNewNumLines(int)));
 }
 
 int LatexEditor::getLastNumLines()
@@ -1621,6 +1799,19 @@ if (block.isValid())
 	}
 return result;
 }
+
+void LatexEditor::setTabSettings(bool tabspaces,int tabwidth)
+{
+tabWidth=tabwidth;
+tabSpaces=tabspaces;
+setTabStopWidth(fontMetrics().width(" ")*tabWidth);
+}
+
+void LatexEditor::requestNewNumLines(int n)
+{
+emit numLinesChanged(n);
+}
+
 /*const QRectF LatexEditor::blockGeometry(const QTextBlock & block) 
 {
 qDebug() << "ok1" << block.isValid() << block.isVisible();
@@ -1633,6 +1824,9 @@ return blockBoundingGeometry(block).translated(contentOffset());
 //else return QRectF();
 }*/
 
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
 bool LatexEditor::event(QEvent *e)
 {
 if (QBiDiExtender::bidiEnabled)
@@ -1642,7 +1836,11 @@ if (QBiDiExtender::bidiEnabled)
 //#if defined( Q_WS_WIN )
 		////when user manually change language app needs to clear last language info
 		if (!BiDiForEditor->lastLangAutoChanged)
+		{
 			BiDiForEditor->processInputLang(false, true);
+			//if after typing '\' input language changed!
+			BiDiForEditor->backSlashFlag = false;
+		}
 			//BiDiForEditor->lastInputLang=0;
 //#endif
 		BiDiForEditor->kbdLayoutChangingCanEmited = true;
@@ -1651,3 +1849,30 @@ if (QBiDiExtender::bidiEnabled)
 	}
 return QTextEdit::event(e);
 }
+//////////////////////
+//Extra Features forward search
+#include <QDebug>
+#ifdef Q_WS_WIN
+void LatexEditor::callForwardSearch()
+{
+		qDebug() << "::callForwardSearch";
+emit callSumatraForwardSearch();
+}
+
+void LatexEditor::mouseDoubleClickEvent( QMouseEvent *ev )
+{
+if ( ev->buttons() == (Qt::LeftButton | Qt::RightButton) && ev->button() == Qt::LeftButton )
+	{
+	qDebug() << "mouseDoubleClickEvent-callForwardSearch";
+	ignoreRightClickEvent = true;
+	callForwardSearch();
+	ev->ignore();
+	}
+else
+	{
+	ignoreRightClickEvent = false;
+	QTextEdit::mouseDoubleClickEvent(ev);
+	}
+}
+#endif
+/////////////////////////////////////////////////

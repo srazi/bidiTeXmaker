@@ -15,7 +15,7 @@
 EncodingDialog::EncodingDialog(QWidget *parent, const char *name)
     :QDialog( parent)
 {
-setWindowTitle("Texmaker");
+setWindowTitle("bidiTeXmaker");
 setModal(true);
 ui.setupUi(this);
 ui.comboBoxEncoding->addItem("UTF-8");

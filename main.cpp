@@ -15,6 +15,12 @@
 #include "texmakerapp.h"
 #include <QStringList>
 
+//DDE Support
+#ifdef Q_WS_WIN
+//#include "windows.h"
+#include "winuser.h"
+#endif
+
 /////////////////////////////////////////////////
 //added by S. R. Alavizadeh
 //Extra Feature: easy portable
@@ -23,9 +29,17 @@ bool isPortable;
 
 int main( int argc, char ** argv )
 {
-TexmakerApp app("TexMaker", argc, argv ); // This is a dummy constructor so that the programs loads fast.
+#ifdef Q_WS_WIN
+#ifdef D_MSVC_CC
+//This allows other foreground process to set texmaker to foreground
+//we need use this code in the beginning of the application
+AllowSetForegroundWindow(ASFW_ANY);
+#endif
+#endif
 
-QStringList args = QCoreApplication::arguments();
+TexmakerApp app("bidiTeXmaker", argc, argv ); // This is a dummy constructor so that the programs loads fast.
+
+QStringList args = QCoreApplication::arguments();//add by S. R. Alavizadeh
 //for ( int i=0; i < argc; i++) args += QString::fromLocal8Bit(argv[i]);
 
 if ( app.isRunning() ) 
@@ -38,6 +52,8 @@ if ( app.isRunning() )
     }
 
 app.init(args); // Initialization takes place only if there is no other instance running.
+
+app.setActivationWindow(app.mw, true);//activating window on reciving message
 
 QObject::connect( &app, SIGNAL( messageReceived(const QString &) ), 
                   app.mw,   SLOT( onOtherInstanceMessage(const QString &) ) );

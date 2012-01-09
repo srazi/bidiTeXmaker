@@ -52,6 +52,11 @@ connect(ui.radioButton6, SIGNAL(toggled(bool)),ui.lineEditUserquick, SLOT(setEna
 connect(ui.radioButton6, SIGNAL(toggled(bool)),ui.pushButtonWizard, SLOT(setEnabled(bool)));
 
 //pagetools
+///////////////
+//Xindy Make
+connect( ui.pushButtonXindyGlossary, SIGNAL(clicked()), this, SLOT(browseXindy()));
+connect( ui.pushButtonXindyIndex, SIGNAL(clicked()), this, SLOT(browseXindy()));
+///////////////
 connect( ui.pushButtonLatex, SIGNAL(clicked()), this, SLOT(browseLatex()));
 connect( ui.pushButtonDvips, SIGNAL(clicked()), this, SLOT(browseDvips()));
 connect( ui.pushButtonBibtex, SIGNAL(clicked()), this, SLOT(browseBibtex()));
@@ -175,6 +180,24 @@ if (color.isValid())
 }
 
 //pagetools
+//////////////////////////
+//Xindy Make
+void ConfigDialog::browseXindy()
+{
+	QString location=QFileDialog::getOpenFileName(this,tr("Browse program"),QDir::rootPath(),"Program (*)",0,QFileDialog::DontResolveSymlinks);
+	if ( !location.isEmpty() ) 
+		{
+		location.replace(QString("\\"),QString("/"));
+		QFileInfo file(location);
+		location="\""+location+"\"";
+		QString xindy_index = location+" -L persian -C utf8 -M "+file.dir().absolutePath()+"/texindy"+" %.idx";
+		QString xindy_glossory = location+" -L persian -C utf8 -I "+location+" -M %.xdy -t %.glg -o %.gls %.glo";
+		ui.lineEditLatex->setText( location );
+		ui.lineEditXindyIndex->setText(xindy_index);
+		ui.lineEditXindyGlossary->setText(xindy_glossory);
+		}
+}
+//////////////////////////
 void ConfigDialog::browseLatex()
 {
 QString location=QFileDialog::getOpenFileName(this,tr("Browse program"),QDir::rootPath(),"Program (*)",0,QFileDialog::DontResolveSymlinks);
@@ -404,6 +427,9 @@ usualCommands.append(ui.lineEditAsymptote->text());
 
 usualNames.append(tr("Latexmk"));
 usualCommands.append(ui.lineEditLatexmk->text());
+
+usualNames.append(tr("R Sweave"));
+usualCommands.append(ui.lineEditSweave->text());
 
 userquickdlg= new UserQuickDialog(this,usualNames,usualCommands);
 if ( userquickdlg->exec() )
