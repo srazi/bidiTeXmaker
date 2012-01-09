@@ -30,10 +30,10 @@
 
 typedef  int UserBookmarkList[3];
 
-class LatexEditor : public /*QPlainTextEdit*/QTextEdit  {
+class LatexEditor : public QTextEdit  {
    Q_OBJECT
 public:
-LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling=false, QString ignoredWords="",Hunspell *spellChecker=0);
+LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling=false, QString ignoredWords="",Hunspell *spellChecker=0,bool tabspaces=false,int tabwidth=4);
 ~LatexEditor();
 static void clearMarkerFormat(const QTextBlock &block, int markerId);
 void gotoLine( int line );
@@ -77,12 +77,15 @@ QList<QTextCursor> structcursor;
 
 void removeStructureItem(int offset,int len, int line);
 void appendStructureItem(int line,QString item,int type,const QTextCursor& cursor);
+void setOldStructureItem();
+void setStructureDirty();
 
 int getLastNumLines();
 void setLastNumLines(int n);
 
 QDateTime getLastSavedTime();
 void setLastSavedTime(QDateTime t);
+void setTabSettings(bool tabspaces,int tabwidth);
 
 class StructItem {
 public:
@@ -91,18 +94,30 @@ QString item;
 int type;
 QTextCursor cursor;
 StructItem(int l, const QString& it, int t,const QTextCursor& curs): line(l),item(it),type(t),cursor(curs) { };
+bool operator==( const StructItem other ) const
+    {
+    return ((item==other.item) && (type==other.type));
+    }
+bool operator<( const StructItem other ) const
+    {
+    return (item<other.item);
+    }
 };
 const QList<StructItem> getStructItems() const { return StructItemsList; }
 
 QString beginningLine();
+bool StructureHasChanged();
 public slots:
 void matchAll();
 void setHightLightLine();
 void clearHightLightLine();
 
+
 private:
+bool tabSpaces;
+int tabWidth;
 QDateTime lastSavedTime;
-QList<StructItem> StructItemsList;
+QList<StructItem> StructItemsList, OldStructItemsList;
 QString encoding;
 int lastnumlines;
 //QString textUnderCursor() const;
@@ -133,7 +148,7 @@ void checkSpellingDocument();
 void insertCompletion(const QString &completion);
 void jumpToPdf();
 void jumpToEndBlock();
-
+void requestNewNumLines(int n);
 
 void matchPar();
 void matchLat();
@@ -153,7 +168,8 @@ void setBlockRange(int,int);
 void updatelineWidget();
 void requestUpdateStructure();
 void requestGotoStructure(int);
-
+void poshaschanged(int,int);
+void numLinesChanged(int);
 
 /////////////////////////////////////////////////
 //added by S. R. Alavizadeh
@@ -161,6 +177,22 @@ void requestGotoStructure(int);
 public:
 	QBiDiExtender *BiDiForEditor;
 	static QBiDiInitializer *BiDiBase;
+
+	//////////////////////
+	//Extra Features forward search
+private:
+	bool ignoreRightClickEvent;
+#ifdef Q_WS_WIN
+private slots:
+	void callForwardSearch();
+
+protected:
+	void mouseDoubleClickEvent( QMouseEvent *ev );
+
+signals:
+	void callSumatraForwardSearch();
+#endif
+	//////////////////////
 
 protected:
 //#ifdef Q_WS_WIN

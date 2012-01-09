@@ -40,14 +40,14 @@ setWindowIcon(QIcon(":/images/appicon.png"));
 #endif
 
 ///////////////////////////////////////
-QString organization = "xm1";
+QString organization = "biditexmaker";
 QSettings::Format settingsFormat = QSettings::IniFormat;
 if (isPortable)
 	{
 	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
 	organization = "settings";
 	}
-QSettings *config = new QSettings(settingsFormat, QSettings::UserScope, organization, "texmakerpdfview");
+QSettings *config = new QSettings(settingsFormat, QSettings::UserScope, organization, "biditexmakerpdfview");
 ///////////////////////////////////////
 
 //#ifdef USB_VERSION
@@ -276,19 +276,18 @@ if (proc && proc->state()==QProcess::Running)
 void PdfViewer::closeEvent(QCloseEvent *e)
 {
 ///////////////////////////////////////
-QString organization = "xm1";
+QString organization = "biditexmaker";
 QSettings::Format settingsFormat = QSettings::IniFormat;
 if (isPortable)
 	{
 	QSettings::setPath(settingsFormat, QSettings::UserScope, QCoreApplication::applicationDirPath());
 	organization = "settings";
 	}
-QCoreApplication::setApplicationName("texmakerpdfview");
+QCoreApplication::setApplicationName("biditexmakerpdfview");
 QCoreApplication::setOrganizationName(organization);
 QSettings::setDefaultFormat(settingsFormat);
 QSettings config;
 ///////////////////////////////////////
-
 //#ifdef USB_VERSION
 //QSettings config(QCoreApplication::applicationDirPath()+"/texmakerpdfview.ini",QSettings::IniFormat); //for USB-stick version 
 //#else
@@ -1038,7 +1037,11 @@ if (!fi.exists()) return;
 QString command;
 #ifdef Q_WS_WIN
 QString gs="none";
-if (QFileInfo(gswin32c_command).exists()) gs=gswin32c_command;
+QString gstemp=gswin32c_command;
+gstemp.remove("\"");
+if (QFileInfo(gstemp).exists()) gs=gstemp;
+else if (QFileInfo("C:/Program Files/gs/gs9.02/bin/gswin32c.exe").exists()) gs="C:/Program Files/gs/gs9.02/bin/gswin32c.exe";
+else if (QFileInfo("C:/Program Files (x86)/gs/gs9.02/bin/gswin32c.exe").exists()) gs="C:/Program Files (x86)/gs/gs9.02/bin/gswin32c.exe";
 else if (QFileInfo("C:/Program Files/gs/gs9.00/bin/gswin32c.exe").exists()) gs="C:/Program Files/gs/gs9.00/bin/gswin32c.exe";
 else if (QFileInfo("C:/Program Files (x86)/gs/gs9.00/bin/gswin32c.exe").exists()) gs="C:/Program Files (x86)/gs/gs9.00/bin/gswin32c.exe";
 else if (QFileInfo("C:/Program Files/gs/gs8.71/bin/gswin32c.exe").exists()) gs="C:/Program Files/gs/gs8.71/bin/gswin32c.exe";
@@ -1163,11 +1166,19 @@ if (synctex_edit_query(scanner, page+1, pos.x(), pos.y()) > 0)
 
 void PdfViewer::keyPressEvent ( QKeyEvent * e ) 
 {
+#ifdef Q_WS_MACX
+if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Dollar)
+    {
+    emit sendFocusToEditor();
+    }
+else QMainWindow::keyPressEvent(e);
+#else
 if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Space)
     {
     emit sendFocusToEditor();
     }
 else QMainWindow::keyPressEvent(e);
+#endif
 }
 
 void PdfViewer::ShowStructure()

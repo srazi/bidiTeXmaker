@@ -15,7 +15,7 @@
 PaperDialog::PaperDialog(QWidget *parent, const char *name)
     :QDialog( parent)
 {
-setWindowTitle("Texmaker");
+setWindowTitle("bidiTeXmaker");
 setModal(true);
 ui.setupUi(this);
 ui.comboBoxPaper->addItem( "a1" );

@@ -21,7 +21,6 @@
 #include <QTimer>
 #include "poppler-qt4.h"
 
-
 /////////////////////////////////////////////////
 //added by S. R. Alavizadeh
 //Extra Feature: easy portable

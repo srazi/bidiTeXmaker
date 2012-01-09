@@ -37,6 +37,10 @@ void browseAspell();
 void configureColorMath();
 void configureColorCommand();
 void configureColorKeyword();
+////////////////
+//Xindy Make
+void browseXindy();
+////////////////
 void browseLatex();
 void browseDvips();
 void browseBibtex();
