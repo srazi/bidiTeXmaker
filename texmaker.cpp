@@ -2208,12 +2208,16 @@ else edit->editor->setEncoding(input_encoding);
 if (completion) edit->editor->setCompleter(completer);
 else edit->editor->setCompleter(0);
 
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
 if ( file.fileName().endsWith(".ptd", Qt::CaseInsensitive) )
 	{
 	edit->editor->setHtml(text);
 	}
 else
 	edit->editor->setPlainText(text);
+/////////////////////////////////////////////////
 
 filenames.remove( edit);
 filenames.insert( edit, f );
@@ -2681,6 +2685,8 @@ else
 	QTextCodec* codec = QTextCodec::codecForName(currentEditorView()->editor->getEncoding().toLatin1());
 	ts.setCodec(codec ? codec : QTextCodec::codecForLocale());
 
+	
+	/////////////////////////////////////////////////
 	//Bi-Di Support
 	if (QBiDiExtender::bidiEnabled)
 		{
@@ -2767,6 +2773,7 @@ else
 	QTextCodec* codec = QTextCodec::codecForName(currentEditorView()->editor->getEncoding().toLatin1());
 	ts.setCodec(codec ? codec : QTextCodec::codecForLocale());
 
+	/////////////////////////////////////////////////
 	//Bi-Di Support
 	if (QBiDiExtender::bidiEnabled)
 		{
@@ -6722,9 +6729,11 @@ if (fic.exists() && fic.isReadable() )
 	if ( f.open(QIODevice::ReadOnly) )
 		{
 		QTextStream t( &f );
+		///////////////////////////////////////////////////////////////////////////////////
 		//For UTF-8 TeX document, Log file is in UTF-8 encoding!
 		if (currentEditorView() && currentEditorView()->editor->getEncoding()=="UTF-8")
 			t.setCodec(QTextCodec::codecForName("UTF-8"));
+		///////////////////////////////////////////////////////////////////////////////////////
 //		OutputTextEdit->setPlainText( t.readAll() );
 		while ( !t.atEnd() )
 			{
