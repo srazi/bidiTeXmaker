@@ -2150,19 +2150,13 @@ QString file = fi.canonicalFilePath();
 file.replace(QString("\\"),QString("/"));
 bool rep=false;
 FilesMap::Iterator it;
-QString /*fw32,funix,*/forig;
+QString forig;
 for( it = filenames.begin(); it != filenames.end(); ++it )
 	{
 	forig = it.value();
 	QFileInfo fio(forig);
 	forig = fio.canonicalFilePath();
 	forig.replace(QString("\\"),QString("/"));
-//	forig=filenames[it.key()];
-//	fw32=filenames[it.key()];
-//	funix=filenames[it.key()];
-//	fw32.replace(QString("\\"),QString("/"));
-//	funix.replace(QString("/"),QString("\\"));
-	qDebug() << "forig="<<forig<<"file="<<file;
 	if ( forig==file) 
 		{
 		EditorView->setCurrentIndex(EditorView->indexOf(it.key()));
