@@ -167,6 +167,7 @@ QStringList errorFileList, errorTypeList, errorLineList, errorMessageList, error
 QList<int> onlyErrorList;
 int errorIndex, runIndex, viewIndex;
 
+QString logPath;
 //X11
 #if defined( Q_WS_X11 )
 QString x11style;

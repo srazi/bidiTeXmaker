@@ -2145,17 +2145,25 @@ return title;
 
 bool Texmaker::FileAlreadyOpen(QString f)
 {
+QFileInfo fi(f);
+QString file = fi.canonicalFilePath();
+file.replace(QString("\\"),QString("/"));
 bool rep=false;
 FilesMap::Iterator it;
-QString fw32,funix,forig;
+QString /*fw32,funix,*/forig;
 for( it = filenames.begin(); it != filenames.end(); ++it )
 	{
-	forig=filenames[it.key()];
-	fw32=filenames[it.key()];
-	funix=filenames[it.key()];
-	fw32.replace(QString("\\"),QString("/"));
-	funix.replace(QString("/"),QString("\\"));
-	if ( (forig==f) || (fw32==f) || (funix==f)) 
+	forig = it.value();
+	QFileInfo fio(forig);
+	forig = fio.canonicalFilePath();
+	forig.replace(QString("\\"),QString("/"));
+//	forig=filenames[it.key()];
+//	fw32=filenames[it.key()];
+//	funix=filenames[it.key()];
+//	fw32.replace(QString("\\"),QString("/"));
+//	funix.replace(QString("/"),QString("\\"));
+	qDebug() << "forig="<<forig<<"file="<<file;
+	if ( forig==file) 
 		{
 		EditorView->setCurrentIndex(EditorView->indexOf(it.key()));
 		rep=true;
@@ -2181,6 +2189,17 @@ void Texmaker::load( const QString &f )
 if (FileAlreadyOpen(f) || !QFile::exists( f )) return;
 
 /////////////////////////////////////////////////
+////////
+//FilesMap::Iterator it;
+//QString fileList;
+//fileList = "This file=\n"+f+"\n\nOpened files=\n";
+//for( it = filenames.begin(); it != filenames.end(); ++it )
+//	{
+//		fileList+= it.value()+"\n";
+//	}
+//QMessageBox tempBox(QMessageBox::Information, "TEST", fileList );
+//tempBox.exec();
+//////////
 //added by S. R. Alavizadeh
 //Bi-Di Support
 QString fn=f;
@@ -2297,7 +2316,7 @@ if (QBiDiExtender::bidiEnabled)
 
 	edit->editor->BiDiForEditor->initBiDi();//new
 	
-	if (edit->editor->BiDiForEditor)
+	if (edit->editor->BiDiForEditor && !QBiDiExtender::ptdOpenFlag)
 		edit->editor->BiDiForEditor->applyBiDiModeToEditor(edit->editor->BiDiForEditor->editorLastBiDiModeApplied);
 	}
 /////////////////////////////////////////////////
@@ -6923,6 +6942,7 @@ else return false;
 
 void Texmaker::LoadLog()
 {
+logPath = "";
 OutputTextEdit->clear();
 logpresent=false;
 QString finame;
@@ -6943,6 +6963,7 @@ QString line;
 QFileInfo fic(logname);
 if (fic.exists() && fic.isReadable() )
 	{
+	logPath = fic.absoluteDir().absolutePath();
 	OutputTextEdit->insertLine("LOG FILE :");
 	QFile f(logname);
 	if ( f.open(QIODevice::ReadOnly) )
@@ -6988,6 +7009,7 @@ int row=OutputTableWidget->row(item);
 int col=OutputTableWidget->column(item);
 if (col!=3) content=OutputTableWidget->item(row,3)->text();
 QString file=OutputTableWidget->item(row,1)->text();
+if (!file.isEmpty()) file.prepend(logPath+"/");
 
 int Start, End;
 bool ok;
