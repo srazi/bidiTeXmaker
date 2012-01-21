@@ -1655,7 +1655,11 @@ void LatexEditor::keyPressEvent ( QKeyEvent * e )
                 removeBlockSelection();
                 // continue
           
-        }
+        } else if (e == QKeySequence::Copy) {
+				copy();
+				e->accept();
+				return;
+		}
     }
 if (c && c->popup()->isVisible()) 
 	{
