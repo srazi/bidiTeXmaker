@@ -2469,23 +2469,38 @@ if (e->modifiers() & Qt::AltModifier)
 #endif
 
 	  blockSelection.moveAnchor(cursor.blockNumber(), column);
+	  qDebug()<<"column="<<column<<"bNum="<<cursor.blockNumber();
 	//setTextCursor(blockSelection.selection());
 ///////////////////
 	  QList<QTextEdit::ExtraSelection> extras;
 	  QColor highlightColor(palette().color(QPalette::Highlight));
 	  QColor highlightTextColor(palette().color(QPalette::HighlightedText));
 	  //qDebug() << "fi="<<blockSelection.firstBlock.blockNumber()<<"la="<<blockSelection.lastBlock.blockNumber();
-
+	
+	  int countFirstBlockLRM = 0;
 	  for(QTextBlock b=blockSelection.firstBlock.block(); b!=blockSelection.lastBlock.block().next(); b=b.next())
 		  {
 			QTextCursor bCursor(b);
-		  if (blockSelection.firstVisualColumn>=b.length())
-			blockSelection.firstVisualColumn = b.length()-1;
-		  if (blockSelection.lastVisualColumn>=b.length())
-			blockSelection.lastVisualColumn = b.length()-1;
-		  qDebug()<<blockSelection.firstVisualColumn<<blockSelection.lastVisualColumn<<b.position()<<b.position()+b.length()-1;
-		  bCursor.setPosition(b.position()+blockSelection.firstVisualColumn, QTextCursor::MoveAnchor);
-		  bCursor.setPosition(b.position()+blockSelection.lastVisualColumn, QTextCursor::KeepAnchor);
+			int blockFirstVisualColumn = blockSelection.firstVisualColumn;
+			int blockLastVisualColumn = blockSelection.lastVisualColumn;
+		  if (blockFirstVisualColumn>=b.length())
+			blockFirstVisualColumn = b.length()-1;
+		  if (blockLastVisualColumn>=b.length())
+			blockLastVisualColumn = b.length()-1;
+		  QString blockText = b.text();
+		  qDebug()<<blockText.left(blockFirstVisualColumn)<<blockText.left(blockFirstVisualColumn).count(QChar(LRM));
+		  qDebug()<<blockText.mid(blockFirstVisualColumn, blockLastVisualColumn-blockFirstVisualColumn)<<blockText.mid(blockFirstVisualColumn, blockLastVisualColumn-blockFirstVisualColumn).count(QChar(LRM));
+		  //blockFirstVisualColumn -= blockText.left(blockFirstVisualColumn).count(QChar(LRM));
+//		  if (b == blockSelection.firstBlock.block())
+//		  {
+//			countFirstBlockLRM = blockText.left(blockFirstVisualColumn).count(QChar(LRM));
+//		  }
+//		  blockFirstVisualColumn = blockFirstVisualColumn - (blockText.left(blockFirstVisualColumn).count(QChar(LRM))+countFirstBlockLRM);
+//		  blockLastVisualColumn = blockLastVisualColumn - (blockText.left(blockFirstVisualColumn).count(QChar(LRM))+countFirstBlockLRM);
+//		  blockLastVisualColumn += blockText.mid(blockFirstVisualColumn, blockLastVisualColumn-blockFirstVisualColumn).count(QChar(LRM));
+		  qDebug()<<blockSelection.firstVisualColumn<<"lastCol="<<blockSelection.lastVisualColumn<<"column="<<column<<"bNum="<<cursor.blockNumber()<<b.position()<<b.position()+b.length()-1;
+		  bCursor.setPosition(b.position()+blockFirstVisualColumn, QTextCursor::MoveAnchor);
+		  bCursor.setPosition(b.position()+blockLastVisualColumn, QTextCursor::KeepAnchor);
 		  QTextEdit::ExtraSelection highlight;
 		  highlight.cursor = bCursor;
 		  highlight.format.setBackground( highlightColor );
@@ -2493,7 +2508,7 @@ if (e->modifiers() & Qt::AltModifier)
 		  extras << highlight;
 		  }
 	 setExtraSelections( extras );
-	 qDebug()<<"mouseMoveEvent="<<extraSelections().size();
+	 //qDebug()<<"mouseMoveEvent="<<extraSelections().size();
 	 emit copyStateChanged(true);
 ///////////////
 	//viewport()->update();
