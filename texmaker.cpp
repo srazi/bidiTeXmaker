@@ -5498,7 +5498,7 @@ if ( quickDlg->exec() )
 	tag +=QString("}\n");
 	for ( int i=0;i<y;i++) 
 	  {
-	  if (quickDlg->liDataList.at(i).topborder) tag+=QString("\\hline \n");
+	  if (quickDlg->liDataList.at(i).topborder) tag+=QString("\\hline ");//remove default newline for easy use of column selection feature 
 	  if (quickDlg->ui.checkBoxMargin->isChecked()) tag+="\\rule[-1ex]{0pt}{2.5ex} ";
 	  if (quickDlg->liDataList.at(i).merge && (quickDlg->liDataList.at(i).mergeto>quickDlg->liDataList.at(i).mergefrom))
 	    {
