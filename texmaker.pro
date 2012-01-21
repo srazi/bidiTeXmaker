@@ -409,9 +409,9 @@ INSTALLS += icon
 }
 ################################
 win32 {
-INCLUDEPATH += C:\QtSDK\mingw\include
-INCLUDEPATH += C:\poppler
-LIBS         += -LC:\poppler -lpoppler-qt4
+INCLUDEPATH += C:/QtSDK/mingw/include
+INCLUDEPATH += C:/poppler
+LIBS         += -LC:/poppler -lpoppler-qt4
 RC_FILE = win.rc
 
 #DEFINES += USB_VERSION

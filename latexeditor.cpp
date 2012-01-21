@@ -2472,30 +2472,26 @@ if (e->modifiers() & Qt::AltModifier)
 	//setTextCursor(blockSelection.selection());
 ///////////////////
 	  QList<QTextEdit::ExtraSelection> extras;
+	  QColor highlightColor(palette().color(QPalette::Highlight));
+	  QColor highlightTextColor(palette().color(QPalette::HighlightedText));
 	  //qDebug() << "fi="<<blockSelection.firstBlock.blockNumber()<<"la="<<blockSelection.lastBlock.blockNumber();
 
 	  for(QTextBlock b=blockSelection.firstBlock.block(); b!=blockSelection.lastBlock.block().next(); b=b.next())
-	  {
-	  //QTextCursor allSelection = blockSelection.selection();
-	  //int startBlock = allSelection.
-		QTextCursor bCursor(b);
-		if (blockSelection.firstVisualColumn>=b.length())
-		  blockSelection.firstVisualColumn = b.length()-1;
-		if (blockSelection.lastVisualColumn>=b.length())
-		  blockSelection.lastVisualColumn = b.length()-1;
-		qDebug()<<blockSelection.firstVisualColumn<<blockSelection.lastVisualColumn<<b.position()<<b.position()+b.length()-1;
-		bCursor.setPosition(b.position()+blockSelection.firstVisualColumn, QTextCursor::MoveAnchor);
-		bCursor.setPosition(b.position()+blockSelection.lastVisualColumn, QTextCursor::KeepAnchor);
-		  //bCursor.movePosition()
-	  QTextEdit::ExtraSelection highlight;
-	  highlight.cursor = bCursor;//blockSelection.selection();
-//	  highlight.cursor.clearSelection();
-//	  highlight.cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-//	  highlight.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-//	  highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
-	  highlight.format.setBackground( QColor(Qt::green).lighter(170) );
-	  extras << highlight;
-	  }
+		  {
+			QTextCursor bCursor(b);
+		  if (blockSelection.firstVisualColumn>=b.length())
+			blockSelection.firstVisualColumn = b.length()-1;
+		  if (blockSelection.lastVisualColumn>=b.length())
+			blockSelection.lastVisualColumn = b.length()-1;
+		  qDebug()<<blockSelection.firstVisualColumn<<blockSelection.lastVisualColumn<<b.position()<<b.position()+b.length()-1;
+		  bCursor.setPosition(b.position()+blockSelection.firstVisualColumn, QTextCursor::MoveAnchor);
+		  bCursor.setPosition(b.position()+blockSelection.lastVisualColumn, QTextCursor::KeepAnchor);
+		  QTextEdit::ExtraSelection highlight;
+		  highlight.cursor = bCursor;
+		  highlight.format.setBackground( highlightColor );
+		  highlight.format.setForeground( highlightTextColor );
+		  extras << highlight;
+		  }
 	 setExtraSelections( extras );
 	 qDebug()<<"mouseMoveEvent="<<extraSelections().size();
 	 emit copyStateChanged(true);
@@ -2503,27 +2499,26 @@ if (e->modifiers() & Qt::AltModifier)
 	//viewport()->update();
     }
 }
-//else
-//{
-//	this->setStyleSheet("QTextEdit{selection-background-color: none;}");
-//}
     if (viewport()->cursor().shape() == Qt::BlankCursor)
         viewport()->setCursor(Qt::IBeamCursor);
 }
 
 void LatexEditor::mousePressEvent(QMouseEvent *e)
 {
+	QTextEdit::mousePressEvent(e);
     if (e->button() == Qt::LeftButton) {
     if (inBlockSelectionMode) {
         inBlockSelectionMode = false;
-        blockSelection.clear();
+		blockSelection.clear();
+		///////////////////////////
+		setExtraSelections(QList<QTextEdit::ExtraSelection>());
         QTextCursor cursor = textCursor();
         cursor.clearSelection();
         setTextCursor(cursor);
     }       
     }
 
-    QTextEdit::mousePressEvent(e);
+    //QTextEdit::mousePressEvent(e);
 }
 
 void LatexEditor::copy()
