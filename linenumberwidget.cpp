@@ -14,6 +14,7 @@
 #include <QTextCursor>
 #include <QTextEdit>
 #include <QTextBlock>
+#include <QDebug>
 #include "blockdata.h"
 
 LineNumberWidget::LineNumberWidget(LatexEditor* editor, QWidget* parent)
@@ -28,6 +29,7 @@ setPalette( p );
 start=-1;
 end=-1;
 connect( m_editor->verticalScrollBar(), SIGNAL( valueChanged( int ) ), this, SLOT( update() ) );
+connect( m_editor->verticalScrollBar(), SIGNAL( actionTriggered( int ) ), this, SLOT( update() ) );
 connect( m_editor, SIGNAL( textChanged() ), this, SLOT( update() ) );
 connect(m_editor, SIGNAL(updatelineWidget()), this, SLOT(update()));
 connect( m_editor, SIGNAL( setBlockRange(int,int) ), this, SLOT( setRange(int,int) ) );
@@ -57,6 +59,7 @@ int i = 1;
 QTextBlock p = doc->begin();
 QTextBlock np;
 QString numtext;
+QString lineCount = QString::number(doc->lineCount());
 
 
 painter.setPen(oldpen);
@@ -76,127 +79,130 @@ while ( p.isValid())
 	{
 	//Version 2.0.1
 	QPointF point = p.layout()->position();
-		if ( point.y() + 20 - yOffset < 0 ) 
-			{
-			i++;
-			p = p.next();
-			continue;
-			}		
-		if ( (int)(point.y()) - yOffset > height() ) break;
-		for (int j = 0; j < 3; ++j)
-			{
-			if (m_editor->UserBookmark[j]==i) 
-				{
-				const QBrush brush(QColor("#1B8EA6"));
-				painter.fillRect(2, (int)(point.y()) - yOffset,fm.width("0")+6,fm.lineSpacing(), brush);
-				const QPen pen(QColor("#FFFFFF"));
-				painter.setPen(pen);
-				painter.drawText(4, (int)(point.y()) - yOffset,width()-4,fm.lineSpacing(),Qt::AlignLeft | Qt::AlignTop,QString::number(j+1));
-				}
-			}
-		painter.setPen(oldpen);
-		numtext=QString::number(i);
-		painter.drawText(0, (int)(point.y()) - yOffset,width()-4,fm.lineSpacing(),Qt::AlignRight | Qt::AlignTop,numtext);
-		l= fm.width(numtext)+18+fm.width("0");
-		if (l>max) max=l;
+	if ( point.y() + 20 - yOffset < 0 ) 
+		{
 		i++;
 		p = p.next();
-	//Version 3.1 QPlainTextEdit
-	/*if (p.isVisible()) top = (int) m_editor->blockGeometry(p).top();
-	np=p.next();
-	if ( np.isValid() && np.isVisible()) delta= (int) m_editor->blockGeometry(np).top()-top;
-	else delta=fm.lineSpacing();
-	if (top<0)
-	  {
-	  if (i==start+1)
-	    {
-	    realmin=top;
-	    if (top>=0) rmin=top;
-	    else rmin=0;
-	    }
-	  if (i<=end+1) rmax=top+delta;//top+fm.lineSpacing();
-	  p = p.next();
-	  i++;
-	  continue;
-	  }
-	  if (top>height()) break;
-	  for (int j = 0; j < 3; ++j)
-		  {
-		  if (m_editor->UserBookmark[j]==i) 
-			  {
-			  
-			  painter.fillRect(2, top,fm.width("0")+6,fm.lineSpacing(), bookmarkbrush);	  
-			  painter.setPen(bookmarkpen);
-			  painter.drawText(4,top,width()-4,fm.lineSpacing(),Qt::AlignLeft | Qt::AlignTop,QString::number(j+1));
-			  }
-		  }
+		continue;
+		}		
+	if ( (int)(point.y()) - yOffset > height() ) break;
+	for (int j = 0; j < 3; ++j)
+		{
+		if (m_editor->UserBookmark[j]==i) 
+			{
+			const QBrush brush(QColor("#1B8EA6"));
+			painter.fillRect(2, (int)(point.y()) - yOffset,fm.width("0")+6,fm.lineSpacing(), brush);
+			const QPen pen(QColor("#FFFFFF"));
+			painter.setPen(pen);
+			painter.drawText(4, (int)(point.y()) - yOffset,width()-4,fm.lineSpacing(),Qt::AlignLeft | Qt::AlignTop,QString::number(j+1));
+			}
+		}
 	painter.setPen(oldpen);
 	numtext=QString::number(i);
-	if (p.isVisible()) painter.drawText(10+fm.width("0"), top,fm.width(numtext),fm.lineSpacing(),Qt::AlignRight | Qt::AlignTop,numtext);
-	l= fm.width(numtext)+18+fm.width("0");
+	painter.drawText(0, (int)(point.y()) - yOffset,width()-4,fm.lineSpacing(),Qt::AlignRight | Qt::AlignTop,numtext);
+	l= fm.width(numtext)+10+fm.width("0")+6;
 	if (l>max) max=l;
-	if (i==start+1)
-	  {
-	  realmin=top;
-	  if (top>=0) rmin=top;
-	  else rmin=0;
-	  }
-	if (i<=end+1) rmax=top+delta;//top+fm.lineSpacing();
-	if ((m_editor->foldedLines.keys().contains(i-1)) && (i!=start+1))
-	  {
-	  painter.setPen(bookmarkpen);
-	  painter.fillRect(width()-20, top+(int) (fm.lineSpacing()/2)-5,10,10, markerbrush);
-	  painter.drawLine(width()-17,top+(int) (fm.lineSpacing()/2),width()-13,top+(int) (fm.lineSpacing()/2));
-	  painter.drawLine(width()-15,top+(int) (fm.lineSpacing()/2)-2,width()-15,top+(int) (fm.lineSpacing()/2)+2);
-	  rangepen.setStyle(Qt::DotLine);
-	  painter.setPen(rangepen);
-	  painter.drawLine(fm.width("0")+8,top+fm.lineSpacing(),width()-12,top+fm.lineSpacing() );
-	  rangepen.setStyle(Qt::SolidLine);
-	  painter.setPen(rangepen);
-	  }
+	i++;
 	p = p.next();
-	i++;*/
+////Version 3.2.2 QPlainTextEdit
+//	if (p.isVisible()) top = (int) m_editor->blockGeometry(p).top();
+//	np=p.next();
+//	if ( np.isValid() && np.isVisible()) delta= (int) m_editor->blockGeometry(np).top()-top;
+//	else delta=fm.lineSpacing();
+//	if (top<0)
+//	  {
+//	  if (i==start+1)
+//	    {
+//	    realmin=top;
+//	    if (top>=0) rmin=top;
+//	    else rmin=0;
+//	    }
+//	  if (i<=end+1) rmax=top+delta;//top+fm.lineSpacing();
+//	  p = p.next();
+//	  i++;
+//	  continue;
+//	  }
+//	  if (top>height()) break;
+//	  for (int j = 0; j < 3; ++j)
+//		  {
+//		  if (m_editor->UserBookmark[j]==i) 
+//			  {
+			  
+//			  painter.fillRect(2, top,fm.width("0")+6,fm.lineSpacing(), bookmarkbrush);	  
+//			  painter.setPen(bookmarkpen);
+//			  painter.drawText(4,top,width()-4,fm.lineSpacing(),Qt::AlignLeft | Qt::AlignTop,QString::number(j+1));
+//			  }
+//		  }
+//	painter.setPen(oldpen);
+//	numtext=QString::number(i);
+//	if (p.isVisible()) painter.drawText(10+fm.width("0"), top,fm.width(numtext),fm.lineSpacing(),Qt::AlignRight | Qt::AlignTop,numtext);
+//	l= fm.width(numtext)+18+fm.width("0");
+//	if (l>max) max=l;
+//	if (i==start+1)
+//	  {
+//	  realmin=top;
+//	  if (top>=0) rmin=top;
+//	  else rmin=0;
+//	  }
+//	if (i<=end+1) rmax=top+delta;//top+fm.lineSpacing();
+//	if ((m_editor->foldedLines.keys().contains(i-1)) && (i!=start+1))
+//	  {
+//	  painter.setPen(bookmarkpen);
+//	  painter.fillRect(width()-20, top+(int) (fm.lineSpacing()/2)-5,10,10, markerbrush);
+//	  painter.drawLine(width()-17,top+(int) (fm.lineSpacing()/2),width()-13,top+(int) (fm.lineSpacing()/2));
+//	  painter.drawLine(width()-15,top+(int) (fm.lineSpacing()/2)-2,width()-15,top+(int) (fm.lineSpacing()/2)+2);
+//	  rangepen.setStyle(Qt::DotLine);
+//	  painter.setPen(rangepen);
+//	  painter.drawLine(fm.width("0")+8,top+fm.lineSpacing(),width()-12,top+fm.lineSpacing() );
+//	  rangepen.setStyle(Qt::SolidLine);
+//	  painter.setPen(rangepen);
+//	  }
+//	p = p.next();
+//	i++;
 	}
-if (i>=10000) setFixedWidth(max);	
+max = qMax(fm.width(lineCount)+10+fm.width("0")+6, 10+fm.width( "00" ) + fm.width("0")+6 );
+if (width()!=max) setFixedWidth(max);
+//if (i>=100 && width()<max) setFixedWidth(max);
+//else if (i<100 && width() > (10+fm.width( "00" ) + fm.width("0")+6) ) setFixedWidth( 10+fm.width( "00" ) + fm.width("0")+6 );
 //const QBrush rangebrush(QColor("#FF8000"));
 
-/*painter.setPen(rangepen);
-if ((rmin>=0) && (rmax>=0)) 
-    {
-    if (realmin>=0)
-    {
-    	  painter.setPen(bookmarkpen);
-	  painter.fillRect(width()-20,rmin+(int) (fm.lineSpacing()/2)-5,10,10, markerbrush);
-	  painter.drawLine(width()-17,rmin+(int) (fm.lineSpacing()/2),width()-14,rmin+(int) (fm.lineSpacing()/2));
-	  painter.setPen(rangepen);
-    if (m_editor->foldedLines.keys().contains(start)) 
-      {
-	painter.setPen(bookmarkpen);
-	painter.drawLine(width()-17,rmin+(int) (fm.lineSpacing()/2),width()-13,rmin+(int) (fm.lineSpacing()/2));
-	  painter.drawLine(width()-15,rmin+(int) (fm.lineSpacing()/2)-2,width()-15,rmin+(int) (fm.lineSpacing()/2)+2);
-    	  rangepen.setStyle(Qt::DotLine);
-	  painter.setPen(rangepen);
-      painter.drawLine(fm.width("0")+8,rmin+fm.lineSpacing(),width()-12,rmin+fm.lineSpacing() );
-    	rangepen.setStyle(Qt::SolidLine);
-	  painter.setPen(rangepen);
-      }
-    else  
-      {
-	//painter.drawLine(width()-7,rmin+2,width()-7,qMin(rmax,height()));
-	painter.fillRect(width()-7,rmin+2,2,qMin(rmax,height())-rmin-2, markerbrush);
-	//painter.drawLine(width()-6,rmin+2,width()-6,qMin(rmax,height()));
+//painter.setPen(rangepen);
+//if ((rmin>=0) && (rmax>=0)) 
+//    {
+//    if (realmin>=0)
+//    {
+//    	  painter.setPen(bookmarkpen);
+//	  painter.fillRect(width()-20,rmin+(int) (fm.lineSpacing()/2)-5,10,10, markerbrush);
+//	  painter.drawLine(width()-17,rmin+(int) (fm.lineSpacing()/2),width()-14,rmin+(int) (fm.lineSpacing()/2));
+//	  painter.setPen(rangepen);
+//    if (m_editor->foldedLines.keys().contains(start)) 
+//      {
+//	painter.setPen(bookmarkpen);
+//	painter.drawLine(width()-17,rmin+(int) (fm.lineSpacing()/2),width()-13,rmin+(int) (fm.lineSpacing()/2));
+//	  painter.drawLine(width()-15,rmin+(int) (fm.lineSpacing()/2)-2,width()-15,rmin+(int) (fm.lineSpacing()/2)+2);
+//    	  rangepen.setStyle(Qt::DotLine);
+//	  painter.setPen(rangepen);
+//      painter.drawLine(fm.width("0")+8,rmin+fm.lineSpacing(),width()-12,rmin+fm.lineSpacing() );
+//    	rangepen.setStyle(Qt::SolidLine);
+//	  painter.setPen(rangepen);
+//      }
+//    else  
+//      {
+//	//painter.drawLine(width()-7,rmin+2,width()-7,qMin(rmax,height()));
+//	painter.fillRect(width()-7,rmin+2,2,qMin(rmax,height())-rmin-2, markerbrush);
+//	//painter.drawLine(width()-6,rmin+2,width()-6,qMin(rmax,height()));
 	
-      }
+//      }
 
-    }
-    else 
-    {
-      //painter.drawLine(width()-7,rmin,width()-7,qMin(rmax,height())); 
-      painter.fillRect(width()-7,rmin,2,qMin(rmax,height())-rmin, markerbrush);
-      //painter.drawLine(width()-6,rmin,width()-6,qMin(rmax,height()));
+//    }
+//    else 
+//    {
+//      //painter.drawLine(width()-7,rmin,width()-7,qMin(rmax,height())); 
+//      painter.fillRect(width()-7,rmin,2,qMin(rmax,height())-rmin, markerbrush);
+//      //painter.drawLine(width()-6,rmin,width()-6,qMin(rmax,height()));
       
-    }
-    }*/
+//    }
+//    }
 painter.end();
 }
 

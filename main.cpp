@@ -17,7 +17,6 @@
 
 //DDE Support
 #ifdef Q_WS_WIN
-//#include "windows.h"
 #include "winuser.h"
 #endif
 
@@ -36,7 +35,6 @@ int main( int argc, char ** argv )
 AllowSetForegroundWindow(ASFW_ANY);
 #endif
 #endif
-
 TexmakerApp app("bidiTeXmaker", argc, argv ); // This is a dummy constructor so that the programs loads fast.
 
 QStringList args = QCoreApplication::arguments();//add by S. R. Alavizadeh
