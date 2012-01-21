@@ -43,6 +43,7 @@
         <file>images/configeditor.png</file>
         <file>images/configquick.png</file>
         <file>images/configtools.png</file>
+	<file>images/configkeys.png</file>
         <file>images/splash.png</file>
         <file>images/acute.png</file>
         <file>images/appicon.png</file>
@@ -108,6 +109,7 @@
         <file>images/text_left.png</file>
         <file>images/text_right.png</file>
         <file>images/text_under.png</file>
+        <file>images/text_emphasis.png</file>
         <file>images/tilde.png</file>
         <file>images/undo.png</file>
         <file>images/vec.png</file>
@@ -129,6 +131,7 @@
         <file>images/pages.png</file>
         <file>images/process-stop.png</file>
         <file>images/toggle.png</file>
+        <file>images/opened.png</file>
         <file>symbols/img1.png</file>
         <file>symbols/img10.png</file>
         <file>symbols/img100.png</file>

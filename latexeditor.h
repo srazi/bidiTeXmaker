@@ -17,23 +17,52 @@
 #include <QWidget>
 #include <QString>
 #include <QTextEdit>
-//#include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QTextDocument>
 #include <QTextCursor>
 #include <QTextBlock>
 #include <QCompleter>
 #include <QDateTime>
 #include <QTimer>
+#include <QKeySequence>
+#include <QThread>
+#include <QSemaphore>
+#include <QMutex>
+#include <QQueue>
+#include <QDebug>
 
 #include "latexhighlighter.h"
+#include "textblockselection.h"
 #include "hunspell/hunspell.hxx"
 
 typedef  int UserBookmarkList[3];
 
+class StructItem {
+public:
+int line;
+QString item;
+int type;
+QTextCursor cursor;
+StructItem(int l, const QString& it, int t,const QTextCursor& curs): line(l),item(it),type(t),cursor(curs) { }
+bool operator==( const StructItem other ) const
+    {
+    return ((item==other.item) && (type==other.type));
+    }
+bool operator<( const StructItem other ) const
+    {
+    return (item<other.item);
+    }
+};
+
+struct updateStruct {
+bool isdirty;
+QList<StructItem> list;
+};
+
 class LatexEditor : public QTextEdit  {
    Q_OBJECT
 public:
-LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling=false, QString ignoredWords="",Hunspell *spellChecker=0,bool tabspaces=false,int tabwidth=4);
+LatexEditor(QWidget *parent,QFont & efont, QList<QColor> edcolors, QList<QColor> hicolors,bool inlinespelling=false, QString ignoredWords="",Hunspell *spellChecker=0,bool tabspaces=false,int tabwidth=4,const QKeySequence viewfocus=QKeySequence("Ctrl+Space"), QString name="");
 ~LatexEditor();
 static void clearMarkerFormat(const QTextBlock &block, int markerId);
 void gotoLine( int line );
@@ -71,14 +100,12 @@ QMap<int,int> foldedLines;
 QMap<int,int> foldableLines;
 
 
+
 QStringList structlist, structitem;
-QList<int> structtype, structpos, structlen;
+//QList<int> structtype, structpos, structlen;
 QList<QTextCursor> structcursor;
 
-void removeStructureItem(int offset,int len, int line);
-void appendStructureItem(int line,QString item,int type,const QTextCursor& cursor);
-void setOldStructureItem();
-void setStructureDirty();
+void checkStructUpdate(QTextDocument *doc,int blockpos,QString text,int line);
 
 int getLastNumLines();
 void setLastNumLines(int n);
@@ -86,34 +113,32 @@ void setLastNumLines(int n);
 QDateTime getLastSavedTime();
 void setLastSavedTime(QDateTime t);
 void setTabSettings(bool tabspaces,int tabwidth);
+void setKeyViewerFocus(QKeySequence s);
+void updateName(QString f);
 
-class StructItem {
-public:
-int line;
-QString item;
-int type;
-QTextCursor cursor;
-StructItem(int l, const QString& it, int t,const QTextCursor& curs): line(l),item(it),type(t),cursor(curs) { };
-bool operator==( const StructItem other ) const
-    {
-    return ((item==other.item) && (type==other.type));
-    }
-bool operator<( const StructItem other ) const
-    {
-    return (item<other.item);
-    }
-};
-const QList<StructItem> getStructItems() const { return StructItemsList; }
+
+const QList<StructItem> getStructItems() const {return StructItemsList; }
+
+
 
 QString beginningLine();
-bool StructureHasChanged();
+
+void setTextCursor(const QTextCursor &cursor);
+
+TextBlockSelection blockSelection;
 public slots:
 void matchAll();
 void setHightLightLine();
 void clearHightLightLine();
-
+virtual void paste();
+virtual void cut();
+void setCursorVisible() {ensureCursorVisible ();};
+void setColors(QList<QColor> colors);
 
 private:
+bool inBlockSelectionMode;
+QKeySequence vfocus;
+QString fname;
 bool tabSpaces;
 int tabWidth;
 QDateTime lastSavedTime;
@@ -140,6 +165,9 @@ void createLatSelection(int start, int end );
 int endBlock;
 QTimer highlightRemover;
 bool highlightLine;
+QString copyBlockSelection() const;
+QColor colorBackground, colorLine, colorHighlight, colorCursor;
+
 
 private slots:
 void correctWord();
@@ -154,12 +182,20 @@ void matchPar();
 void matchLat();
 
 void ensureFinalNewLine();//Qt 4.7.1 bug
+void removeBlockSelection(const QString &text = QString());
+void slotSelectionChanged();
 
 protected:
 void paintEvent(QPaintEvent *event);
 void contextMenuEvent(QContextMenuEvent *e);
 void keyPressEvent ( QKeyEvent * e );
 void focusInEvent(QFocusEvent *e);
+void mouseMoveEvent(QMouseEvent *);
+void mousePressEvent(QMouseEvent *);
+QMimeData *createMimeDataFromSelection() const;
+bool canInsertFromMimeData(const QMimeData *source) const;
+void insertFromMimeData(const QMimeData *source);
+
 signals:
 void spellme();
 void tooltiptab();
@@ -171,6 +207,12 @@ void requestGotoStructure(int);
 void poshaschanged(int,int);
 void numLinesChanged(int);
 
+///
+public slots:
+virtual void copy();
+
+signals:
+void copyStateChanged(bool enable);
 /////////////////////////////////////////////////
 //added by S. R. Alavizadeh
 //Bi-Di Support

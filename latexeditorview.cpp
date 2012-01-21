@@ -17,7 +17,7 @@
 //#include <QTextEdit>
 #include <QTextBlock>
 
-LatexEditorView::LatexEditorView(QWidget *parent,QFont & efont,bool line, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces, int tabwidth) : QWidget(parent)
+LatexEditorView::LatexEditorView(QWidget *parent,QFont & efont,bool line,QList<QColor> edcolors, QList<QColor> hicolors,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces, int tabwidth,const QKeySequence viewfocus,QString name) : QWidget(parent)
 {
   
 splitter=new MiniSplitter(this);
@@ -42,11 +42,12 @@ frame->setFrameShadow(QFrame::Plain);
 frame->setFrameStyle(QFrame::NoFrame);
 mainlay->addWidget(frame);
 
-editor=new LatexEditor(frame,efont,colMath,colCommand,colKeyword,inlinespelling,ignoredWords,spellChecker,tabspaces,tabwidth);
+editor=new LatexEditor(frame,efont,edcolors,hicolors,inlinespelling,ignoredWords,spellChecker,tabspaces,tabwidth,viewfocus,name);
 m_lineNumberWidget = new LineNumberWidget( editor, frame);
 m_lineNumberWidget->setFont(efont);
 QFontMetrics fm( efont );
-m_lineNumberWidget->setFixedWidth( fm.width( "00000" ) + 32 );
+m_lineNumberWidget->setFixedWidth( 10+fm.width( "00" ) + fm.width("0")+6 );
+//m_lineNumberWidget->setFixedWidth( fm.width( "00000" ) + 32 );
 QHBoxLayout* lay = new QHBoxLayout( frame );
 lay->setSpacing(0);
 lay->setMargin(0);

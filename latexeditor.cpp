@@ -31,15 +31,369 @@
 #include <QScrollBar>
 #include <QTextCodec>
 #include <QFile>
+#include <QFileInfo>
 #include <QInputContext>
+#include <QTextDocumentFragment>
+#include <QFuture>
+#include <QtCore>
+
+
 #include "blockdata.h"
 
-LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QColor colMath, QColor colCommand, QColor colKeyword,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces,int tabwidth) : QTextEdit(parent),c(0)
+static void convertToPlainText(QString &txt)
 {
+    QChar *uc = txt.data();
+    QChar *e = uc + txt.size();
+
+    for (; uc != e; ++uc) {
+        switch (uc->unicode()) {
+        case 0xfdd0: // QTextBeginningOfFrame
+        case 0xfdd1: // QTextEndOfFrame
+        case QChar::ParagraphSeparator:
+        case QChar::LineSeparator:
+            *uc = QLatin1Char('\n');
+            break;
+        case QChar::Nbsp:
+            *uc = QLatin1Char(' ');
+            break;
+        default:
+            ;
+        }
+    }
+}
+
+extern struct updateStruct updateStructureList(QTextDocument *doc,int blockpos,QString text,int line,QList<StructItem> list)
+{
+bool haschanged=false;
+QList<StructItem> templist=list;
+int i=line;
+int j=0;
+StructItem oldItem=StructItem(i,"",-1,QTextCursor());
+for ( j=templist.count()-1;j>=0; --j ) 
+  {
+    if ( templist[j].cursor.block().blockNumber()==line)
+    {
+      oldItem=templist[j];
+      templist.removeAt(j);
+    }
+  }
+StructItem newItem=StructItem(i,"",-1,QTextCursor());
+bool found=false;
+int tagStart, tagEnd,offset;
+QString s;
+QString struct_level1="part";
+QString struct_level2="chapter";
+QString struct_level3="section";
+QString struct_level4="subsection";
+QString struct_level5="subsubsection";
+
+tagStart=tagEnd=offset=0;
+s=text; 
+ tagStart=s.indexOf(QRegExp("\\\\"+struct_level3+"\\*?[\\{\\[]"), tagEnd);
+offset=tagStart;
+	if (tagStart!=-1)
+	{
+	tagStart=s.indexOf(struct_level3, tagEnd);
+	s=s.mid(tagStart+struct_level3.length(),s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+	  {
+	  if (s.startsWith("*")) s=s.remove(0,1);
+	  if (s.startsWith("{")) s=s.remove(0,1);
+	  if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+	QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+	  newItem=StructItem(i,s,6,cursor);
+	  found=true;
+	  }
+	};
+if (!found)
+{
+//// subsection ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf(QRegExp("\\\\"+struct_level4+"\\*?[\\{\\[]"), tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	tagStart=s.indexOf(struct_level4, tagEnd);
+	s=s.mid(tagStart+struct_level4.length(),s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+	  {
+	  if (s.startsWith("*")) s=s.remove(0,1);
+	  if (s.startsWith("{")) s=s.remove(0,1);
+	  if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+	QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+	  newItem=StructItem(i,s,7,cursor);
+	  found=true;
+	  }
+	};
+}
+if (!found)
+{
+//// subsubsection ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf(QRegExp("\\\\"+struct_level5+"\\*?[\\{\\[]"), tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	tagStart=s.indexOf(struct_level5, tagEnd);
+	s=s.mid(tagStart+struct_level5.length(),s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+	  {
+	  if (s.startsWith("*")) s=s.remove(0,1);
+	  if (s.startsWith("{")) s=s.remove(0,1);
+	  if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+		QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+	  newItem=StructItem(i,s,8,cursor);
+	  found=true;
+	  }
+	};
+}
+if (!found)
+{
+//// block ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf(QRegExp("\\\\begin\\{block\\}\\*?[\\{\\[]"), tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	tagStart=s.indexOf("begin{block}", tagEnd);
+	s=s.mid(tagStart+12,s.length());
+	if (s.startsWith("{")) s=s.remove(0,1);
+	if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+	QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+	newItem=StructItem(i,s,0,cursor);
+	found=true;
+	};
+}
+if (!found)
+{
+//// label ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf("\\label{", tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	s=s.mid(tagStart+7,s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+		{
+		s=s.mid(0,tagStart);
+		if (s.startsWith("{")) s=s.remove(0,1);
+		if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+		QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+		newItem=StructItem(i,s,1,cursor);
+		found=true;
+		}
+	};
+}
+if (!found)
+{
+//// include ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf("\\include{", tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	s=s.mid(tagStart+8,s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+		{
+		s=s.mid(0,tagStart+1);
+		if (s.startsWith("{")) s=s.remove(0,1);
+		if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+			   	QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+		newItem=StructItem(i,s,2,cursor);
+		found=true;
+		}
+	};
+}
+if (!found)
+{
+//// input ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf("\\input{", tagEnd);
+offset=tagStart;
+	if (tagStart!=-1)
+	{
+	s=s.mid(tagStart+6,s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+		{
+		s=s.mid(0,tagStart+1);
+		if (s.startsWith("{")) s=s.remove(0,1);
+		if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+			   	QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+		newItem=StructItem(i,s,3,cursor);
+		found=true;
+		}
+	};
+}
+if (!found)
+{
+//// part ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf(QRegExp("\\\\"+struct_level1+"\\*?[\\{\\[]"), tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	tagStart=s.indexOf(struct_level1, tagEnd);
+	s=s.mid(tagStart+struct_level1.length(),s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+	  {
+	  if (s.startsWith("*")) s=s.remove(0,1);
+	  if (s.startsWith("{")) s=s.remove(0,1);
+	  if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+		QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+	  newItem=StructItem(i,s,4,cursor);
+	  found=true;
+	  }
+	};
+}
+if (!found)
+{
+//// chapter ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf(QRegExp("\\\\"+struct_level2+"\\*?[\\{\\[]"), tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	tagStart=s.indexOf(struct_level2, tagEnd);
+	s=s.mid(tagStart+struct_level2.length(),s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+	  {
+	  if (s.startsWith("*")) s=s.remove(0,1);
+	  if (s.startsWith("{")) s=s.remove(0,1);
+	  if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+		QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+	  newItem=StructItem(i,s,5,cursor);
+	  found=true;
+	  }
+	};
+}
+if (!found)
+{
+//// bib files ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf("\\bibliography{", tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	s=s.mid(tagStart+13,s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+		{
+		s=s.mid(0,tagStart+1);
+		if (s.startsWith("{")) s=s.remove(0,1);
+		if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+				      	QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+		newItem=StructItem(i,s,9,cursor);
+		found=true;
+		}
+	};
+}
+if (!found)
+{
+//// bib files ////
+tagStart=tagEnd=offset=0;
+s=text;
+tagStart=s.indexOf("\\addbibresource{", tagEnd);
+offset=tagStart;
+if (tagStart!=-1)
+	{
+	s=s.mid(tagStart+15,s.length());
+	s=s.trimmed();
+	tagStart=s.indexOf("}", tagEnd);
+	if (tagStart!=-1)
+		{
+		s=s.mid(0,tagStart+1);
+		if (s.startsWith("{")) s=s.remove(0,1);
+		if (s.endsWith("}")) s=s.remove(s.length()-1,1);
+				      	QTextCursor	cursor(doc);
+	cursor.setPosition(blockpos + offset+1);
+		newItem=StructItem(i,s,9,cursor);
+		found=true;
+		}
+	};
+}
+
+j=0;
+if (newItem.type>=0)
+{
+while (j < templist.count()) 
+  {
+   if (templist[j].cursor.position() > newItem.cursor.position()) break;
+  ++j;
+  }
+templist.insert(j,newItem);
+}
+if (!(newItem==oldItem)) haschanged=true;
+struct updateStruct newstruct;
+newstruct.isdirty=haschanged;
+newstruct.list=templist;
+return newstruct;
+}
+
+
+LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QList<QColor> edcolors, QList<QColor> hicolors,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces,int tabwidth,const QKeySequence viewfocus, QString name) : QTextEdit(parent),c(0)
+{
+ 
+fname=name;
+vfocus=viewfocus;
+/***********************/
+inBlockSelectionMode=false;
+blockSelection.tabSize=tabwidth;
+blockSelection.clear();
+setCursorWidth(2);
+connect(this, SIGNAL(selectionChanged()), this, SLOT(slotSelectionChanged()));
+/***********************/
+colorBackground=edcolors.at(0);
+colorLine=edcolors.at(1);
+colorHighlight=edcolors.at(2);
+colorCursor=edcolors.at(3);
+
 QPalette p = palette();
+p.setColor(QPalette::Active, QPalette::Base, colorBackground);
+p.setColor(QPalette::Inactive, QPalette::Base, colorBackground);
+p.setColor(QPalette::Inactive, QPalette::Window, colorBackground);
+p.setColor(QPalette::Active, QPalette::Window, colorBackground);
+p.setColor(QPalette::Normal,QPalette::Text,colorCursor);
 p.setColor(QPalette::Inactive, QPalette::Highlight,p.color(QPalette::Active, QPalette::Highlight));
 p.setColor(QPalette::Inactive, QPalette::HighlightedText,p.color(QPalette::Active, QPalette::HighlightedText));
 setPalette(p);
+//setBackgroundVisible(true);
+
 setFrameStyle(QFrame::NoFrame);
 //setAcceptRichText(false);
 setLineWidth(0);
@@ -88,12 +442,16 @@ else
 
 highlighter = new LatexHighlighter(document(),inlinespelling,ignoredWords,spellChecker);
 highlighter->SetEditor(this);
-highlighter->setColors(colMath,colCommand,colKeyword);
+highlighter->setColors(hicolors);
+QFileInfo fi(fname);
+if (!fname.startsWith("untitled") && (fi.suffix()=="asy" || fi.suffix()=="mp")) highlighter->setModeGraphic(true);
+
 
 //c=0;
 //connect(this, SIGNAL(cursorPositionChanged()), viewport(), SLOT(update()));
 connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(matchAll()));
 connect(this->document(), SIGNAL(blockCountChanged(int)), this, SLOT(requestNewNumLines(int)));
+
 //connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(matchLat()));
 //grabShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Tab), Qt::WidgetShortcut);
 //setCenterOnScroll(true);
@@ -104,48 +462,295 @@ highlightLine=false;
 highlightRemover.setSingleShot(true);
 connect(&highlightRemover, SIGNAL(timeout()), this, SLOT(clearHightLightLine()));
 emit poshaschanged(1,1);
+
 }
 LatexEditor::~LatexEditor(){
 //delete pChecker;
 }
 
+void LatexEditor::setColors(QList<QColor> colors)
+{
+colorBackground=colors.at(0);
+colorLine=colors.at(1);
+colorHighlight=colors.at(2);
+colorCursor=colors.at(3);
+QPalette p = palette();
+p.setColor(QPalette::Active, QPalette::Base, colorBackground);
+p.setColor(QPalette::Inactive, QPalette::Base, colorBackground);
+p.setColor(QPalette::Inactive, QPalette::Window, colorBackground);
+p.setColor(QPalette::Active, QPalette::Window, colorBackground);
+p.setColor(QPalette::Normal,QPalette::Text,colorCursor);
+p.setColor(QPalette::Inactive, QPalette::Highlight,p.color(QPalette::Active, QPalette::Highlight));
+p.setColor(QPalette::Inactive, QPalette::HighlightedText,p.color(QPalette::Active, QPalette::HighlightedText));
+setPalette(p);
+//setBackgroundVisible(true);
+highlighter->rehighlight();
+update();
+}
+//#include<QAbstractTextDocumentLayout>
 void LatexEditor::paintEvent(QPaintEvent *event)
 {
-QColor selBlendColor=QColor("#FF0000");
+QPainter painter(viewport());
+QColor selBlendColor=colorHighlight;
 QColor blCol = selBlendColor.dark( 140 );
 blCol.setAlphaF( 0.2 );
 QRect rect = cursorRect();
 rect.setX(0);
 rect.setWidth(viewport()->width());
-QPainter painter(viewport());
 if (!highlightLine)
   {
-  const QBrush brush(QColor("#ececec"));
+  const QBrush brush(colorLine);
   painter.fillRect(rect, brush);
-  painter.end();
   }
 else
   {
   const QBrush brush(blCol);
   painter.fillRect(rect, brush);
-  painter.end();
   }
+painter.end();
 QTextEdit::paintEvent(event);
+/*
+QTextDocument *doc = document();  
+int yOffset = verticalScrollBar()->value();
+QTextBlock p = doc->begin();
+QTextBlock firstVisible;
+while ( p.isValid()) 
+	{
+	//Version 2.0.1
+	QPointF point = p.layout()->position();
+	if ( point.y() + 20 - yOffset < 0 ) 
+		{
+		//i++;
+		p = p.next();
+		continue;
+		}
+	else
+	{
+		firstVisible = p;
+		break;
+	}
+}
+
+
+QPointF offset( firstVisible.layout()->position().x(), firstVisible.layout()->position().y() + 20 - yOffset);//contentOffset());
+QTextBlock textCursorBlock = textCursor().block();
+bool hasMainSelection = textCursor().hasSelection();
+QRect er = event->rect();
+QRect viewportRect = viewport()->rect();
+painter.setBrushOrigin(offset);
+
+
+int blockSelectionIndex = -1;
+
+QAbstractTextDocumentLayout::PaintContext context = getPaintContext();
+if (inBlockSelectionMode
+    && context.selections.count() && context.selections.last().cursor == textCursor()) 
+{
+    blockSelectionIndex = context.selections.size()-1;
+    context.selections[blockSelectionIndex].format.clearBackground();
+}
+
+QTextLayout *cursor_layout = 0;
+QPointF cursor_offset;
+int cursor_cpos = 0;
+QPen cursor_pen;
+QTextBlock block = firstVisible;//firstVisibleBlock();
+while (block.isValid()) {
+QRectF r = blockBoundingRect(block).translated(offset);
+
+if (r.bottom() >= er.top() && r.top() <= er.bottom()) {
+
+    QTextLayout *layout = block.layout();
+
+    QTextOption option = layout->textOption();
+
+	option.setFlags(option.flags() & ~QTextOption::SuppressColors);
+	painter.setPen(context.palette.text().color());
+   
+    layout->setTextOption(option);
+    layout->setFont(doc->defaultFont()); 
+int blpos = block.position();
+int bllen = block.length();
+
+QVector<QTextLayout::FormatRange> selections;
+QVector<QTextLayout::FormatRange> prioritySelections;
+
+for (int i = 0; i < context.selections.size(); ++i) {
+    const QAbstractTextDocumentLayout::Selection &range = context.selections.at(i);
+    const int selStart = range.cursor.selectionStart() - blpos;
+    const int selEnd = range.cursor.selectionEnd() - blpos;
+    if (selStart < bllen && selEnd >= 0
+	&& selEnd >= selStart) {
+	QTextLayout::FormatRange o;
+	o.start = selStart;
+	o.length = selEnd - selStart;
+	o.format = range.format;
+	if (i == blockSelectionIndex) {
+	    QString text = block.text();
+	    o.start = blockSelection.positionAtColumn(text, blockSelection.firstVisualColumn,0);
+	    o.length = blockSelection.positionAtColumn(text, blockSelection.lastVisualColumn,0) - o.start;
+	}
+	if ((hasMainSelection && i == context.selections.size()-1)
+	    || (o.format.foreground().style() == Qt::NoBrush
+	    && o.format.underlineStyle() != QTextCharFormat::NoUnderline
+	    && o.format.background() == Qt::NoBrush))
+	    prioritySelections.append(o);
+	else
+	    selections.append(o);
+    }
+}
+ selections += prioritySelections;
+ 
+QRectF blockSelectionCursorRect;
+if (inBlockSelectionMode
+	&& block.position() >= blockSelection.firstBlock.block().position()
+	&& block.position() <= blockSelection.lastBlock.block().position()) {
+    QString text = block.text();
+    qreal spacew = QFontMetricsF(font()).width(QLatin1Char(' '));
+
+    int offset = 0;
+    int relativePos  =  blockSelection.positionAtColumn(text, blockSelection.firstVisualColumn, &offset);
+    QTextLine line = layout->lineForTextPosition(relativePos);
+    qreal x = line.cursorToX(relativePos) + offset * spacew;
+
+    int eoffset = 0;
+    int erelativePos  =  blockSelection.positionAtColumn(text, blockSelection.lastVisualColumn, &eoffset);
+    QTextLine eline = layout->lineForTextPosition(erelativePos);
+    qreal ex = eline.cursorToX(erelativePos) + eoffset * spacew;
+
+    QRectF rr = line.naturalTextRect();
+    rr.moveTop(rr.top() + r.top());
+    rr.setLeft(r.left() + x);
+    if (line.lineNumber() == eline.lineNumber())  {
+	rr.setRight(r.left() + ex);
+    }
+    painter.fillRect(rr, palette().highlight());
+    if ((blockSelection.anchor == TextBlockSelection::TopLeft
+	    && block == blockSelection.firstBlock.block())
+	    || (blockSelection.anchor == TextBlockSelection::BottomLeft
+		&& block == blockSelection.lastBlock.block())
+	    ) {
+	rr.setRight(rr.left()+2);
+	blockSelectionCursorRect = rr;
+    }
+    for (int i = line.lineNumber() + 1; i < eline.lineNumber(); ++i) {
+	rr = layout->lineAt(i).naturalTextRect();
+	rr.moveTop(rr.top() + r.top());
+	rr.setLeft(r.left() + x);
+	painter.fillRect(rr, palette().highlight());
+    }
+
+    rr = eline.naturalTextRect();
+    rr.moveTop(rr.top() + r.top());
+    rr.setRight(r.left() + ex);
+    if (line.lineNumber() != eline.lineNumber())
+	painter.fillRect(rr, palette().highlight());
+    if ((blockSelection.anchor == TextBlockSelection::TopRight
+	  && block == blockSelection.firstBlock.block())
+	    || (blockSelection.anchor == TextBlockSelection::BottomRight
+		&& block == blockSelection.lastBlock.block())) {
+	rr.setLeft(rr.right()-2);
+	blockSelectionCursorRect = rr;
+    }
+}
+            bool drawCursor = ((true) // we want the cursor in read-only mode
+                               && context.cursorPosition >= blpos
+                               && context.cursorPosition < blpos + bllen);
+
+            bool drawCursorAsBlock = drawCursor && overwriteMode() ;
+
+            if (drawCursorAsBlock) {
+                int relativePos = context.cursorPosition - blpos;
+                bool doSelection = true;
+                QTextLine line = layout->lineForTextPosition(relativePos);
+                qreal x = line.cursorToX(relativePos);
+                qreal w = 0;
+                if (relativePos < line.textLength() - line.textStart()) {
+                    w = line.cursorToX(relativePos + 1) - x;
+                    if (doc->characterAt(context.cursorPosition) == QLatin1Char('\t')) {
+                        doSelection = false;
+                        qreal space = QFontMetricsF(layout->font()).width(QLatin1Char(' '));
+                        if (w > space) {
+                            x += w-space;
+                            w = space;
+                        }
+                    }
+                } else
+                    w = QFontMetrics(layout->font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+
+                QRectF rr = line.rect();
+                rr.moveTop(rr.top() + r.top());
+                rr.moveLeft(r.left() + x);
+                rr.setWidth(w);
+                painter.fillRect(rr, palette().text());
+                if (doSelection) {
+                    QTextLayout::FormatRange o;
+                    o.start = relativePos;
+                    o.length = 1;
+                    o.format.setForeground(palette().base());
+                    selections.append(o);
+                }
+            }
+layout->draw(&painter, offset, selections, er); 
+            if ((drawCursor && !drawCursorAsBlock)
+                || (context.cursorPosition < -1
+                    && !layout->preeditAreaText().isEmpty())) {
+                int cpos = context.cursorPosition;
+                if (cpos < -1)
+                    cpos = layout->preeditAreaPosition() - (cpos + 2);
+                else
+                    cpos -= blpos;
+                cursor_layout = layout;
+                cursor_offset = offset;
+                cursor_cpos = cpos;
+                cursor_pen = painter.pen();
+            }
+#ifndef Q_WS_MAC // no visible cursor on mac
+            if (blockSelectionCursorRect.isValid())
+                painter.fillRect(blockSelectionCursorRect, palette().text());
+#endif
+}
+offset.ry() += r.height();
+
+
+if (offset.y() > viewportRect.height())
+    break;
+
+block = block.next();
+       if (!block.isVisible()) {
+            // invisible blocks do have zero line count
+            block = doc->findBlockByLineNumber(block.firstLineNumber());
+        }
+
+}
+    painter.setPen(context.palette.text().color());
+
+    if (backgroundVisible() && !block.isValid() && offset.y() <= er.bottom()
+        && (centerOnScroll() || verticalScrollBar()->maximum() == verticalScrollBar()->minimum())) {
+        painter.fillRect(QRect(QPoint((int)er.left(), (int)offset.y()), er.bottomRight()), palette().background());
+    }
+    
+
+   if (cursor_layout && !inBlockSelectionMode) {
+	cursor_pen.setBrush(QBrush(colorCursor));
+        painter.setPen(cursor_pen);
+        cursor_layout->drawCursor(&painter, cursor_offset, cursor_cpos, cursorWidth());
+    }*/
 }
 
 void LatexEditor::contextMenuEvent(QContextMenuEvent *e)
 {
-	/////////////////////////////////////////////////
-	//added by S. R. Alavizadeh
-	//Extra Feature: Forward Search
-	if (ignoreRightClickEvent)
-		{
-		ignoreRightClickEvent = false;
-		e->ignore();
-		return;
-		}
-	/////////////////////////////////////////////////
-	
+/////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Extra Feature: Forward Search
+if (ignoreRightClickEvent)
+	{
+	ignoreRightClickEvent = false;
+	e->ignore();
+	return;
+	}
+/////////////////////////////////////////////////
+
 QMenu *menu=new QMenu(this);
 //menu = createStandardContextMenu();
 QAction *a;
@@ -237,10 +842,10 @@ a->setEnabled(document()->isRedoAvailable());
 menu->addSeparator();
 a = menu->addAction(tr("Cut"), this, SLOT(cut()));
 a->setShortcut(Qt::CTRL+Qt::Key_X);
-a->setEnabled(textCursor().hasSelection());
+a->setEnabled(textCursor().hasSelection() || !extraSelections().isEmpty());
 a = menu->addAction(tr("Copy"), this, SLOT(copy()));
 a->setShortcut(Qt::CTRL+Qt::Key_C);
-a->setEnabled(textCursor().hasSelection());
+a->setEnabled(textCursor().hasSelection() || !extraSelections().isEmpty());
 a = menu->addAction(tr("Paste") , this, SLOT(paste()));
 a->setShortcut(Qt::CTRL+Qt::Key_P);
 const QMimeData *md = QApplication::clipboard()->mimeData();
@@ -287,11 +892,12 @@ if (endBlock>=0)
   }
 menu->addSeparator();
 a=new QAction(tr("Jump to pdf"),menu);
-#ifdef Q_WS_MACX
-a->setShortcut(Qt::CTRL+Qt::Key_Dollar);
-#else
-a->setShortcut(Qt::CTRL+Qt::Key_Space);
-#endif
+a->setShortcut(vfocus);
+// #ifdef Q_WS_MACX
+// a->setShortcut(Qt::CTRL+Qt::Key_Dollar);
+// #else
+// a->setShortcut(Qt::CTRL+Qt::Key_Space);
+// #endif
 a->setData(QVariant(cursorForPosition(e->pos()).blockNumber() + 1));
 connect(a, SIGNAL(triggered()), this, SLOT(jumpToPdf()));
 menu->addAction(a);
@@ -929,7 +1535,7 @@ while (++end < text.length())
 
   if (IS_WORD_FORMING(ch))
   {
-    if ((first) && (ch=='}' || ch==']')) break;
+    if ((first) && (ch=='}' || ch==']')) {++end;break;}
     first=false;
     continue;
 	  
@@ -1031,6 +1637,26 @@ return (QStringList() << result << QString::number(index) << QString::number(sta
 
 void LatexEditor::keyPressEvent ( QKeyEvent * e ) 
 {
+   if (inBlockSelectionMode) {
+        if (e == QKeySequence::Cut) {
+            
+                cut();
+                e->accept();
+                return;
+      
+        } else if (e == QKeySequence::Delete || e->key() == Qt::Key_Backspace) {
+            
+                removeBlockSelection();
+                e->accept();
+                return;
+           
+        } else if (e == QKeySequence::Paste) {
+            
+                removeBlockSelection();
+                // continue
+          
+        }
+    }
 if (c && c->popup()->isVisible()) 
 	{
 	switch (e->key()) 
@@ -1073,7 +1699,7 @@ if ( e->key()==Qt::Key_Tab)
 	if (txt.contains(QString(0x2022)))
 	    {
 	    //e->ignore();
-	    search(QString(0x2022) ,true,true,true,true);
+	    search(QString(0x2022) ,true,false,true,true);
 	    return;		
 	    }
 	}
@@ -1084,7 +1710,7 @@ if ( e->key()==Qt::Key_Tab)
 	if (txtnext.contains(QString(0x2022)))
 	    {
 	    //e->ignore();
-	    search(QString(0x2022) ,true,true,true,true);
+	    search(QString(0x2022) ,true,false,true,true);
 	    return;		
 	    }
 	}
@@ -1101,7 +1727,7 @@ else if ( e->key()==Qt::Key_Backtab)
 	if (txt.contains(QString(0x2022)))
 	    {
 	    //e->ignore();
-	    search(QString(0x2022) ,true,true,false,true);
+	    search(QString(0x2022) ,true,false,false,true);
 	    return;		
 	    }
 	}
@@ -1152,18 +1778,37 @@ else if ((e->key()==Qt::Key_Enter)||(e->key()==Qt::Key_Return))
 		}
 	cursor.endEditBlock();
 	}
-#ifdef Q_WS_MACX
-else if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Dollar) 
-  {
-  emit requestpdf(textCursor().blockNumber() + 1);
-  }
-#else
-else if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Space) 
-  {
-  emit requestpdf(textCursor().blockNumber() + 1);
-  }
-#endif
-else QTextEdit::keyPressEvent(e);
+else
+	{
+	int qtKeyCode = e->key();
+	if(e->modifiers() & Qt::ShiftModifier) {
+		qtKeyCode += Qt::SHIFT;
+	}
+	if(e->modifiers() & Qt::ControlModifier) {
+		qtKeyCode += Qt::CTRL;
+	}
+	if(e->modifiers() & Qt::AltModifier) {
+		qtKeyCode += Qt::ALT;
+	}
+	if(e->modifiers() & Qt::MetaModifier) {
+		qtKeyCode += Qt::META;
+	}
+	QKeySequence s1 = QKeySequence(qtKeyCode);
+	if (s1.matches(vfocus)==QKeySequence::ExactMatch) emit requestpdf(textCursor().blockNumber() + 1);
+
+// 	#ifdef Q_WS_MACX
+// 	else if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Dollar) 
+// 	  {
+// 	  emit requestpdf(textCursor().blockNumber() + 1);
+// 	  }
+// 	#else
+// 	else if (((e->modifiers() & ~Qt::ShiftModifier) == Qt::ControlModifier) && e->key()==Qt::Key_Space) 
+// 	  {
+// 	  emit requestpdf(textCursor().blockNumber() + 1);
+// 	  }
+// 	#endif
+	else QTextEdit::keyPressEvent(e);
+	}
 if (c && !c->popup()->isVisible()) 
 	{
 	switch (e->key()) 
@@ -1239,18 +1884,29 @@ QObject::connect(c, SIGNAL(activated(const QString&)),this, SLOT(insertCompletio
 {
 if (c->widget() != this) return;
 QTextCursor tc = textCursor();
+//tc.select(QTextCursor::WordUnderCursor);
+//qDebug() << tc.selectedText();
 QStringList check=fullcommandUnderCursor();
 int t=check.at(1).toInt();
 int r=check.at(2).toInt();
 int w=check.at(0).size();
+//qDebug() << check << w;
+
+QString insert_word = completion;
+
 tc.movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,t-r+1);
-tc.removeSelectedText();
-tc.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,w-t-1+r);
+QString bef=tc.selectedText();
 tc.removeSelectedText();
 int pos=tc.position();
-QString insert_word = completion;
+tc.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,w-t-1+r);
+QString aft=tc.selectedText();
+//qDebug() << bef << aft;
+//tc.removeSelectedText();
+if (bef.contains("{") || !aft.contains("}")) tc.removeSelectedText();
+else tc.setPosition(pos,QTextCursor::MoveAnchor);
+
 QString env;
-QRegExp rbb("begin\\{\\s*([A-Za-z_]+)\\}");
+QRegExp rbb("begin\\{\\s*([A-Za-z_]+(\\*)?)\\}");
 //QRegExp rbb("begin\\{\\s*(.*)\\}");
 if (completion.contains(rbb)) 
 	{
@@ -1266,7 +1922,7 @@ if (completion.contains(rbb))
 	    {
 	    tc.movePosition(QTextCursor::Up,QTextCursor::MoveAnchor,1);
 	    setTextCursor(tc);
-	    search(QString(0x2022) ,true,true,true,true);
+	    search(QString(0x2022) ,true,false,true,true);
 	    emit tooltiptab();
 	    }
 
@@ -1285,7 +1941,7 @@ else
 		tc.insertText(insert_word);
 	tc.setPosition(pos,QTextCursor::MoveAnchor);
 	setTextCursor(tc);
-	if (!search(QString(0x2022) ,true,true,true,true))
+	if (!search(QString(0x2022) ,true,false,true,true))
 	  {
 	  tc.setPosition(pos+completion.length(),QTextCursor::MoveAnchor);
 	  setTextCursor(tc);
@@ -1393,7 +2049,9 @@ QList<QTextEdit::ExtraSelection> selections;
 setExtraSelections(selections);
 matchPar();
 matchLat();
+
 if (foldableLines.keys().contains(textCursor().block().blockNumber())) emit requestGotoStructure(textCursor().block().blockNumber());
+
 //emit poshaschanged(textCursor().blockNumber() + 1,textCursor().position() - document()->findBlock(textCursor().selectionStart()).position()+1);
 emit poshaschanged(textCursor().blockNumber() + 1,textCursor().position() - textCursor().block().position()+1);
 }
@@ -1666,70 +2324,16 @@ emit updatelineWidget();
 ensureCursorVisible();
 }
 
-void LatexEditor::setOldStructureItem()
+void LatexEditor::checkStructUpdate(QTextDocument *doc,int blockpos,QString text,int line)
 {
-OldStructItemsList=StructItemsList;
+QList<StructItem> temp=StructItemsList;
+QFuture< struct updateStruct > result=QtConcurrent::run(updateStructureList,doc,blockpos,text,line,temp);
+struct updateStruct newstruct=result;
+StructItemsList=newstruct.list;
+if (newstruct.isdirty) {emit requestUpdateStructure();}
 }
 
-bool LatexEditor::StructureHasChanged()
-{
-QList<StructItem> tempStructItemsList, tempOldStructItemsList;
-tempStructItemsList=StructItemsList;
-tempOldStructItemsList=OldStructItemsList;
-qSort(tempOldStructItemsList.begin(),tempOldStructItemsList.end());
-qSort(tempStructItemsList.begin(), tempStructItemsList.end());
-/*if (tempStructItemsList!=tempOldStructItemsList)
-{
-qDebug() << tempOldStructItemsList.count() << tempStructItemsList.count();
-for (int i=0;i<tempOldStructItemsList.count();i++)
-{
-qDebug() <<  tempOldStructItemsList[i].line << tempStructItemsList[i].line;
-qDebug() <<  tempOldStructItemsList[i].item << tempStructItemsList[i].item;
-qDebug() <<  tempOldStructItemsList[i].type << tempStructItemsList[i].type;
-}
-}*/
-return (tempStructItemsList!=tempOldStructItemsList);
-}
 
-void LatexEditor::removeStructureItem(int offset,int len, int line)
-{
-bool r=false;
-for ( int j=StructItemsList.count()-1;j>=0; --j ) 
-  {
-  //if (StructItemsList[j].cursor.selectionStart() < offset) break;
-  //if (StructItemsList[j].cursor.selectionStart() < offset+len)
-  //if (StructItemsList[j].cursor.position() < offset) break;
-  //if (StructItemsList[j].cursor.position() < offset+len)
-    if ( StructItemsList[j].cursor.block().blockNumber()==line)
-    {
-      //qDebug() << "remove" << StructItemsList[j].item << StructItemsList[j].cursor.selectionStart() << offset << len;
-      //qDebug() << "remove" << StructItemsList[j].item << StructItemsList[j].cursor.block().blockNumber() << line;
-      StructItemsList.removeAt(j);
-    r=true;
-    }
-  }
-
-//if (r && update) {qDebug() << "update remove" << line  ;emit requestUpdateStructure();}
-}
-
-void LatexEditor::appendStructureItem(int line,QString item,int type,const QTextCursor& cursor)
-{
-int j = 0;
-while (j < StructItemsList.count()) 
-  {
-  if (StructItemsList[j].cursor.position() > cursor.position()) break;
-  //if (StructItemsList[j].cursor.selectionStart() > cursor.selectionStart()) break;
-  ++j;
-  }
-StructItemsList.insert(j,StructItem(line,item,type,cursor));
-//qDebug() << "update append" << line ;
-//if (update) emit requestUpdateStructure();
-}
-
-void LatexEditor::setStructureDirty()
-{
-emit requestUpdateStructure();
-}
 
 void LatexEditor::ensureFinalNewLine()//Qt 4.7.1 bug
 {
@@ -1810,6 +2414,410 @@ setTabStopWidth(fontMetrics().width(" ")*tabWidth);
 void LatexEditor::requestNewNumLines(int n)
 {
 emit numLinesChanged(n);
+}
+
+void LatexEditor::setKeyViewerFocus(QKeySequence s)
+{
+vfocus=s;
+}
+
+void LatexEditor::updateName(QString f)
+{
+QFileInfo fiold(fname);
+QFileInfo finew(f);
+if ((fname.startsWith("untitled") || (fiold.suffix()!="asy" && fiold.suffix()!="mp")) && (finew.suffix()=="asy" || finew.suffix()=="mp") )
+  {
+  highlighter->setModeGraphic(true);
+  highlighter->rehighlight();
+  }
+fname=f;
+}
+
+void LatexEditor::mouseMoveEvent(QMouseEvent *e)
+{
+QTextEdit::mouseMoveEvent(e);
+
+if (e->modifiers() & Qt::AltModifier) 
+{
+	//qDebug() << "movseMoveAnchor="<<anchorAt(e->pos())<<"blockNumber="<<cursorForPosition(e->pos()).blockNumber()+1<<"columnNumber="<<cursorForPosition(e->pos()).columnNumber()<<"columnAt="<<blockSelection.columnAt(cursorForPosition(e->pos()).block().text(), cursorForPosition(e->pos()).positionInBlock());
+	
+	//this->setStyleSheet("QTextEdit{selection-background-color: transparent; selection-color: none;}");
+    if (!inBlockSelectionMode) {
+	blockSelection.fromSelection(textCursor());
+	QTextCursor mcursor = textCursor();
+	mcursor.clearSelection();
+	setTextCursor(mcursor);
+	inBlockSelectionMode = true;
+    } else {
+	QTextCursor cursor = textCursor();
+	QTextCursor mcursor = textCursor();
+	mcursor.clearSelection();
+	setTextCursor(mcursor);
+	//slotSelectionChanged() sets 'inBlockSelectionMode' to false!
+	inBlockSelectionMode = true;
+	// get visual column
+#if (QT_VERSION >= 0x040700)
+	int column = blockSelection.columnAt(cursor.block().text(), cursor.positionInBlock());
+	if (cursor.positionInBlock() == cursor.block().length()-1) {
+	    column += (e->pos().x() - cursorRect().center().x())/QFontMetricsF(font()).width(QLatin1Char(' '));
+	}
+#else
+	int column = blockSelection.columnAt(cursor.block().text(), cursor.position() - cursor.block().position());
+	if (cursor.position() - cursor.block().position() == cursor.block().length()-1) {
+	    column += (e->pos().x() - cursorRect().center().x())/QFontMetricsF(font()).width(QLatin1Char(' '));
+	}
+#endif
+
+	  blockSelection.moveAnchor(cursor.blockNumber(), column);
+	//setTextCursor(blockSelection.selection());
+///////////////////
+	  QList<QTextEdit::ExtraSelection> extras;
+	  //qDebug() << "fi="<<blockSelection.firstBlock.blockNumber()<<"la="<<blockSelection.lastBlock.blockNumber();
+
+	  for(QTextBlock b=blockSelection.firstBlock.block(); b!=blockSelection.lastBlock.block().next(); b=b.next())
+	  {
+	  //QTextCursor allSelection = blockSelection.selection();
+	  //int startBlock = allSelection.
+		QTextCursor bCursor(b);
+		if (blockSelection.firstVisualColumn>=b.length())
+		  blockSelection.firstVisualColumn = b.length()-1;
+		if (blockSelection.lastVisualColumn>=b.length())
+		  blockSelection.lastVisualColumn = b.length()-1;
+		qDebug()<<blockSelection.firstVisualColumn<<blockSelection.lastVisualColumn<<b.position()<<b.position()+b.length()-1;
+		bCursor.setPosition(b.position()+blockSelection.firstVisualColumn, QTextCursor::MoveAnchor);
+		bCursor.setPosition(b.position()+blockSelection.lastVisualColumn, QTextCursor::KeepAnchor);
+		  //bCursor.movePosition()
+	  QTextEdit::ExtraSelection highlight;
+	  highlight.cursor = bCursor;//blockSelection.selection();
+//	  highlight.cursor.clearSelection();
+//	  highlight.cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+//	  highlight.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+//	  highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
+	  highlight.format.setBackground( QColor(Qt::green).lighter(170) );
+	  extras << highlight;
+	  }
+	 setExtraSelections( extras );
+	 qDebug()<<"mouseMoveEvent="<<extraSelections().size();
+	 emit copyStateChanged(true);
+///////////////
+	//viewport()->update();
+    }
+}
+//else
+//{
+//	this->setStyleSheet("QTextEdit{selection-background-color: none;}");
+//}
+    if (viewport()->cursor().shape() == Qt::BlankCursor)
+        viewport()->setCursor(Qt::IBeamCursor);
+}
+
+void LatexEditor::mousePressEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::LeftButton) {
+    if (inBlockSelectionMode) {
+        inBlockSelectionMode = false;
+        blockSelection.clear();
+        QTextCursor cursor = textCursor();
+        cursor.clearSelection();
+        setTextCursor(cursor);
+    }       
+    }
+
+    QTextEdit::mousePressEvent(e);
+}
+
+void LatexEditor::copy()
+{
+    if (inBlockSelectionMode) {
+        QClipboard *clipboard = QApplication::clipboard();
+		QMimeData *md = createMimeDataFromSelection();//clipboard->mimeData()
+		clipboard->setMimeData(md);
+				//->setText(copyBlockSelection(), QClipboard::Clipboard);
+        return;
+    }
+    QTextEdit::copy();
+}
+
+void LatexEditor::cut()
+{
+    if (inBlockSelectionMode) {
+        copy();
+        removeBlockSelection();
+        return;
+    }
+    QTextEdit::cut();
+}
+
+void LatexEditor::paste()
+{
+    if (inBlockSelectionMode) {
+        removeBlockSelection();
+    }
+    QTextEdit::paste();
+}
+
+void LatexEditor::removeBlockSelection(const QString &text)
+{
+    QTextCursor cursor = textCursor();
+    if ( extraSelections().isEmpty() /*!cursor.hasSelection()*/ || !inBlockSelectionMode)
+        return;
+	qDebug()<<"removeBlockSelection="<<extraSelections().size();
+	cursor.beginEditBlock();
+	foreach(QTextEdit::ExtraSelection exSelect, extraSelections())
+	{
+		qDebug()<<"removeBlock="<<exSelect.cursor.selectedText()<<exSelect.cursor.blockNumber();
+        cursor.setPosition(exSelect.cursor.selectionStart());
+        cursor.setPosition(exSelect.cursor.selectionEnd(), QTextCursor::KeepAnchor);
+cursor.removeSelectedText();
+//		exSelect.cursor.joinPreviousEditBlock();
+//		exSelect.cursor.removeSelectedText();
+//		exSelect.format = QTextCharFormat();
+//		exSelect.cursor.endEditBlock();
+	}
+	cursor.endEditBlock();
+	//clears extra selections
+	setExtraSelections(QList<QTextEdit::ExtraSelection>());
+return;
+    int cursorPosition = cursor.selectionStart();
+    cursor.clearSelection();
+    cursor.beginEditBlock();
+
+   
+    QTextBlock block = blockSelection.firstBlock.block();
+    QTextBlock lastBlock = blockSelection.lastBlock.block();
+    for (;;) {
+        QString text = block.text();
+        int startOffset = 0;
+        int startPos = blockSelection.positionAtColumn(text, blockSelection.firstVisualColumn, &startOffset);
+        int endOffset = 0;
+        int endPos = blockSelection.positionAtColumn(text, blockSelection.lastVisualColumn, &endOffset);
+
+        cursor.setPosition(block.position() + startPos);
+        cursor.setPosition(block.position() + endPos, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+
+        if (startOffset < 0)
+            cursor.insertText(QString(blockSelection.tabSize + startOffset, QLatin1Char(' ')));
+        if (endOffset < 0)
+            cursor.insertText(QString(-endOffset, QLatin1Char(' ')));
+
+        if (block == lastBlock)
+            break;
+        block = block.next();
+    }
+
+    cursor.setPosition(cursorPosition);
+    if (!text.isEmpty())
+        cursor.insertText(text);
+    cursor.endEditBlock();
+    setTextCursor(cursor);
+}
+
+QMimeData *LatexEditor::createMimeDataFromSelection() const
+{
+    if (inBlockSelectionMode) {
+        QMimeData *mimeData = new QMimeData;
+        QString text = copyBlockSelection();
+        mimeData->setData(QLatin1String("application/vnd.texmaker.vblocktext"), text.toUtf8());
+        mimeData->setText(text); // for exchangeability
+        return mimeData;
+    } else if (textCursor().hasSelection()) {
+        QTextCursor cursor = textCursor();
+        QMimeData *mimeData = new QMimeData;
+
+        // Copy the selected text as plain text
+        QString text = cursor.selectedText();
+        convertToPlainText(text);
+        mimeData->setText(text);
+
+        // Copy the selected text as HTML
+        {
+            // Create a new document from the selected text document fragment
+            QTextDocument *tempDocument = new QTextDocument;
+            QTextCursor tempCursor(tempDocument);
+            tempCursor.insertFragment(cursor.selection());
+
+            // Apply the additional formats set by the syntax highlighter
+            QTextBlock start = document()->findBlock(cursor.selectionStart());
+            QTextBlock end = document()->findBlock(cursor.selectionEnd());
+            end = end.next();
+
+            const int selectionStart = cursor.selectionStart();
+            const int endOfDocument = tempDocument->characterCount() - 1;
+            for (QTextBlock current = start; current.isValid() && current != end; current = current.next()) {
+                const QTextLayout *layout = current.layout();
+                foreach (const QTextLayout::FormatRange &range, layout->additionalFormats()) {
+                    const int start = current.position() + range.start - selectionStart;
+                    const int end = start + range.length;
+                    if (end <= 0 || start >= endOfDocument)
+                        continue;
+                    tempCursor.setPosition(qMax(start, 0));
+                    tempCursor.setPosition(qMin(end, endOfDocument), QTextCursor::KeepAnchor);
+                    tempCursor.setCharFormat(range.format);
+                }
+            }
+
+            // Reset the user states since they are not interesting
+            for (QTextBlock block = tempDocument->begin(); block.isValid(); block = block.next())
+                block.setUserState(-1);
+
+            // Make sure the text appears pre-formatted
+            tempCursor.setPosition(0);
+            tempCursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+            QTextBlockFormat blockFormat = tempCursor.blockFormat();
+            blockFormat.setNonBreakableLines(true);
+            tempCursor.setBlockFormat(blockFormat);
+
+            mimeData->setHtml(tempCursor.selection().toHtml());
+            delete tempDocument;
+        }
+
+        /*
+          Try to figure out whether we are copying an entire block, and store the complete block
+          including indentation in the qtcreator.blocktext mimetype.
+        */
+        QTextCursor selstart = cursor;
+        selstart.setPosition(cursor.selectionStart());
+        QTextCursor selend = cursor;
+        selend.setPosition(cursor.selectionEnd());
+
+        bool startOk = blockSelection.cursorIsAtBeginningOfLine(selstart);
+        bool multipleBlocks = (selend.block() != selstart.block());
+
+        if (startOk && multipleBlocks) {
+            selstart.movePosition(QTextCursor::StartOfBlock);
+            if (blockSelection.cursorIsAtBeginningOfLine(selend))
+                selend.movePosition(QTextCursor::StartOfBlock);
+            cursor.setPosition(selstart.position());
+            cursor.setPosition(selend.position(), QTextCursor::KeepAnchor);
+            text = cursor.selectedText();
+            mimeData->setData(QLatin1String("application/vnd.texmaker.blocktext"), text.toUtf8());
+        }
+        return mimeData;
+    }
+    return 0;
+}
+
+bool LatexEditor::canInsertFromMimeData(const QMimeData *source) const
+{
+    return QTextEdit::canInsertFromMimeData(source);
+}
+
+void LatexEditor::insertFromMimeData(const QMimeData *source)
+{
+    if (isReadOnly())
+        return;
+
+    if (source->hasFormat(QLatin1String("application/vnd.texmaker.vblocktext"))) {
+        QString text = QString::fromUtf8(source->data(QLatin1String("application/vnd.texmaker.vblocktext")));
+        if (text.isEmpty())
+            return;
+
+
+        QStringList lines = text.split(QLatin1Char('\n'));
+        QTextCursor cursor = textCursor();
+        cursor.beginEditBlock();
+        int initialCursorPosition = cursor.position();
+#if (QT_VERSION >= 0x040700)
+        int column = blockSelection.columnAt(cursor.block().text(), cursor.positionInBlock());
+#else
+	int column = blockSelection.columnAt(cursor.block().text(), cursor.position() - cursor.block().position());
+#endif
+        cursor.insertText(lines.first());
+        for (int i = 1; i < lines.count(); ++i) {
+            QTextBlock next = cursor.block().next();
+            if (next.isValid()) {
+                cursor.setPosition(next.position());
+            } else {
+                cursor.movePosition(QTextCursor::EndOfBlock);
+                cursor.insertBlock();
+            }
+            int offset = 0;
+            int position = blockSelection.positionAtColumn(cursor.block().text(), column, &offset);
+            cursor.setPosition(cursor.block().position() + position);
+            if (offset < 0) {
+                cursor.deleteChar();
+                cursor.insertText(QString(-offset, QLatin1Char(' ')));
+            } else {
+                cursor.insertText(QString(offset, QLatin1Char(' ')));
+            }
+            cursor.insertText(lines.at(i));
+        }
+        cursor.setPosition(initialCursorPosition);
+        cursor.endEditBlock();
+        setTextCursor(cursor);
+        ensureCursorVisible();
+
+
+        return;
+    }
+
+    QString text = source->text();
+    if (text.isEmpty())
+        return;
+
+    QTextCursor cursor = textCursor();
+        cursor.beginEditBlock();
+        cursor.insertText(text);
+        cursor.endEditBlock();
+        setTextCursor(cursor);
+}
+
+QString LatexEditor::copyBlockSelection() const
+{
+    QString selection;
+    QTextCursor cursor = textCursor();
+    if (!inBlockSelectionMode)
+        return selection;
+    QTextBlock block = blockSelection.firstBlock.block();
+    QTextBlock lastBlock = blockSelection.lastBlock.block();
+    for (;;) {
+        QString text = block.text();
+        int startOffset = 0;
+        int startPos = blockSelection.positionAtColumn(text, blockSelection.firstVisualColumn, &startOffset);
+        int endOffset = 0;
+        int endPos = blockSelection.positionAtColumn(text, blockSelection.lastVisualColumn, &endOffset);
+
+        if (startPos == endPos) {
+            selection += QString(endOffset - startOffset, QLatin1Char(' '));
+        } else {
+            if (startOffset < 0)
+                selection += QString(-startOffset, QLatin1Char(' '));
+            if (endOffset < 0)
+                --endPos;
+            selection += text.mid(startPos, endPos - startPos);
+            if (endOffset < 0) {
+                selection += QString(blockSelection.tabSize + endOffset, QLatin1Char(' '));
+            } else if (endOffset > 0) {
+                selection += QString(endOffset, QLatin1Char(' '));
+            }
+        }
+        if (block == lastBlock)
+            break;
+        selection += QLatin1Char('\n');
+        block = block.next();
+    }
+    return selection;
+}
+
+void LatexEditor::setTextCursor(const QTextCursor &cursor)
+{
+    // workaround for QTextControl bug
+    bool selectionChange = cursor.hasSelection() || textCursor().hasSelection();
+    QTextCursor c = cursor;
+    QTextEdit::setTextCursor(c);
+    if (selectionChange)
+        slotSelectionChanged();
+}
+
+void LatexEditor::slotSelectionChanged()
+{
+//    if (inBlockSelectionMode && !textCursor().hasSelection()) {
+//        inBlockSelectionMode = false;
+//        blockSelection.clear();
+//        viewport()->update();
+//    }
+
 }
 
 /*const QRectF LatexEditor::blockGeometry(const QTextBlock & block) 
