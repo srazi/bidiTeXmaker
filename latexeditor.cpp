@@ -64,6 +64,8 @@ static void convertToPlainText(QString &txt)
 
 extern struct updateStruct updateStructureList(QTextDocument *doc,int blockpos,QString text,int line,QList<StructItem> list)
 {
+//skip control characters
+text = QBiDiExtender::removeUnicodeControlCharacters(text);
 bool haschanged=false;
 QList<StructItem> templist=list;
 int i=line;
