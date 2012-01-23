@@ -196,20 +196,49 @@ for (int j=0; j < text.length(); j++) {blockData->code.append(0);blockData->miss
 while (i < text.length())
 	{
         ch = text.at( i );
-	buffer += ch;
-	if ( i < text.length()-1 ) next = text.at( i+1 );
-
+		/////////////////////////////////////////////////
+		//added by S. R. Alavizadeh
+		if (QBiDiExtender::bidiEnabled)
+			{
+			if ( QBiDiExtender::removeUnicodeControlCharacters(ch).isEmpty() )
+				{
+				buffer += ch;
+				++i;
+				continue;
+				}
+			}
+		/////////////////////////////////////////////////
+		
+		buffer += ch;
+		
+		/////////////////////////////////////////////////
+		//added by S. R. Alavizadeh
+		int k=i;
+		if (QBiDiExtender::bidiEnabled)
+			{
+			if ( i < text.length()-1 )
+				{
+				while ( k<text.length()-2 && QBiDiExtender::removeUnicodeControlCharacters(QString(text.at( k+1 ))).isEmpty() )
+					{
+					++k;
+					}
+				next = text.at( k+1 );
+				}
+			}
+		else	/////////////////////////////////////////////////
+			if ( i < text.length()-1 ) next = text.at( i+1 );
+tmp = ch;
         switch (state) {
 	
 	case StateStandard: {
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp=='\\') {
 			if (next=='[')
 				{
 				setFormat( i, 1,ColorMath );
 				blockData->code[i]=1;
 				state=StateMath;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -229,8 +258,8 @@ while (i < text.length())
 			blockData->code[i]=1;
 			state=StateMath;
 			if (next=='$')
-				{
-				i++;
+			{qDebug() << "next is $$$$$$$";
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -318,14 +347,14 @@ while (i < text.length())
 	} break;
 
 	case StateMath: {
-		tmp=text.at( i );
+		//tmp=ch;//text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
 			state=StateStandard;
 			if (next=='$')
-				{
-				i++;
+				{qDebug() << "next is $$$$$$$";
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -338,7 +367,7 @@ while (i < text.length())
 				setFormat( i, 1,ColorMath);
 				blockData->code[i]=1;
 				state=StateStandard;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -350,7 +379,7 @@ while (i < text.length())
 				setFormat( i, 1,ColorMath);
 				blockData->code[i]=1;
 				state=StateMath;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath/*QColor("#838307")*/);
@@ -382,14 +411,14 @@ while (i < text.length())
 	buffer = QString::null;
 	} break;
 	case StateGraphicMath: {
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
 			state=StateGraphic;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -402,7 +431,7 @@ while (i < text.length())
 				setFormat( i, 1,ColorMath);
 				blockData->code[i]=1;
 				state=StateGraphic;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -434,14 +463,14 @@ while (i < text.length())
 	buffer = QString::null;
 	} break;
 	case StateGraphicAsyMath: {
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
 			state=StateGraphicAsy;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -454,7 +483,7 @@ while (i < text.length())
 				setFormat( i, 1,ColorMath);
 				blockData->code[i]=1;
 				state=StateGraphicAsy;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -486,7 +515,7 @@ while (i < text.length())
 	buffer = QString::null;
 	} break;
 	case StateCommand:{
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (rxverb.exactMatch(buffer))
 				{
 				 verbflag=rxverb.cap(1).at(0);
@@ -542,12 +571,20 @@ while (i < text.length())
 			state=StateStandard;
 			if ( buffer.length() > 0 )
 				{
+				/////////////////////////////////////////////////
+				//added by S. R. Alavizadeh
+				//Bi-Di Support
+				QString tmpBuffer = "";
+				//This just skips Unicode Control Characters.
+				if (QBiDiExtender::bidiEnabled)
+					tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
+				/////////////////////////////////////////////////
 				for ( QStringList::Iterator it = KeyWords.begin(); it != KeyWords.end(); ++it ) 
 					{
-        				if (( *it ).indexOf( buffer )!=-1) 
+        				if (( *it ).indexOf( tmpBuffer )!=-1) 
 						{
-						if (*it!="begin{" && *it!="end{") setFormat( i - buffer.length(), buffer.length(),structFormat);
-						else setFormat( i - buffer.length(), buffer.length(),ColorKeyword);
+						if (*it!="begin{" && *it!="end{") setFormat( i - tmpBuffer.length(), tmpBuffer.length(),structFormat);
+						else setFormat( i - tmpBuffer.length(), tmpBuffer.length(),ColorKeyword);
 						blockData->code[i]=1;
 						}
 					}
@@ -575,7 +612,7 @@ while (i < text.length())
 		}
 	} break;
        case StateVerbatim: {
-               tmp=text.at( i );
+               //tmp=text.at( i );
 		if (tmp==verbflag && verbflag!=' ')
 		{
 		setFormat( i, 1,ColorCommand);
@@ -588,7 +625,7 @@ while (i < text.length())
 				{
 				setFormat( i, 1,ColorVerbatim );
 				blockData->code[i]=1;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorVerbatim);
@@ -607,7 +644,7 @@ while (i < text.length())
 			blockData->code[i]=1;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorVerbatim);
@@ -680,7 +717,7 @@ while (i < text.length())
 		}
        } break;
 	case StateVerbatimCommand:{
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp==verbflag && verbflag!=' ')
 		{
 		setFormat( i, 1,ColorCommand);
@@ -746,13 +783,13 @@ while (i < text.length())
 		}
 	} break;
        case StateGraphic: {
-               tmp=text.at( i );
+               //tmp=text.at( i );
  		if (tmp=='\\') {
 			if (next=='[')
 				{
 				setFormat( i, 1,ColorVerbatim );
 				blockData->code[i]=1;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorVerbatim);
@@ -772,7 +809,7 @@ while (i < text.length())
 			state=StateGraphicMath;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -853,13 +890,13 @@ while (i < text.length())
 		}
        } break;
        case StateGraphicAsy: {
-               tmp=text.at( i );
+               //tmp=text.at( i );
  		if (tmp=='\\') {
 			if (next=='[')
 				{
 				setFormat( i, 1,ColorVerbatim );
 				blockData->code[i]=1;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorVerbatim);
@@ -879,7 +916,7 @@ while (i < text.length())
 			state=StateGraphicAsyMath;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -965,7 +1002,7 @@ while (i < text.length())
 	buffer = QString::null;
 	} break;
 	case StateGraphicCommand:{
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1024,7 +1061,7 @@ while (i < text.length())
 		}
 	} break;
 	case StateGraphicAsyCommand:{
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1085,7 +1122,7 @@ while (i < text.length())
 /****************************/
        case StateBib: {
 //	 qDebug() << "bib" << buffer << next;
-               tmp=text.at( i );
+               //tmp=text.at( i );
 /*		if (tmp== '\"' ){
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorVerbatim);
@@ -1133,13 +1170,13 @@ while (i < text.length())
        } break;*/
 /***************************/
        case StateSweave: {
-               tmp=text.at( i );
+               //tmp=text.at( i );
 		if (tmp=='\\') {
 			if (next=='[')
 				{
 				setFormat( i, 1,ColorVerbatim );
 				blockData->code[i]=1;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorVerbatim);
@@ -1158,7 +1195,7 @@ while (i < text.length())
 			blockData->code[i]=1;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorVerbatim);
@@ -1208,7 +1245,7 @@ while (i < text.length())
 		}
        } break;
 	case StateSweaveCommand:{
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1363,20 +1400,28 @@ if (state == StateComment)
 		while (!isSpace(ch) || ch=='%')
 		      {
 		      buffer += ch;
-		      i++;
+		      ++i;
 		      if (i < text.length()) ch = text.at( i );
 		      else break;
 		      }
 		if ((buffer.length() > 0) && (format(i - buffer.length()).foreground()==brushcomment)) 
 		    {
+				/////////////////////////////////////////////////
+				//added by S. R. Alavizadeh
+				//Bi-Di Support
+				QString tmpBuffer = "";
+				//This just skips Unicode Control Characters.
+				if (QBiDiExtender::bidiEnabled)
+					tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
+				/////////////////////////////////////////////////
 
-        				if (buffer=="%TODO") 
+        				if (tmpBuffer=="%TODO") 
 						{
-						setFormat( i - buffer.length()+1, buffer.length()-1,todoFormat);
+						setFormat( i - tmpBuffer.length()+1, tmpBuffer.length()-1,todoFormat);
 						}
 
 		    }
-		i++;
+		++i;
 		}
 }
 
@@ -1406,29 +1451,37 @@ if (state == StateGraphic || state == StateGraphicCommand || state == StateGraph
 		while ((blockData->code[i]!=1 || ch=='\\') && (!isSpace(ch)))
 		      {
 		      buffer += ch;
-		      i++;
+		      ++i;
 		      if (i < text.length()) ch = text.at( i );
 		      else break;
 		      }
 		if ((buffer.length() > 0) && (format(i - buffer.length()).foreground()==brushverbatim)) 
 		    {
+			/////////////////////////////////////////////////
+			//added by S. R. Alavizadeh
+			//Bi-Di Support
+			QString tmpBuffer = "";
+			//This just skips Unicode Control Characters.
+			if (QBiDiExtender::bidiEnabled)
+				tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
+			/////////////////////////////////////////////////
 		    for ( QStringList::Iterator it = KeyWordsGraphic.begin(); it != KeyWordsGraphic.end(); ++it ) 
 					{
-        				if (*it==buffer ) 
+        				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - buffer.length(), buffer.length(),ColorKeywordGraphic);
+						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),ColorKeywordGraphic);
 						}
 					}
 		    for ( QStringList::Iterator it = KeyWordsGraphicBis.begin(); it != KeyWordsGraphicBis.end(); ++it ) 
 					{
-        				if (*it==buffer ) 
+        				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - buffer.length(), buffer.length(),asyFormat);
+						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),asyFormat);
 						}
 					}
 		    }
 
-		i++;
+		++i;
 		}
 	}
 	else if ((text.indexOf("pspicture") == -1) && (text.indexOf("tikzpicture") == -1))
@@ -1460,7 +1513,7 @@ if (pChecker && state!=StateGraphic && state!=StateGraphicCommand && state!=Stat
 		while ((blockData->code[i]!=1) && (!isSpace(ch)))
 		      {
 		      buffer += ch;
-		      i++;
+		      ++i;
 		      if (i < text.length()) ch = text.at( i );
 		      else break;
 		      }
@@ -1478,9 +1531,10 @@ if (pChecker && state!=StateGraphic && state!=StateGraphicCommand && state!=Stat
 			  /////////////////////////////////////////////////
 			  //added by S. R. Alavizadeh
 			  //Bi-Di Support
-			  QString tmpBuffer = buffer;
+			  QString tmpBuffer = "";
 			  //This just skips Unicode Control Characters.
-			  if (QBiDiExtender::bidiEnabled)	tmpBuffer.remove(QChar(LRM)).remove(QChar(RLM)).remove(QChar(LRE)).remove(QChar(RLE)).remove(QChar(PDF));
+			  if (QBiDiExtender::bidiEnabled)
+				  tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
 			  /////////////////////////////////////////////////
 		      if (format(i - tmpBuffer.length()-offset).foreground()==brushverbatim) spellingErrorFormat.setForeground(brushverbatim);
 		      else spellingErrorFormat.setForeground(brushstandard);
@@ -1492,7 +1546,7 @@ if (pChecker && state!=StateGraphic && state!=StateGraphicCommand && state!=Stat
 			for (int k=i - tmpBuffer.length()-offset;  k< i-offset; k++) blockData->misspelled[k]=true;
 			}
 		      }
-		i++;
+		++i;
 		}
 	}
 	
@@ -1508,21 +1562,51 @@ for (int j=0; j < text.length(); j++) {blockData->code.append(0);blockData->miss
 while (i < text.length())
 	{
         ch = text.at( i );
+
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	if (QBiDiExtender::bidiEnabled)
+		{
+		if ( QBiDiExtender::removeUnicodeControlCharacters(ch).isEmpty() )
+			{
+			buffer += ch;
+			++i;
+			continue;
+			}
+		}
+	/////////////////////////////////////////////////
+	
 	buffer += ch;
-	if ( i < text.length()-1 ) next = text.at( i+1 );
+	
+	/////////////////////////////////////////////////
+	//added by S. R. Alavizadeh
+	int k=i;
+	if (QBiDiExtender::bidiEnabled)
+		{
+		if ( i < text.length()-1 )
+			{
+			while ( k<text.length()-2 && QBiDiExtender::removeUnicodeControlCharacters(QString(text.at( k+1 ))).isEmpty() )
+				{
+				++k;
+				}
+			next = text.at( k+1 );
+			}
+		}
+	else	/////////////////////////////////////////////////
+		if ( i < text.length()-1 ) next = text.at( i+1 );
 
         switch (state) {
 	
 
 	case StateGraphicMath: {
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
 			state=StateGraphic;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -1535,7 +1619,7 @@ while (i < text.length())
 				setFormat( i, 1,ColorMath);
 				blockData->code[i]=1;
 				state=StateGraphic;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -1568,13 +1652,13 @@ while (i < text.length())
 	} break;
 
        case StateGraphic: {
-               tmp=text.at( i );
+               //tmp=text.at( i );
 		if (tmp=='\\') {
 			if (next=='[')
 				{
 				setFormat( i, 1,ColorStandard );
 				blockData->code[i]=1;
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorStandard);
@@ -1594,7 +1678,7 @@ while (i < text.length())
 			state=StateGraphicMath;
 			if (next=='$')
 				{
-				i++;
+				i = k+1;//i++;;
 				if ( i < text.length())
 					{
 					setFormat( i, 1,ColorMath);
@@ -1654,7 +1738,7 @@ while (i < text.length())
 	} break;
 	
 	case StateGraphicCommand:{
-		tmp=text.at( i );
+		//tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1771,18 +1855,26 @@ if (state == StateGraphic || state == StateGraphicCommand || state == StateGraph
 		      }
 		if ((buffer.length() > 0) ) 
 		    {
+			/////////////////////////////////////////////////
+			//added by S. R. Alavizadeh
+			//Bi-Di Support
+			QString tmpBuffer = "";
+			//This just skips Unicode Control Characters.
+			if (QBiDiExtender::bidiEnabled)
+				tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
+			/////////////////////////////////////////////////
 		    for ( QStringList::Iterator it = KeyWordsGraphic.begin(); it != KeyWordsGraphic.end(); ++it ) 
 					{
-        				if (*it==buffer ) 
+        				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - buffer.length(), buffer.length(),ColorKeywordGraphic);
+						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),ColorKeywordGraphic);
 						}
 					}
 		    for ( QStringList::Iterator it = KeyWordsGraphicBis.begin(); it != KeyWordsGraphicBis.end(); ++it ) 
 					{
-        				if (*it==buffer ) 
+        				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - buffer.length(), buffer.length(),asyFormat);
+						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),asyFormat);
 						}
 					}
 		    }
