@@ -2458,13 +2458,13 @@ if (FileAlreadyOpen(f) || !QFile::exists( f )) return;
 /////////////////////////////////////////////////
 //added by S. R. Alavizadeh
 //Bi-Di Support
-QString fn=f;
-if (QBiDiExtender::bidiEnabled && QBiDiExtender::ptdSupportFlag)
-	fn = LatexEditor::BiDiBase->openPtdFile(f, QTextCodec::codecForName(input_encoding.toLatin1()) );
+//QString fn=f;
+//if (QBiDiExtender::bidiEnabled && QBiDiExtender::ptdSupportFlag)
+//	fn = LatexEditor::BiDiBase->openPtdFile(f, QTextCodec::codecForName(input_encoding.toLatin1()) );
 
-QFile file( fn );
+//QFile file( fn );
 
-//QFile file( f );
+QFile file( f );
 /////////////////////////////////////////////////
 
 if ( !file.open( QIODevice::ReadOnly ) )
@@ -2533,12 +2533,19 @@ else edit->editor->setCompleter(0);
 connect(edit->editor, SIGNAL(copyStateChanged(bool)), this, SLOT(setCopyEnabled(bool)));
 //added by S. R. Alavizadeh
 //Bi-Di Support
-if ( file.fileName().endsWith(".ptd", Qt::CaseInsensitive) )
+if (QBiDiExtender::bidiEnabled && QBiDiExtender::ptdSupportFlag)
+	text = LatexEditor::BiDiBase->openPtdFile(f, QTextCodec::codecForName(edit->editor->getEncoding().toLatin1()), text );
+
+if ( QBiDiExtender::ptdOpenFlag /*file.fileName().endsWith(".ptd", Qt::CaseInsensitive)*/ )
 	{
 	edit->editor->setHtml(text);
+	qDebug() << "PTD Loaded, HTML.";
 	}
 else
+	{
 	edit->editor->setPlainText(text);
+	qDebug() << "TeX Loaded, PLAIN.";
+	}
 /////////////////////////////////////////////////
 
 filenames.remove( edit);
@@ -2564,12 +2571,12 @@ connect(edit->editor, SIGNAL(poshaschanged(int,int)),this, SLOT(showCursorPos(in
 //start of codes
 if (QBiDiExtender::bidiEnabled)
 	{
-	if ( file.fileName().endsWith(".ptd", Qt::CaseInsensitive) )
-		{
-		QBiDiExtender::ptdOpenFlag = true;
-		}
-	else
-		QBiDiExtender::ptdOpenFlag = false;
+//	if ( file.fileName().endsWith(".ptd", Qt::CaseInsensitive) )
+//		{
+//		QBiDiExtender::ptdOpenFlag = true;
+//		}
+//	else
+//		QBiDiExtender::ptdOpenFlag = false;
 
 	edit->editor->BiDiForEditor->initBiDi();//new
 	
