@@ -258,7 +258,7 @@ tmp = ch;
 			blockData->code[i]=1;
 			state=StateMath;
 			if (next=='$')
-			{qDebug() << "next is $$$$$$$";
+			{
 				i = k+1;//i++;;
 				if ( i < text.length())
 					{
@@ -353,7 +353,7 @@ tmp = ch;
 			blockData->code[i]=1;
 			state=StateStandard;
 			if (next=='$')
-				{qDebug() << "next is $$$$$$$";
+				{
 				i = k+1;//i++;;
 				if ( i < text.length())
 					{
