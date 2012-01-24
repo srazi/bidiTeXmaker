@@ -105,18 +105,18 @@
         <translation type="obsolete">Cancelar</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="157"/>
+        <location filename="configdialog.cpp" line="161"/>
         <source>Commands</source>
         <translation>Comandos</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="163"/>
+        <location filename="configdialog.cpp" line="167"/>
         <source>Quick Build</source>
         <translation>Compilar</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="757"/>
-        <location filename="configdialog.cpp" line="169"/>
+        <location filename="configdialog.cpp" line="173"/>
         <source>Editor</source>
         <translation>Editor</translation>
     </message>
@@ -126,21 +126,21 @@
         <translation>Configurar o Texmaker</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="336"/>
-        <location filename="configdialog.cpp" line="352"/>
-        <location filename="configdialog.cpp" line="363"/>
-        <location filename="configdialog.cpp" line="374"/>
-        <location filename="configdialog.cpp" line="385"/>
-        <location filename="configdialog.cpp" line="396"/>
-        <location filename="configdialog.cpp" line="407"/>
-        <location filename="configdialog.cpp" line="418"/>
-        <location filename="configdialog.cpp" line="429"/>
-        <location filename="configdialog.cpp" line="440"/>
-        <location filename="configdialog.cpp" line="451"/>
-        <location filename="configdialog.cpp" line="462"/>
-        <location filename="configdialog.cpp" line="473"/>
-        <location filename="configdialog.cpp" line="484"/>
-        <location filename="configdialog.cpp" line="495"/>
+        <location filename="configdialog.cpp" line="364"/>
+        <location filename="configdialog.cpp" line="380"/>
+        <location filename="configdialog.cpp" line="391"/>
+        <location filename="configdialog.cpp" line="402"/>
+        <location filename="configdialog.cpp" line="413"/>
+        <location filename="configdialog.cpp" line="424"/>
+        <location filename="configdialog.cpp" line="435"/>
+        <location filename="configdialog.cpp" line="446"/>
+        <location filename="configdialog.cpp" line="457"/>
+        <location filename="configdialog.cpp" line="468"/>
+        <location filename="configdialog.cpp" line="479"/>
+        <location filename="configdialog.cpp" line="490"/>
+        <location filename="configdialog.cpp" line="501"/>
+        <location filename="configdialog.cpp" line="512"/>
+        <location filename="configdialog.cpp" line="523"/>
         <source>Browse program</source>
         <translation>Navegar programa</translation>
     </message>
@@ -151,73 +151,73 @@
     </message>
     <message>
         <location filename="configdialog.ui" line="196"/>
-        <location filename="configdialog.cpp" line="568"/>
+        <location filename="configdialog.cpp" line="596"/>
         <source>Dvi Viewer</source>
         <translation>Leitor de Dvi</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="223"/>
-        <location filename="configdialog.cpp" line="571"/>
+        <location filename="configdialog.cpp" line="599"/>
         <source>PS Viewer</source>
         <translation>Leitor de PS</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="378"/>
-        <location filename="configdialog.cpp" line="592"/>
+        <location filename="configdialog.cpp" line="620"/>
         <source>ghostscript</source>
         <translation>ghostscript</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="142"/>
-        <location filename="configdialog.cpp" line="580"/>
+        <location filename="configdialog.cpp" line="608"/>
         <source>Bibtex</source>
         <translation>Bibtex</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="277"/>
-        <location filename="configdialog.cpp" line="574"/>
+        <location filename="configdialog.cpp" line="602"/>
         <source>Dvipdfm</source>
         <translation>Dvipdfm</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="250"/>
-        <location filename="configdialog.cpp" line="562"/>
+        <location filename="configdialog.cpp" line="590"/>
         <source>PdfLaTeX</source>
         <translation>PdfLaTeX</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="169"/>
-        <location filename="configdialog.cpp" line="583"/>
+        <location filename="configdialog.cpp" line="611"/>
         <source>Makeindex</source>
         <translation>Makeindex</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="304"/>
-        <location filename="configdialog.cpp" line="577"/>
+        <location filename="configdialog.cpp" line="605"/>
         <source>ps2pdf</source>
         <translation>ps2pdf</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="331"/>
-        <location filename="configdialog.cpp" line="586"/>
+        <location filename="configdialog.cpp" line="614"/>
         <source>Pdf Viewer</source>
         <translation>Leitor de Pdf</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="351"/>
-        <location filename="configdialog.cpp" line="589"/>
+        <location filename="configdialog.cpp" line="617"/>
         <source>metapost</source>
         <translation>metapost</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="88"/>
-        <location filename="configdialog.cpp" line="559"/>
+        <location filename="configdialog.cpp" line="587"/>
         <source>LaTeX</source>
         <translation>LaTeX</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="115"/>
-        <location filename="configdialog.cpp" line="565"/>
+        <location filename="configdialog.cpp" line="593"/>
         <source>dvips</source>
         <translation>dvips</translation>
     </message>
@@ -233,13 +233,13 @@
     </message>
     <message>
         <location filename="configdialog.ui" line="405"/>
-        <location filename="configdialog.cpp" line="595"/>
+        <location filename="configdialog.cpp" line="623"/>
         <source>Asymptote</source>
         <translation></translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="432"/>
-        <location filename="configdialog.cpp" line="598"/>
+        <location filename="configdialog.cpp" line="626"/>
         <source>Latexmk</source>
         <translation>Latexmk</translation>
     </message>
@@ -250,7 +250,7 @@
     </message>
     <message>
         <location filename="configdialog.ui" line="506"/>
-        <location filename="configdialog.cpp" line="601"/>
+        <location filename="configdialog.cpp" line="629"/>
         <source>R Sweave</source>
         <translation>R Sweave</translation>
     </message>
@@ -444,7 +444,7 @@
     </message>
     <message>
         <location filename="configdialog.ui" line="1049"/>
-        <location filename="configdialog.cpp" line="175"/>
+        <location filename="configdialog.cpp" line="179"/>
         <source>Shortcuts</source>
         <translation>Atalhos</translation>
     </message>
@@ -483,7 +483,7 @@
         <translation type="obsolete">Obter dicionário de: %1</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="214"/>
+        <location filename="configdialog.cpp" line="218"/>
         <source>Browse dictionary</source>
         <translation>Navegar dicionário</translation>
     </message>
@@ -1293,7 +1293,7 @@ com as configurações de descodificação padrão</translation>
     </message>
     <message>
         <location filename="../../QBiDiExtender2/qbidiextender2.cpp" line="2086"/>
-        <source>&lt;br/&gt;%1 uses QBiDiExtender2.&lt;br/&gt;The QBiDiExtender is a Qt class that extends bidi support of QTextEdit class.&lt;br/&gt; The QBiDiExtender2 is prepared&lt;br/&gt;for Qt Version &gt; 4.7.0 .&lt;br/&gt;&lt;br/&gt;Author: &lt;a href=&quot;http://pozh.org/&quot;&gt;S. Razi Alavizadeh&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Project Home Page: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;ParsiLaTeX: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Version: %2&lt;br/&gt;Rev: %3&lt;br/&gt;Build Time: %4</source>
+        <source>&lt;br/&gt;%1 uses QBiDiExtender2.&lt;br/&gt;The QBiDiExtender is a Qt class that extends bidi support of QTextEdit class.&lt;br/&gt; The QBiDiExtender2 is prepared for Qt Version &gt; 4.7.0 .&lt;br/&gt;&lt;br/&gt;Author: &lt;a href=&quot;http://pozh.org/&quot;&gt;S. Razi Alavizadeh&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Project Home Page: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;ParsiLaTeX: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Version: %2&lt;br/&gt;Rev: %3&lt;br/&gt;Build Time: %4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2044,7 +2044,7 @@ com as configurações de descodificação padrão</translation>
     </message>
     <message>
         <location filename="texmaker.cpp" line="766"/>
-        <location filename="texmaker.cpp" line="8676"/>
+        <location filename="texmaker.cpp" line="8688"/>
         <source>Normal Mode</source>
         <translation>Modo normal</translation>
     </message>
@@ -2252,42 +2252,42 @@ com as configurações de descodificação padrão</translation>
         <translation>Ver Log</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9754"/>
+        <location filename="texmaker.cpp" line="9766"/>
         <source>Import FarsiTeX File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9763"/>
+        <location filename="texmaker.cpp" line="9775"/>
         <source>Warning!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9764"/>
+        <location filename="texmaker.cpp" line="9776"/>
         <source>The output file &quot;%1&quot; already exists. Do you want to replace it?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9765"/>
+        <location filename="texmaker.cpp" line="9777"/>
         <source>Yes</source>
         <translation type="unfinished">Sim</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9765"/>
+        <location filename="texmaker.cpp" line="9777"/>
         <source>No</source>
         <translation type="unfinished">Não</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9772"/>
+        <location filename="texmaker.cpp" line="9784"/>
         <source>Import As</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9791"/>
+        <location filename="texmaker.cpp" line="9803"/>
         <source>Error! Convert is not successful. Please check contents of &quot;ftx2uni&quot; directory or check your python installation and your path environment.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9797"/>
+        <location filename="texmaker.cpp" line="9809"/>
         <source>Error! Convert is not successful. Please check your python installation and your path environment.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2429,7 +2429,7 @@ com as configurações de descodificação padrão</translation>
     </message>
     <message>
         <location filename="texmaker.cpp" line="1904"/>
-        <location filename="texmaker.cpp" line="8667"/>
+        <location filename="texmaker.cpp" line="8679"/>
         <source>Define Current Document as &apos;Master Document&apos;</source>
         <translation>Definir o documento atual como &apos;Documento Mestre&apos;</translation>
     </message>
@@ -2595,12 +2595,12 @@ com as configurações de descodificação padrão</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9080"/>
+        <location filename="texmaker.cpp" line="9092"/>
         <source>The language setting will take effect after restarting the application.</source>
         <translation>A configuração da língua  será aplicada ao reiniciar o Texmaker.</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9088"/>
+        <location filename="texmaker.cpp" line="9100"/>
         <source>The appearance setting will take effect after restarting the application.</source>
         <translation>A configuração da aparência será aplicada ao reiniciar o Texmaker.</translation>
     </message>
@@ -2673,7 +2673,7 @@ com as configurações de descodificação padrão</translation>
         <location filename="texmaker.cpp" line="8093"/>
         <location filename="texmaker.cpp" line="8127"/>
         <location filename="texmaker.cpp" line="8149"/>
-        <location filename="texmaker.cpp" line="8685"/>
+        <location filename="texmaker.cpp" line="8697"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
@@ -2707,7 +2707,7 @@ com as configurações de descodificação padrão</translation>
         <location filename="texmaker.cpp" line="4535"/>
         <location filename="texmaker.cpp" line="4578"/>
         <location filename="texmaker.cpp" line="7095"/>
-        <location filename="texmaker.cpp" line="9765"/>
+        <location filename="texmaker.cpp" line="9777"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
@@ -2842,7 +2842,7 @@ com as configurações de descodificação padrão</translation>
         <location filename="texmaker.cpp" line="6987"/>
         <location filename="texmaker.cpp" line="7563"/>
         <location filename="texmaker.cpp" line="8149"/>
-        <location filename="texmaker.cpp" line="8685"/>
+        <location filename="texmaker.cpp" line="8697"/>
         <source>Could not start the command.</source>
         <translation>Impossível iniciar o comando.</translation>
     </message>
@@ -2874,12 +2874,12 @@ com as configurações de descodificação padrão</translation>
         <translation type="obsolete">Manuel de Texmaker</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="8691"/>
+        <location filename="texmaker.cpp" line="8703"/>
         <source>Normal Mode (current master document :</source>
         <translation>Modo Normal (documento mestre atual:</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="8693"/>
+        <location filename="texmaker.cpp" line="8705"/>
         <source>Master Document :</source>
         <translation>Documento Mestre:</translation>
     </message>

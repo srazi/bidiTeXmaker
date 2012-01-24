@@ -2528,12 +2528,12 @@ if (QBiDiExtender::bidiEnabled && QBiDiExtender::ptdSupportFlag)
 if ( QBiDiExtender::ptdOpenFlag )
 	{
 	edit->editor->setHtml(text);
-	qDebug() << "PTD Loaded, HTML.";
+	//qDebug() << "PTD Loaded, HTML.";
 	}
 else
 	{
 	edit->editor->setPlainText(text);
-	qDebug() << "TeX Loaded, PLAIN.";
+	//qDebug() << "TeX Loaded, PLAIN.";
 	}
 //moved from section after connections
 if (QBiDiExtender::bidiEnabled)
@@ -8267,51 +8267,63 @@ QTableWidgetItem *colorItem;
 
 colorItem= new QTableWidgetItem(colorBackground.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(0,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorLine.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(1,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorHighlight.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(2,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorStandard.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(3,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorComment.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(4,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorMath.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(5,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorCommand.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(6,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorKeyword.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(7,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorVerbatim.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(8,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorTodo.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(9,1,colorItem);
 
 colorItem= new QTableWidgetItem(colorKeywordGraphic.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(10,1,colorItem);
 
 
 colorItem= new QTableWidgetItem(colorNumberGraphic.name());
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 confDlg->ui.colortableWidget->setItem(11,1,colorItem);
 
 disconnect(autosaveTimer, SIGNAL(timeout()), this, SLOT(fileBackupAll()));

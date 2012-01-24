@@ -234,18 +234,18 @@ Patch Date: %1</translation>
         <translation type="obsolete">رد</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="157"/>
+        <location filename="configdialog.cpp" line="161"/>
         <source>Commands</source>
         <translation>دستورات</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="163"/>
+        <location filename="configdialog.cpp" line="167"/>
         <source>Quick Build</source>
         <translation>ساخت سریع</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="757"/>
-        <location filename="configdialog.cpp" line="169"/>
+        <location filename="configdialog.cpp" line="173"/>
         <source>Editor</source>
         <translation>ویرایش‌گر</translation>
     </message>
@@ -255,21 +255,21 @@ Patch Date: %1</translation>
         <translation>‫تنظیم تک‌میکر</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="336"/>
-        <location filename="configdialog.cpp" line="352"/>
-        <location filename="configdialog.cpp" line="363"/>
-        <location filename="configdialog.cpp" line="374"/>
-        <location filename="configdialog.cpp" line="385"/>
-        <location filename="configdialog.cpp" line="396"/>
-        <location filename="configdialog.cpp" line="407"/>
-        <location filename="configdialog.cpp" line="418"/>
-        <location filename="configdialog.cpp" line="429"/>
-        <location filename="configdialog.cpp" line="440"/>
-        <location filename="configdialog.cpp" line="451"/>
-        <location filename="configdialog.cpp" line="462"/>
-        <location filename="configdialog.cpp" line="473"/>
-        <location filename="configdialog.cpp" line="484"/>
-        <location filename="configdialog.cpp" line="495"/>
+        <location filename="configdialog.cpp" line="364"/>
+        <location filename="configdialog.cpp" line="380"/>
+        <location filename="configdialog.cpp" line="391"/>
+        <location filename="configdialog.cpp" line="402"/>
+        <location filename="configdialog.cpp" line="413"/>
+        <location filename="configdialog.cpp" line="424"/>
+        <location filename="configdialog.cpp" line="435"/>
+        <location filename="configdialog.cpp" line="446"/>
+        <location filename="configdialog.cpp" line="457"/>
+        <location filename="configdialog.cpp" line="468"/>
+        <location filename="configdialog.cpp" line="479"/>
+        <location filename="configdialog.cpp" line="490"/>
+        <location filename="configdialog.cpp" line="501"/>
+        <location filename="configdialog.cpp" line="512"/>
+        <location filename="configdialog.cpp" line="523"/>
         <source>Browse program</source>
         <translation>مرور برنامه‌ها</translation>
     </message>
@@ -280,73 +280,73 @@ Patch Date: %1</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="196"/>
-        <location filename="configdialog.cpp" line="568"/>
+        <location filename="configdialog.cpp" line="596"/>
         <source>Dvi Viewer</source>
         <translation>‫نمایش‌گر دی.وی.آی</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="223"/>
-        <location filename="configdialog.cpp" line="571"/>
+        <location filename="configdialog.cpp" line="599"/>
         <source>PS Viewer</source>
         <translation>‫نمایش‌گر پی.اس</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="378"/>
-        <location filename="configdialog.cpp" line="592"/>
+        <location filename="configdialog.cpp" line="620"/>
         <source>ghostscript</source>
         <translation>ghostscript</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="142"/>
-        <location filename="configdialog.cpp" line="580"/>
+        <location filename="configdialog.cpp" line="608"/>
         <source>Bibtex</source>
         <translation>Bibtex</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="277"/>
-        <location filename="configdialog.cpp" line="574"/>
+        <location filename="configdialog.cpp" line="602"/>
         <source>Dvipdfm</source>
         <translation>Dvipdfm</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="250"/>
-        <location filename="configdialog.cpp" line="562"/>
+        <location filename="configdialog.cpp" line="590"/>
         <source>PdfLaTeX</source>
         <translation>PdfLaTeX</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="169"/>
-        <location filename="configdialog.cpp" line="583"/>
+        <location filename="configdialog.cpp" line="611"/>
         <source>Makeindex</source>
         <translation>Makeindex</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="304"/>
-        <location filename="configdialog.cpp" line="577"/>
+        <location filename="configdialog.cpp" line="605"/>
         <source>ps2pdf</source>
         <translation>ps2pdf</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="331"/>
-        <location filename="configdialog.cpp" line="586"/>
+        <location filename="configdialog.cpp" line="614"/>
         <source>Pdf Viewer</source>
         <translation>‫نمایش‌گر پی.دی.اف</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="351"/>
-        <location filename="configdialog.cpp" line="589"/>
+        <location filename="configdialog.cpp" line="617"/>
         <source>metapost</source>
         <translation>metapost</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="88"/>
-        <location filename="configdialog.cpp" line="559"/>
+        <location filename="configdialog.cpp" line="587"/>
         <source>LaTeX</source>
         <translation>LaTeX</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="115"/>
-        <location filename="configdialog.cpp" line="565"/>
+        <location filename="configdialog.cpp" line="593"/>
         <source>dvips</source>
         <translation>dvips</translation>
     </message>
@@ -357,13 +357,13 @@ Patch Date: %1</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="405"/>
-        <location filename="configdialog.cpp" line="595"/>
+        <location filename="configdialog.cpp" line="623"/>
         <source>Asymptote</source>
         <translation></translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="432"/>
-        <location filename="configdialog.cpp" line="598"/>
+        <location filename="configdialog.cpp" line="626"/>
         <source>Latexmk</source>
         <translation></translation>
     </message>
@@ -379,7 +379,7 @@ Patch Date: %1</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="506"/>
-        <location filename="configdialog.cpp" line="601"/>
+        <location filename="configdialog.cpp" line="629"/>
         <source>R Sweave</source>
         <translation></translation>
     </message>
@@ -598,7 +598,7 @@ Patch Date: %1</translation>
     </message>
     <message>
         <location filename="configdialog.ui" line="1049"/>
-        <location filename="configdialog.cpp" line="175"/>
+        <location filename="configdialog.cpp" line="179"/>
         <source>Shortcuts</source>
         <translation>میان‌برها</translation>
     </message>
@@ -637,7 +637,7 @@ Patch Date: %1</translation>
         <translation type="obsolete">فرهنگ غلط‌یاب را از این آدرس دریافت کنید:‪ %1</translation>
     </message>
     <message>
-        <location filename="configdialog.cpp" line="214"/>
+        <location filename="configdialog.cpp" line="218"/>
         <source>Browse dictionary</source>
         <translation>مرور فرهنگ لغت‌ها</translation>
     </message>
@@ -1458,8 +1458,12 @@ with the default encoding setting</source>
     </message>
     <message>
         <location filename="../../QBiDiExtender2/qbidiextender2.cpp" line="2086"/>
+        <source>&lt;br/&gt;%1 uses QBiDiExtender2.&lt;br/&gt;The QBiDiExtender is a Qt class that extends bidi support of QTextEdit class.&lt;br/&gt; The QBiDiExtender2 is prepared for Qt Version &gt; 4.7.0 .&lt;br/&gt;&lt;br/&gt;Author: &lt;a href=&quot;http://pozh.org/&quot;&gt;S. Razi Alavizadeh&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Project Home Page: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;ParsiLaTeX: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Version: %2&lt;br/&gt;Rev: %3&lt;br/&gt;Build Time: %4</source>
+        <translation>&lt;br/&gt;%1 از QBiDiExtender2 استفاده می‌کند.&lt;br/&gt;QBiDiExtender یک کلاس Qt است که امکانات کلاس QTextEdit را گسترش می‌دهد.&lt;br/&gt; QBiDiExtender2 برای Qt نسخه بزرگتر از 4.7.0 طراحی شده است.&lt;br/&gt;&lt;br/&gt;برنامه‌نویس: &lt;a href=&quot;http://pozh.org/&quot;&gt;سیدرضی علوی‌زاده&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;صفحه خانگی پروژه: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;پارسی‌لاتک: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;نسخه: %2&lt;br/&gt;اصلاحیه: %3&lt;br/&gt;زمان ساخت: %4</translation>
+    </message>
+    <message>
         <source>&lt;br/&gt;%1 uses QBiDiExtender2.&lt;br/&gt;The QBiDiExtender is a Qt class that extends bidi support of QTextEdit class.&lt;br/&gt; The QBiDiExtender2 is prepared&lt;br/&gt;for Qt Version &gt; 4.7.0 .&lt;br/&gt;&lt;br/&gt;Author: &lt;a href=&quot;http://pozh.org/&quot;&gt;S. Razi Alavizadeh&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Project Home Page: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;ParsiLaTeX: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Version: %2&lt;br/&gt;Rev: %3&lt;br/&gt;Build Time: %4</source>
-        <translation>&lt;br/&gt;%1 از QBiDiExtender2 استفاده می‌کند.&lt;br/&gt;QBiDiExtender یک کلاس Qt است که امکانات کلاس QTextEdit را گسترش می‌دهد.&lt;br/&gt; QBiDiExtender2 برای&lt;br/&gt;Qt نسخه بزرگتر از 4.7.0 طراحی شده است.&lt;br/&gt;&lt;br/&gt;برنامه‌نویس: &lt;a href=&quot;http://pozh.org/&quot;&gt;سیدرضی علوی‌زاده&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;صفحه خانگی پروژه: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;پارسی‌لاتک: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;نسخه: %2&lt;br/&gt;اصلاحیه: %3&lt;br/&gt;زمان ساخت: %4</translation>
+        <translation type="obsolete">&lt;br/&gt;%1 از QBiDiExtender2 استفاده می‌کند.&lt;br/&gt;QBiDiExtender یک کلاس Qt است که امکانات کلاس QTextEdit را گسترش می‌دهد.&lt;br/&gt; QBiDiExtender2 برای&lt;br/&gt;Qt نسخه بزرگتر از 4.7.0 طراحی شده است.&lt;br/&gt;&lt;br/&gt;برنامه‌نویس: &lt;a href=&quot;http://pozh.org/&quot;&gt;سیدرضی علوی‌زاده&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;صفحه خانگی پروژه: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;پارسی‌لاتک: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;نسخه: %2&lt;br/&gt;اصلاحیه: %3&lt;br/&gt;زمان ساخت: %4</translation>
     </message>
     <message>
         <location filename="../../QBiDiExtender2/qbidiextender2.cpp" line="2090"/>
@@ -2160,7 +2164,7 @@ with the default encoding setting</source>
     </message>
     <message>
         <location filename="texmaker.cpp" line="766"/>
-        <location filename="texmaker.cpp" line="8676"/>
+        <location filename="texmaker.cpp" line="8688"/>
         <source>Normal Mode</source>
         <translation>حالت عادی</translation>
     </message>
@@ -2570,7 +2574,7 @@ with the default encoding setting</source>
     </message>
     <message>
         <location filename="texmaker.cpp" line="1904"/>
-        <location filename="texmaker.cpp" line="8667"/>
+        <location filename="texmaker.cpp" line="8679"/>
         <source>Define Current Document as &apos;Master Document&apos;</source>
         <translation>سند جاری را به عنوان &quot;سند اصلی&quot; در نظر بگیر</translation>
     </message>
@@ -2608,12 +2612,12 @@ with the default encoding setting</source>
         <translation type="obsolete">درباره پچ دوجهته</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9080"/>
+        <location filename="texmaker.cpp" line="9092"/>
         <source>The language setting will take effect after restarting the application.</source>
         <translation>تنظیمات زبان در اجرای بعدی نرم‌افزار اثر خواهد کرد.</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9088"/>
+        <location filename="texmaker.cpp" line="9100"/>
         <source>The appearance setting will take effect after restarting the application.</source>
         <translation>تنظیمات ظاهر در اجرای بعدی نرم‌افزار اثر خواهد کرد.</translation>
     </message>
@@ -2644,42 +2648,42 @@ Patch Date: %1</translation>
         <translation type="obsolete">درباره کیوت</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9754"/>
+        <location filename="texmaker.cpp" line="9766"/>
         <source>Import FarsiTeX File</source>
         <translation>بازکردن فایل فارسی‌تک</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9763"/>
+        <location filename="texmaker.cpp" line="9775"/>
         <source>Warning!</source>
         <translation>هشدار!</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9764"/>
+        <location filename="texmaker.cpp" line="9776"/>
         <source>The output file &quot;%1&quot; already exists. Do you want to replace it?</source>
         <translation>فایلی با نام &quot;%1&quot; موجود است. آیا می‌خواهید آن را جایگزین کنید؟</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9765"/>
+        <location filename="texmaker.cpp" line="9777"/>
         <source>Yes</source>
         <translation>بله</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9765"/>
+        <location filename="texmaker.cpp" line="9777"/>
         <source>No</source>
         <translation>نه</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9772"/>
+        <location filename="texmaker.cpp" line="9784"/>
         <source>Import As</source>
         <translation>تبدیل تغییر نام به</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9791"/>
+        <location filename="texmaker.cpp" line="9803"/>
         <source>Error! Convert is not successful. Please check contents of &quot;ftx2uni&quot; directory or check your python installation and your path environment.</source>
         <translation>خطا! عمل تبدیل ناموفق بود. لطفا محتویات پوشه &quot;ftx2uni&quot; و یا نصب پایتون و متغیر محیطی سیستم عامل را چک کنید.</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="9797"/>
+        <location filename="texmaker.cpp" line="9809"/>
         <source>Error! Convert is not successful. Please check your python installation and your path environment.</source>
         <translation>خطا! عمل تبدیل ناموفق بود. لطفا نصب پایتون و متغیر محیطی سیستم عامل را چک کنید.</translation>
     </message>
@@ -2821,7 +2825,7 @@ Patch Date: %1</translation>
         <location filename="texmaker.cpp" line="8093"/>
         <location filename="texmaker.cpp" line="8127"/>
         <location filename="texmaker.cpp" line="8149"/>
-        <location filename="texmaker.cpp" line="8685"/>
+        <location filename="texmaker.cpp" line="8697"/>
         <source>Error</source>
         <translation>خطا</translation>
     </message>
@@ -2870,7 +2874,7 @@ Patch Date: %1</translation>
         <location filename="texmaker.cpp" line="4535"/>
         <location filename="texmaker.cpp" line="4578"/>
         <location filename="texmaker.cpp" line="7095"/>
-        <location filename="texmaker.cpp" line="9765"/>
+        <location filename="texmaker.cpp" line="9777"/>
         <source>Cancel</source>
         <translation>رد</translation>
     </message>
@@ -2992,7 +2996,7 @@ Patch Date: %1</translation>
         <location filename="texmaker.cpp" line="6987"/>
         <location filename="texmaker.cpp" line="7563"/>
         <location filename="texmaker.cpp" line="8149"/>
-        <location filename="texmaker.cpp" line="8685"/>
+        <location filename="texmaker.cpp" line="8697"/>
         <source>Could not start the command.</source>
         <translation>‫قادر به اجرای فرمان نیست.</translation>
     </message>
@@ -3104,12 +3108,12 @@ Patch Date: %1</translation>
         <translation type="obsolete">راهنمای کاربر:Texmaker</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="8691"/>
+        <location filename="texmaker.cpp" line="8703"/>
         <source>Normal Mode (current master document :</source>
         <translation>حالت‌عادی (current master document :</translation>
     </message>
     <message>
-        <location filename="texmaker.cpp" line="8693"/>
+        <location filename="texmaker.cpp" line="8705"/>
         <source>Master Document :</source>
         <translation>سند اصلی :</translation>
     </message>

@@ -34,6 +34,8 @@ public slots:
 private slots:
 void createIcons();
 void browseAspell();
+//color selection!
+void colorChooser(QTableWidgetItem *colorItem);
 ////////////////
 //Xindy Make
 void browseXindy();
