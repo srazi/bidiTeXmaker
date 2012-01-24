@@ -327,6 +327,18 @@
         <source>Dark theme</source>
         <translation></translation>
     </message>
+    <message>
+        <source>Xindy Index</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xindy Glossary</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BiDi Support</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EncodingDialog</name>
@@ -775,58 +787,188 @@ az alapértelmezett kódolási beállítással</translation>
     </message>
 </context>
 <context>
+    <name>QBiDiExtender</name>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Hiba</translation>
+    </message>
+    <message>
+        <source>The PTD file could not be saved. Please check if you have write permission.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>insert: \lr{...}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>insert: \rl{...}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>insert LRM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>insert LTR text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>consider as LTR text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove Unicode Control Characters</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QBiDiInitializer</name>
+    <message>
+        <source>Bi-&amp;Directional</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bi-Directing &amp;Method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Automatic Direction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;RTL Environment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;LTR Environment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto New &amp;Line(RTL)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text Direction &amp;Right to Left</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Text Direction &amp;Left to Right</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insert LTR Text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Changing Language by typing &apos;\&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;BiDi Help</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Extended &amp;BiDi Help</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Extended BiDi &amp;Manual...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About Extended BiDi Support...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Hiba</translation>
+    </message>
+    <message>
+        <source>Extended BiDi help file not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About Extended BiDi Support</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br/&gt;%1 uses QBiDiExtender2.&lt;br/&gt;The QBiDiExtender is a Qt class that extends bidi support of QTextEdit class.&lt;br/&gt; The QBiDiExtender2 is prepared&lt;br/&gt;for Qt Version &gt; 4.7.0 .&lt;br/&gt;&lt;br/&gt;Author: &lt;a href=&quot;http://pozh.org/&quot;&gt;S. Razi Alavizadeh&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Project Home Page: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;ParsiLaTeX: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Version: %2&lt;br/&gt;Rev: %3&lt;br/&gt;Build Time: %4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About Qt...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About Qt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This application</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>bidiTeXmaker-</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>bidiTeXworks-</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>unknown</source>
-        <translation>ismeretlen</translation>
+        <translation type="obsolete">ismeretlen</translation>
     </message>
     <message>
         <source>Type 1</source>
-        <translation>Type 1</translation>
+        <translation type="obsolete">Type 1</translation>
     </message>
     <message>
         <source>Type 1C</source>
-        <translation>Type 1C</translation>
+        <translation type="obsolete">Type 1C</translation>
     </message>
     <message>
         <source>Type 3</source>
-        <translation>Type 3</translation>
+        <translation type="obsolete">Type 3</translation>
     </message>
     <message>
         <source>TrueType</source>
-        <translation>TrueType</translation>
+        <translation type="obsolete">TrueType</translation>
     </message>
     <message>
         <source>CID Type 0</source>
-        <translation>CID Type 0</translation>
+        <translation type="obsolete">CID Type 0</translation>
     </message>
     <message>
         <source>CID Type 0C</source>
-        <translation>CID Type 0C</translation>
+        <translation type="obsolete">CID Type 0C</translation>
     </message>
     <message>
         <source>CID TrueType</source>
-        <translation>CID TrueType</translation>
+        <translation type="obsolete">CID TrueType</translation>
     </message>
     <message>
         <source>Type 1C (OpenType)</source>
-        <translation>Type 1C (OpenType)</translation>
+        <translation type="obsolete">Type 1C (OpenType)</translation>
     </message>
     <message>
         <source>TrueType (OpenType)</source>
-        <translation>TrueType (OpenType)</translation>
+        <translation type="obsolete">TrueType (OpenType)</translation>
     </message>
     <message>
         <source>CID Type 0C (OpenType)</source>
-        <translation>CID Type 0C (OpenType)</translation>
+        <translation type="obsolete">CID Type 0C (OpenType)</translation>
     </message>
     <message>
         <source>CID TrueType (OpenType)</source>
-        <translation>CID TrueType (OpenType)</translation>
+        <translation type="obsolete">CID TrueType (OpenType)</translation>
     </message>
     <message>
         <source>Bug: unexpected font type. Notify poppler mailing list!</source>
-        <translation>Hiba: ismeretlen font. Értesítse a poppler levelezőlistát!</translation>
+        <translation type="obsolete">Hiba: ismeretlen font. Értesítse a poppler levelezőlistát!</translation>
     </message>
 </context>
 <context>
@@ -1709,7 +1851,7 @@ az alapértelmezett kódolási beállítással</translation>
     </message>
     <message>
         <source>About Texmaker</source>
-        <translation>A Texmaker névjegye</translation>
+        <translation type="obsolete">A Texmaker névjegye</translation>
     </message>
     <message>
         <source>Run</source>
@@ -1939,6 +2081,66 @@ az alapértelmezett kódolási beállítással</translation>
         <source>Delete the output files generated by LaTeX ?
 (.log,.aux,.dvi,.lof,.lot,.bit,.idx,.glo,.bbl,.ilg,.toc,.ind,.out,.synctex.gz,.blg,.thm,.pre)</source>
         <translation></translation>
+    </message>
+    <message>
+        <source>Import FTX File(s)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>About Texmaker(bidiTeXmaker)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CMD Here</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open File Location</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>[Portable Mode] </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xindy Glossary</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xindy Index</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import FarsiTeX File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Warning!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The output file &quot;%1&quot; already exists. Do you want to replace it?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished">Igen</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="unfinished">Nem</translation>
+    </message>
+    <message>
+        <source>Import As</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error! Convert is not successful. Please check contents of &quot;ftx2uni&quot; directory or check your python installation and your path environment.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error! Convert is not successful. Please check your python installation and your path environment.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
