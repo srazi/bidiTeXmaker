@@ -892,10 +892,6 @@ az alapértelmezett kódolási beállítással</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;br/&gt;%1 uses QBiDiExtender2.&lt;br/&gt;The QBiDiExtender is a Qt class that extends bidi support of QTextEdit class.&lt;br/&gt; The QBiDiExtender2 is prepared&lt;br/&gt;for Qt Version &gt; 4.7.0 .&lt;br/&gt;&lt;br/&gt;Author: &lt;a href=&quot;http://pozh.org/&quot;&gt;S. Razi Alavizadeh&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Project Home Page: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;ParsiLaTeX: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Version: %2&lt;br/&gt;Rev: %3&lt;br/&gt;Build Time: %4</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>About Qt...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -913,6 +909,10 @@ az alapértelmezett kódolási beállítással</translation>
     </message>
     <message>
         <source>bidiTeXworks-</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;br/&gt;%1 uses QBiDiExtender2.&lt;br/&gt;The QBiDiExtender is a Qt class that extends bidi support of QTextEdit class.&lt;br/&gt; The QBiDiExtender2 is prepared for Qt Version &gt; 4.7.0 .&lt;br/&gt;&lt;br/&gt;Author: &lt;a href=&quot;http://pozh.org/&quot;&gt;S. Razi Alavizadeh&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Project Home Page: &lt;a href=&quot;http://pozh.org/qbidiextender&quot;&gt;http://pozh.org/qbidiextender&lt;/a&gt;&lt;br/&gt;ParsiLaTeX: &lt;a href=&quot;http://www.parsilatex.com/&quot;&gt;http://www.parsilatex.com/&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;Version: %2&lt;br/&gt;Rev: %3&lt;br/&gt;Build Time: %4</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

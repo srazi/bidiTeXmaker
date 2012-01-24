@@ -115,6 +115,10 @@ connect( ui.pushButtonDark, SIGNAL(clicked()), this, SLOT(darkColors()));
 connect(ui.radioButton6, SIGNAL(toggled(bool)),ui.lineEditUserquick, SLOT(setEnabled(bool)));
 connect(ui.radioButton6, SIGNAL(toggled(bool)),ui.pushButtonWizard, SLOT(setEnabled(bool)));
 
+//color selection
+connect(ui.colortableWidget, SIGNAL(itemDoubleClicked(QTableWidgetItem*)), this, SLOT(colorChooser(QTableWidgetItem*)));
+//connect(ui.colortableWidget, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(colorItemChanged(QTableWidgetItem*)));
+
 //pagetools
 ///////////////
 //Xindy Make
@@ -226,51 +230,63 @@ QTableWidgetItem *colorItem;
 
 colorItem= new QTableWidgetItem("#FFFFFF");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(0,1,colorItem);
 
 colorItem= new QTableWidgetItem("#ececec");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(1,1,colorItem);
 
 colorItem= new QTableWidgetItem("#FF0000");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(2,1,colorItem);
 
 colorItem= new QTableWidgetItem("#000000");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(3,1,colorItem);
 
 colorItem= new QTableWidgetItem("#606060");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(4,1,colorItem);
 
 colorItem= new QTableWidgetItem("#008000");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(5,1,colorItem);
 
 colorItem= new QTableWidgetItem("#800000");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(6,1,colorItem);
 
 colorItem= new QTableWidgetItem("#0000CC");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(7,1,colorItem);
 
 colorItem= new QTableWidgetItem("#9A4D00");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(8,1,colorItem);
 
 colorItem= new QTableWidgetItem("#FF0000");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(9,1,colorItem);
 
 colorItem= new QTableWidgetItem("#006699");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(10,1,colorItem);
 
 
 colorItem= new QTableWidgetItem("#660066");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(11,1,colorItem);
 }
 
@@ -280,51 +296,63 @@ QTableWidgetItem *colorItem;
 
 colorItem= new QTableWidgetItem("#0c1021");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(0,1,colorItem);
 
 colorItem= new QTableWidgetItem("#131727");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(1,1,colorItem);
 
 colorItem= new QTableWidgetItem("#FF0000");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(2,1,colorItem);
 
 colorItem= new QTableWidgetItem("#f8f8f8");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(3,1,colorItem);
 
 colorItem= new QTableWidgetItem("#aeaeae");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(4,1,colorItem);
 
 colorItem= new QTableWidgetItem("#61ce3c");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(5,1,colorItem);
 
 colorItem= new QTableWidgetItem("#8da6ce");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(6,1,colorItem);
 
 colorItem= new QTableWidgetItem("#fadd2d");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(7,1,colorItem);
 
 colorItem= new QTableWidgetItem("#e6a252");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(8,1,colorItem);
 
 colorItem= new QTableWidgetItem("#FF6400");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(9,1,colorItem);
 
 colorItem= new QTableWidgetItem("#f47bda");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(10,1,colorItem);
 
 
 colorItem= new QTableWidgetItem("#660066");
 colorItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+colorItem->setBackgroundColor(QColor(colorItem->text()));
 ui.colortableWidget->setItem(11,1,colorItem);
 }
 
@@ -607,4 +635,18 @@ if ( userquickdlg->exec() )
    ui.lineEditUserquick->setText(userquickdlg->userQuickCommand);
    }
 delete (userquickdlg);
+}
+
+void ConfigDialog::colorChooser(QTableWidgetItem *colorItem)
+{
+	if (!colorItem) return;
+	if (colorItem->column() != 1) return;
+	QColorDialog colorDialog(colorItem->backgroundColor(), this);
+	colorDialog.setCurrentColor(colorItem->backgroundColor());
+	qDebug() << colorItem->backgroundColor().name();
+	if (colorDialog.exec() == QDialog::Accepted)
+	{
+		colorItem->setBackgroundColor(colorDialog.currentColor());
+		colorItem->setText(colorDialog.currentColor().name());
+	}
 }
