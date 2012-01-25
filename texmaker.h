@@ -111,7 +111,7 @@ QListWidget *OpenedFilesListWidget;
 XmlTagsListWidget *MpListWidget, *PsListWidget, *leftrightWidget, *tikzWidget, *asyWidget;
 SymbolListWidget *RelationListWidget, *ArrowListWidget, *MiscellaneousListWidget, *DelimitersListWidget, *GreekListWidget, *MostUsedListWidget, *FavoriteListWidget;
 QTreeWidget *StructureTreeWidget;
-QVBoxLayout *OutputLayoutV, *CentralLayoutBis,*LeftPanelLayoutBis,;
+QVBoxLayout *OutputLayoutV, *CentralLayoutBis,*LeftPanelLayoutBis;
 QHBoxLayout *OutputLayoutH, *LeftPanelLayout, *CentralLayout;
 QTableWidget *OutputTableWidget;
 //menu-toolbar
