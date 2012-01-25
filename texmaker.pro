@@ -678,8 +678,8 @@ DEFINES      += D_MSVC_CC
 #INCLUDEPATH += "C:/Program Files/Microsoft SDKs/Windows/v6.0A/Include"
 INCLUDEPATH  += D:/Z[Work]/A-TeXworks/KDE/include/poppler/qt4
 INCLUDEPATH  += D:/z[other]/cross-tools/usr/local/include/zlib-1.2.3
-LIBS         += -lD:/Z[Work]/A-TeXworks/KDE/lib/poppler-qt4
-LIBS         += -lD:/Z[Work]/A-TeXworks/KDE/lib/poppler
+LIBS         += -LD:/Z[Work]/A-TeXworks/KDE/lib/ -lpoppler-qt4
+LIBS         += -LD:/Z[Work]/A-TeXworks/KDE/lib/ -lpoppler
 }
 
 win32-g++{
