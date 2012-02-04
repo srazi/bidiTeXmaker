@@ -227,11 +227,11 @@ while (i < text.length())
 			}
 		else	/////////////////////////////////////////////////
 			if ( i < text.length()-1 ) next = text.at( i+1 );
-tmp = ch;
+//tmp = ch;
         switch (state) {
 	
 	case StateStandard: {
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp=='\\') {
 			if (next=='[')
 				{
@@ -347,7 +347,7 @@ tmp = ch;
 	} break;
 
 	case StateMath: {
-		//tmp=ch;//text.at( i );
+		tmp=text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
@@ -411,7 +411,7 @@ tmp = ch;
 	buffer = QString::null;
 	} break;
 	case StateGraphicMath: {
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
@@ -463,7 +463,7 @@ tmp = ch;
 	buffer = QString::null;
 	} break;
 	case StateGraphicAsyMath: {
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
@@ -515,7 +515,7 @@ tmp = ch;
 	buffer = QString::null;
 	} break;
 	case StateCommand:{
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (rxverb.exactMatch(buffer))
 				{
 				 verbflag=rxverb.cap(1).at(0);
@@ -574,7 +574,7 @@ tmp = ch;
 				/////////////////////////////////////////////////
 				//added by S. R. Alavizadeh
 				//Bi-Di Support
-				QString tmpBuffer = "";
+				QString tmpBuffer = buffer;
 				//This just skips Unicode Control Characters.
 				if (QBiDiExtender::bidiEnabled)
 					tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
@@ -612,7 +612,7 @@ tmp = ch;
 		}
 	} break;
        case StateVerbatim: {
-               //tmp=text.at( i );
+               tmp=text.at( i );
 		if (tmp==verbflag && verbflag!=' ')
 		{
 		setFormat( i, 1,ColorCommand);
@@ -717,7 +717,7 @@ tmp = ch;
 		}
        } break;
 	case StateVerbatimCommand:{
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp==verbflag && verbflag!=' ')
 		{
 		setFormat( i, 1,ColorCommand);
@@ -783,7 +783,7 @@ tmp = ch;
 		}
 	} break;
        case StateGraphic: {
-               //tmp=text.at( i );
+               tmp=text.at( i );
  		if (tmp=='\\') {
 			if (next=='[')
 				{
@@ -890,7 +890,7 @@ tmp = ch;
 		}
        } break;
        case StateGraphicAsy: {
-               //tmp=text.at( i );
+               tmp=text.at( i );
  		if (tmp=='\\') {
 			if (next=='[')
 				{
@@ -1002,7 +1002,7 @@ tmp = ch;
 	buffer = QString::null;
 	} break;
 	case StateGraphicCommand:{
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1061,7 +1061,7 @@ tmp = ch;
 		}
 	} break;
 	case StateGraphicAsyCommand:{
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1122,7 +1122,7 @@ tmp = ch;
 /****************************/
        case StateBib: {
 //	 qDebug() << "bib" << buffer << next;
-               //tmp=text.at( i );
+               tmp=text.at( i );
 /*		if (tmp== '\"' ){
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorVerbatim);
@@ -1170,7 +1170,7 @@ tmp = ch;
        } break;*/
 /***************************/
        case StateSweave: {
-               //tmp=text.at( i );
+               tmp=text.at( i );
 		if (tmp=='\\') {
 			if (next=='[')
 				{
@@ -1245,7 +1245,7 @@ tmp = ch;
 		}
        } break;
 	case StateSweaveCommand:{
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1409,7 +1409,7 @@ if (state == StateComment)
 				/////////////////////////////////////////////////
 				//added by S. R. Alavizadeh
 				//Bi-Di Support
-				QString tmpBuffer = "";
+				QString tmpBuffer = buffer;
 				//This just skips Unicode Control Characters.
 				if (QBiDiExtender::bidiEnabled)
 					tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
@@ -1460,7 +1460,7 @@ if (state == StateGraphic || state == StateGraphicCommand || state == StateGraph
 			/////////////////////////////////////////////////
 			//added by S. R. Alavizadeh
 			//Bi-Di Support
-			QString tmpBuffer = "";
+			QString tmpBuffer = buffer;
 			//This just skips Unicode Control Characters.
 			if (QBiDiExtender::bidiEnabled)
 				tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
@@ -1531,7 +1531,7 @@ if (pChecker && state!=StateGraphic && state!=StateGraphicCommand && state!=Stat
 			  /////////////////////////////////////////////////
 			  //added by S. R. Alavizadeh
 			  //Bi-Di Support
-			  QString tmpBuffer = "";
+			  QString tmpBuffer = buffer;
 			  //This just skips Unicode Control Characters.
 			  if (QBiDiExtender::bidiEnabled)
 				  tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
@@ -1599,7 +1599,7 @@ while (i < text.length())
 	
 
 	case StateGraphicMath: {
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp== '$') {
 			setFormat( i, 1,ColorMath);
 			blockData->code[i]=1;
@@ -1652,7 +1652,7 @@ while (i < text.length())
 	} break;
 
        case StateGraphic: {
-               //tmp=text.at( i );
+               tmp=text.at( i );
 		if (tmp=='\\') {
 			if (next=='[')
 				{
@@ -1738,7 +1738,7 @@ while (i < text.length())
 	} break;
 	
 	case StateGraphicCommand:{
-		//tmp=text.at( i );
+		tmp=text.at( i );
 		if (tmp=='$') {
 			if (last=='\\')
 				{
@@ -1858,7 +1858,7 @@ if (state == StateGraphic || state == StateGraphicCommand || state == StateGraph
 			/////////////////////////////////////////////////
 			//added by S. R. Alavizadeh
 			//Bi-Di Support
-			QString tmpBuffer = "";
+			QString tmpBuffer = buffer;
 			//This just skips Unicode Control Characters.
 			if (QBiDiExtender::bidiEnabled)
 				tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);

@@ -20,6 +20,7 @@
 #include "winuser.h"
 #endif
 
+//#include <QMessageBox>
 /////////////////////////////////////////////////
 //added by S. R. Alavizadeh
 //Extra Feature: easy portable
@@ -48,6 +49,9 @@ if ( app.isRunning() )
     app.sendMessage( msg );
     return 0;
     }
+
+//'At Development Stage' message
+//QMessageBox::information(0, QObject::tr("At Development Stage"), QObject::tr("This is an experimental version! Don\'t release it!\nWWW: http://pozh.org/"));
 
 app.init(args); // Initialization takes place only if there is no other instance running.
 
