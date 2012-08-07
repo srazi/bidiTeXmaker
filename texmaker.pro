@@ -4,10 +4,11 @@ TARGET	 = bidiTeXmaker
 QT += network \
       xml \
       webkit
-CONFIG	+= qt warn_off
+CONFIG	+= qt
+#warn_off
 TEXMAKERVERSION=3.2.2
 DEFINES += TEXMAKERVERSION=\\\"$${TEXMAKERVERSION}\\\"
-bidiTEXMAKERVERSION=3.2.2-24
+bidiTEXMAKERVERSION=3.2.2-32
 DEFINES += bidiTEXMAKERVERSION=\\\"$${bidiTEXMAKERVERSION}\\\"
 DEFINES += HAVE_SPLASH
 ###############################

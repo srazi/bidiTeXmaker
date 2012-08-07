@@ -2244,6 +2244,11 @@ viewMenu->addAction(formatToolBar->toggleViewAction());
 viewMenu->addAction(runToolBar->toggleViewAction());
 
 /////////////////////////////////////////////////
+//added by S. R. Alavizadeh
+//Bi-Di Support
+if (QBiDiExtender::bidiEnabled)
+	addToolBar(LatexEditor::BiDiBase->installBiDiToolBar());
+////////////////////////////////////////////////
 //Extra Features: Location Commands
 //added by S. Razi Alavizadeh
 commandToolBar = addToolBar("Command");
@@ -3904,7 +3909,7 @@ singleviewerinstance=config->value("Tools/SingleViewerInstance",false).toBool();
 ///////////////
 //Xindy Make for all OSes
 xindy_makeindex_command=config->value("Tools/XindyMakeIndex","xindy -L persian -C utf8 -M texindy %.idx").toString();
-xindy_makeglossaries_command=config->value("Tools/XindyMakeGlossaries","xindy -L persian -C utf8 -I xindy -M %.xdy -t %.glg -o %.gls %.glo").toString();
+xindy_makeglossaries_command=config->value("Tools/XindyMakeGlossaries","xindy -L persian -C utf8 -I xindy -M %.xdy -t %.glg -o %.gls %.glo|xindy -L persian -C utf8 -I xindy -M %.xdy -t %.blg -o %.bls %.blo").toString();
 ///////////////
 
 #ifdef Q_WS_MACX 
@@ -9777,8 +9782,8 @@ for (int i=0;i<inputFTX.size();++i)
 					tr("Yes"), tr("No"), tr("Cancel"),0,2 ) )
 					{
 					case 0:
-						QFile::QFile(outputUNI).close();
-						QFile::QFile(outputUNI).remove();
+						/*QFile::*/QFile(outputUNI).close();
+						/*QFile::*/QFile(outputUNI).remove();
 						break;
 					case 1:
 						outputUNI = QFileDialog::getSaveFileName(this,tr("Import As"),currentDir,"TeX file (*.tex)");
@@ -9791,14 +9796,14 @@ for (int i=0;i<inputFTX.size();++i)
 					}
 			}
 		QString tmpInput=inputFTX.at(i).left(inputFTX.at(i).size()-4)+"886EA178-B648-4840-A21A-AFFADE5AD3E5";
-		QFile::QFile(inputFTX.at(i)).copy(tmpInput+".ftx");//new
+		/*QFile::*/QFile(inputFTX.at(i)).copy(tmpInput+".ftx");//new
 		ftxConvertor.execute("python", QStringList() << pyConvertorPath << "-x" <<  tmpInput+".ftx");
-		if (!QFile::QFile(tmpInput+".tex").exists())
+		if (!/*QFile::*/QFile(tmpInput+".tex").exists())
 		{
 			if (!exeConvertorPath.isEmpty())
 			{
 				ftxConvertor.execute(exeConvertorPath, QStringList() << "-x" << tmpInput+".ftx" );
-				if (!QFile::QFile(tmpInput+".tex").exists())
+				if (!/*QFile::*/QFile(tmpInput+".tex").exists())
 					{
 						QMessageBox::warning(this, "bidiTeXmaker",tr("Error! Convert is not successful. Please check contents of \"ftx2uni\" directory or check your python installation and your path environment."));
 						return;
@@ -9810,8 +9815,8 @@ for (int i=0;i<inputFTX.size();++i)
 				return;
 			}
 		}
-		QFile::QFile(tmpInput+".tex").rename(outputUNI);
-		QFile::QFile(tmpInput+".ftx").remove();
+		/*QFile::*/QFile(tmpInput+".tex").rename(outputUNI);
+		/*QFile::*/QFile(tmpInput+".ftx").remove();
 		if (FileAlreadyOpen(outputUNI))
 			{
 			filenames.remove(currentEditorView());

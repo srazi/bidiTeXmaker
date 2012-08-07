@@ -2861,10 +2861,13 @@ if (QBiDiExtender::bidiEnabled)
 		////when user manually change language app needs to clear last language info
 		if (!BiDiForEditor->lastLangAutoChanged)
 		{
+			qDebug()<<"-----1-backSlashFlag="<<BiDiForEditor->backSlashFlag;
 			BiDiForEditor->processInputLang(false, true);
+			qDebug()<<"-----2backSlashFlag="<<BiDiForEditor->backSlashFlag;
 			//if after typing '\' input language changed!
 			BiDiForEditor->backSlashFlag = false;
 		}
+		BiDiForEditor->lastLangAutoChanged = false;
 			//BiDiForEditor->lastInputLang=0;
 //#endif
 		BiDiForEditor->kbdLayoutChangingCanEmited = true;
