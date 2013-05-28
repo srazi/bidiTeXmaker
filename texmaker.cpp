@@ -8448,8 +8448,15 @@ if (confDlg->exec())
 			}
 		else
 			{
-			delete LatexEditor::BiDiBase;
-			LatexEditor::BiDiBase=0;
+				if (LatexEditor::BiDiBase)
+					{
+					LatexEditor::BiDiBase->setEditorActionState(false);
+					QToolBar *bidiToolbar = LatexEditor::BiDiBase->installBiDiToolBar();
+					removeToolBar(bidiToolbar);
+					delete bidiToolbar;
+					delete LatexEditor::BiDiBase;
+					LatexEditor::BiDiBase=0;
+					}
 			}
 		menuNeedsUpdate=true;
 		}
@@ -8461,8 +8468,16 @@ if (confDlg->exec())
 			setupMenus();//this is needed for disabling some of menu items
 			UpdateRecentFile();
 			//bidiFlag = true;
+			if (QBiDiExtender::bidiEnabled && LatexEditor::BiDiBase)
+				{
+            //qDebug() << "Texmaker::General--111111111";
+				addToolBar(Qt::TopToolBarArea, LatexEditor::BiDiBase->installBiDiToolBar());
+            //qDebug() << "Texmaker::General--22222222222";
+				LatexEditor::BiDiBase->setEditorActionState(true);
+            //qDebug() << "Texmaker::General--333333333333333";
+				}
 			}
-
+//qDebug() << "Texmaker::General--444444444444444444444";
 	disconnect(EditorView, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged()));
 	/////////////////////////////////////////////////
 	
@@ -10019,18 +10034,18 @@ bool Texmaker::executeDDE(QString ddePseudoURL) {
 //Xindy Make
 void Texmaker::XindyMakeIndex()
 {
-RunCommand(xindy_makeindex_command,false);
+    RunCommand(xindy_makeindex_command,false);
 }
 
 void Texmaker::XindyMakeGlossaries()
 {
-RunCommand(xindy_makeglossaries_command,false);
+    RunCommand(xindy_makeglossaries_command,false);
 }
 /////////////////
 void Texmaker::setCopyEnabled(bool enabled)
 {
-CopyAct->setEnabled(enabled);
-CutAct->setEnabled(enabled);
+    CopyAct->setEnabled(enabled);
+    CutAct->setEnabled(enabled);
 }
 /////////////////////////////////
 //end of codes

@@ -83,19 +83,28 @@ StructItem newItem=StructItem(i,"",-1,QTextCursor());
 bool found=false;
 int tagStart, tagEnd,offset;
 QString s;
-QString struct_level1="part";
-QString struct_level2="chapter";
-QString struct_level3="section";
-QString struct_level4="subsection";
-QString struct_level5="subsubsection";
+QString struct_level_fa1=QString::fromLocal8Bit("ﬁ”„ ");//+QObject::tr("part", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level_fa2=QString::fromLocal8Bit("›’·");//+QObject::tr("chapter", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level_fa3=QString::fromLocal8Bit("»Œ‘");//+QObject::tr("section", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level_fa4=QString::fromUtf8("“Ì—»Œ‘");//+QObject::tr("subsection", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level_fa5=QString::fromLocal8Bit("“Ì—“Ì—»Œ‘");
+QString struct_level1="(part|"+struct_level_fa1+")";//+QObject::tr("part", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level2="(chapter|"+struct_level_fa2+")";//+QObject::tr("chapter", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level3="(section|"+struct_level_fa3+")";//+QObject::tr("section", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level4="(subsection|"+struct_level_fa4+")";//+QObject::tr("subsection", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level5="(subsubsection|"+struct_level_fa5+")";//+QObject::tr("subsubsection", "Translate it to localized latex command or leave it empty")+")";
 
 tagStart=tagEnd=offset=0;
 s=text; 
- tagStart=s.indexOf(QRegExp("\\\\"+struct_level3+"\\*?[\\{\\[]"), tagEnd);
+QRegExp regExp3("\\\\"+struct_level3+"\\*?[\\{\\[]");
+ tagStart=s.indexOf(regExp3, tagEnd);
+ qDebug() << "captureCount=" << regExp3.captureCount();
+
 offset=tagStart;
-	if (tagStart!=-1)
+    if (tagStart!=-1 && regExp3.captureCount() > 0)
 	{
-	tagStart=s.indexOf(struct_level3, tagEnd);
+        struct_level3 = regExp3.cap(0);
+    tagStart=s.indexOf(struct_level3, tagEnd);
 	s=s.mid(tagStart+struct_level3.length(),s.length());
 	s=s.trimmed();
 	tagStart=s.indexOf("}", tagEnd);
@@ -115,10 +124,12 @@ if (!found)
 //// subsection ////
 tagStart=tagEnd=offset=0;
 s=text;
-tagStart=s.indexOf(QRegExp("\\\\"+struct_level4+"\\*?[\\{\\[]"), tagEnd);
+QRegExp regExp4("\\\\"+struct_level4+"\\*?[\\{\\[]");
+tagStart=s.indexOf(regExp4, tagEnd);
 offset=tagStart;
-if (tagStart!=-1)
-	{
+if (tagStart!=-1 && regExp4.captureCount() > 0)
+{
+    struct_level4 = regExp4.cap(0);
 	tagStart=s.indexOf(struct_level4, tagEnd);
 	s=s.mid(tagStart+struct_level4.length(),s.length());
 	s=s.trimmed();
@@ -139,11 +150,12 @@ if (!found)
 {
 //// subsubsection ////
 tagStart=tagEnd=offset=0;
-s=text;
-tagStart=s.indexOf(QRegExp("\\\\"+struct_level5+"\\*?[\\{\\[]"), tagEnd);
+QRegExp regExp5("\\\\"+struct_level5+"\\*?[\\{\\[]");
+tagStart=s.indexOf(regExp5, tagEnd);
 offset=tagStart;
-if (tagStart!=-1)
-	{
+if (tagStart!=-1 && regExp5.captureCount() > 0)
+{
+    struct_level5 = regExp5.cap(0);
 	tagStart=s.indexOf(struct_level5, tagEnd);
 	s=s.mid(tagStart+struct_level5.length(),s.length());
 	s=s.trimmed();
@@ -256,10 +268,12 @@ if (!found)
 //// part ////
 tagStart=tagEnd=offset=0;
 s=text;
-tagStart=s.indexOf(QRegExp("\\\\"+struct_level1+"\\*?[\\{\\[]"), tagEnd);
+QRegExp regExp1("\\\\"+struct_level1+"\\*?[\\{\\[]");
+tagStart=s.indexOf(regExp1, tagEnd);
 offset=tagStart;
-if (tagStart!=-1)
-	{
+if (tagStart!=-1 && regExp1.captureCount() > 0)
+    {
+    struct_level1 = regExp1.cap(0);
 	tagStart=s.indexOf(struct_level1, tagEnd);
 	s=s.mid(tagStart+struct_level1.length(),s.length());
 	s=s.trimmed();
@@ -281,10 +295,12 @@ if (!found)
 //// chapter ////
 tagStart=tagEnd=offset=0;
 s=text;
-tagStart=s.indexOf(QRegExp("\\\\"+struct_level2+"\\*?[\\{\\[]"), tagEnd);
+QRegExp regExp2("\\\\"+struct_level2+"\\*?[\\{\\[]");
+tagStart=s.indexOf(regExp2, tagEnd);
 offset=tagStart;
-if (tagStart!=-1)
-	{
+if (tagStart!=-1 && regExp2.captureCount() > 0)
+    {
+    struct_level2 = regExp2.cap(0);
 	tagStart=s.indexOf(struct_level2, tagEnd);
 	s=s.mid(tagStart+struct_level2.length(),s.length());
 	s=s.trimmed();
@@ -2552,6 +2568,10 @@ void LatexEditor::copy()
         return;
     }
     QTextEdit::copy();
+	QClipboard *clipboard = QApplication::clipboard();
+	QString text = clipboard->text();
+	text = QBiDiExtender::removeUnicodeControlCharacters(text);
+	clipboard->setText(text);
 }
 
 void LatexEditor::cut()
@@ -2562,6 +2582,11 @@ void LatexEditor::cut()
         return;
     }
     QTextEdit::cut();
+
+	QClipboard *clipboard = QApplication::clipboard();
+	QString text = clipboard->text();
+	text = QBiDiExtender::removeUnicodeControlCharacters(text);
+	clipboard->setText(text);
 }
 
 void LatexEditor::paste()
@@ -2634,6 +2659,7 @@ QMimeData *LatexEditor::createMimeDataFromSelection() const
     if (inBlockSelectionMode) {
         QMimeData *mimeData = new QMimeData;
         QString text = copyBlockSelection();
+        text = QBiDiExtender::removeUnicodeControlCharacters(text);
         mimeData->setData(QLatin1String("application/vnd.texmaker.vblocktext"), text.toUtf8());
         mimeData->setText(text); // for exchangeability
         return mimeData;
@@ -2643,6 +2669,7 @@ QMimeData *LatexEditor::createMimeDataFromSelection() const
 
         // Copy the selected text as plain text
         QString text = cursor.selectedText();
+		text = QBiDiExtender::removeUnicodeControlCharacters(text);
         convertToPlainText(text);
         mimeData->setText(text);
 
@@ -2707,6 +2734,7 @@ QMimeData *LatexEditor::createMimeDataFromSelection() const
             cursor.setPosition(selstart.position());
             cursor.setPosition(selend.position(), QTextCursor::KeepAnchor);
             text = cursor.selectedText();
+            text = QBiDiExtender::removeUnicodeControlCharacters(text);
             mimeData->setData(QLatin1String("application/vnd.texmaker.blocktext"), text.toUtf8());
         }
         return mimeData;
