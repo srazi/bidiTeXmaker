@@ -12,6 +12,9 @@ bidiTEXMAKERVERSION=3.2.2-40
 DEFINES += bidiTEXMAKERVERSION=\\\"$${bidiTEXMAKERVERSION}\\\"
 DEFINES += HAVE_SPLASH
 ###############################
+DEFINES += QT_NO_WARNING_OUTPUT
+DEFINES += QT_NO_DEBUG_OUTPUT
+###############################
 HEADERS	+= texmaker.h \
 	texmakerapp.h \
 	minisplitter.h \
@@ -668,9 +671,6 @@ QMAKE_INFO_PLIST =Info.plist
 }
 
 ###################################################################
-#My BiDi Class source files
-#for shared lib comment out the below line.
-DEFINES += QBIDIEXTENDER_EMBED
 win32 {
 LIBS += -luser32
 win32-msvc*{
@@ -689,50 +689,9 @@ INCLUDEPATH += E:/Qt/QtSDK/mingw/include
 #D:/Z[Other]/msysgit/msysgit/mingw/include
 INCLUDEPATH += I:/KDE/minGW4/include/poppler/qt4
 INCLUDEPATH += I:/KDE/minGW4/include
-LIBS         += -L"I:/KDE/minGW4/lib" -llibpoppler-qt4 -llibpoppler
+LIBS        += -L"I:/KDE/minGW4/lib" -llibpoppler-qt4 -llibpoppler
 }
-#LIBS += -l"W:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib\User32" -l"W:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib\Uuid" -l"W:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib\kernel32"
-#INCLUDEPATH += ./ ./debug/_ui
-GUID = {AE276D93-FB6D-3DF7-8512-F8A027A84100}
-HEADERS	+= D:/Z[Work]/QBiDiExtender2/qbidiextender2.h
-SOURCES	+= D:/Z[Work]/QBiDiExtender2/qbidiextender2.cpp
-INCLUDEPATH += D:/Z[Work]/QBiDiExtender2/
-	# Release{
-	# LIBS += -l"D:\Z[Work]\QBiDiExtender\release\QBiDiExtender"
-	# }
-	# Debug{
-	# LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
-	# }
-RESOURCES += D:/Z[Work]/QBiDiExtender2/qbidiextender2.qrc
-}
-unix:!macx {
-HEADERS	+= /media/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.h \
-						/media/DATA1/Z[Work]/QBiDiExtender2/xkb/XKeyboard.h \
-						/media/DATA1/Z[Work]/QBiDiExtender2/xkb/X11Exception.h
-SOURCES	+= /media/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.cpp \
-						/media/DATA1/Z[Work]/QBiDiExtender2/xkb/XKeyboard.cpp
-INCLUDEPATH += /media/DATA1/Z[Work]/QBiDiExtender2
-#Release{
-#LIBS += -L/media/DATA1/Z[Work]/QBiDiExtender
-	#LIBS += -lQBiDiExtender
-#	}
-#Debug{
-	#LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
-#}
-RESOURCES += /media/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.qrc
-}
-macx {
-HEADERS	+= /Volume/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.h
-SOURCES	+= /Volume/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.cpp
-INCLUDEPATH += /Volume/DATA1/Z[Work]/QBiDiExtender2
-INCLUDEPATH += /Users/srazi/Document/bidiTexmaker2_build/
-#Release{
-#LIBS += -L/media/DATA1/Z[Work]/QBiDiExtender
-	#LIBS += -lQBiDiExtender
-#	}
-#Debug{
-	#LIBS += -l"D:\Z[Work]\QBiDiExtender\debug\QBiDiExtenderd"
-#}
-RESOURCES += /Volume/DATA1/Z[Work]/QBiDiExtender2/qbidiextender2.qrc
 }
 
+## QBiDiExtender2
+include($$PWD/QBiDiExtender2/qbidiextender2.pri)
