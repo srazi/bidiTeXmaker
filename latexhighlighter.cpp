@@ -86,6 +86,9 @@ rehighlight();
 
 void LatexHighlighter::highlightBlock(const QString &text)
 {
+	if (text.isEmpty())
+		return;
+
 QRegExp rxSweave("<<(.*)>>=");
 QStringList types;
 types << QLatin1String("article") << QLatin1String("book")
