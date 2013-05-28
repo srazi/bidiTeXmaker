@@ -17,17 +17,17 @@ echo "Enter  DIRECTORY for the desktop file (/usr/share/applications) :"
 read DESKTOPDIR
 echo "Enter  DIRECTORY for the icon file (/usr/share/pixmaps) :"
 read ICONDIR
-qmake -unix PREFIX=$PREFIX DESKTOPDIR=$DESKTOPDIR ICONDIR=$ICONDIR texmaker.pro
+qmake -unix PREFIX=$PREFIX DESKTOPDIR=$DESKTOPDIR ICONDIR=$ICONDIR biditexmaker.pro
 make
 make install
 echo "Compilation and installation done"
-# set the -spec option, if necessary. Ex : qmake -unix -spec linux-g++ PREFIX=$PREFIX texmaker.pro
+# set the -spec option, if necessary. Ex : qmake -unix -spec linux-g++ PREFIX=$PREFIX biditexmaker.pro
 exit 0
 fi
 
 if [ "$SYSTEM" = 2 ] 
 then
-qmake -macx -spec macx-g++ texmaker.pro
+qmake -macx -spec macx-g++ biditexmaker.pro
 make
 make install
 echo "Compilation and installation done"
