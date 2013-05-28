@@ -4287,6 +4287,12 @@ colorNumberGraphic=config->value("Color/NumberGraphic",QColor("#660066")).value<
 config->beginGroup("Editor");
 QBiDiExtender::readBiDiSettings(config);
 config->endGroup();
+//support for localized structure commands
+LatexEditor::localizedStructureCommands.insert("part", config->value("Structure/localizedPart").toString());
+LatexEditor::localizedStructureCommands.insert("chapter", config->value("Structure/localizedChapter").toString());
+LatexEditor::localizedStructureCommands.insert("section", config->value("Structure/localizedSection").toString());
+LatexEditor::localizedStructureCommands.insert("subsection", config->value("Structure/localizedSubsection").toString());
+LatexEditor::localizedStructureCommands.insert("subsubsection", config->value("Structure/localizedSubsubsection").toString());
 /////////////////////////////////////////////////
 
 //just for persian users!
@@ -4528,6 +4534,12 @@ config.setValue("Color/NumberGraphic",colorNumberGraphic);
 config.beginGroup("Editor");
 QBiDiExtender::saveBiDiSettings(&config);
 config.endGroup();
+//support for localized structure commands
+config.setValue("Structure/localizedPart",LatexEditor::localizedStructureCommands.value("part"));
+config.setValue("Structure/localizedChapter",LatexEditor::localizedStructureCommands.value("chapter"));
+config.setValue("Structure/localizedSection",LatexEditor::localizedStructureCommands.value("section"));
+config.setValue("Structure/localizedSubsection",LatexEditor::localizedStructureCommands.value("subsection"));
+config.setValue("Structure/localizedSubsubsection",LatexEditor::localizedStructureCommands.value("subsubsection"));
 /////////////////////////////////////////////////
 
 config.endGroup();
@@ -8223,6 +8235,12 @@ else
     {
     confDlg->ui.checkBoxBidiEnabled->setChecked(false);
     }
+//support for localized structure commands
+confDlg->ui.partLineEdit->setText(LatexEditor::localizedStructureCommands.value("part"));
+confDlg->ui.chapterLineEdit->setText(LatexEditor::localizedStructureCommands.value("chapter"));
+confDlg->ui.sectionLineEdit->setText(LatexEditor::localizedStructureCommands.value("section"));
+confDlg->ui.subsectionLineEdit->setText(LatexEditor::localizedStructureCommands.value("subsection"));
+confDlg->ui.subsubsectionLineEdit->setText(LatexEditor::localizedStructureCommands.value("subsubsection"));
 /////////////////////////////////////////////////
 
 confDlg->ui.lineEditAspellCommand->setText(spell_dic);
@@ -8479,6 +8497,12 @@ if (confDlg->exec())
 			}
 //qDebug() << "Texmaker::General--444444444444444444444";
 	disconnect(EditorView, SIGNAL(currentChanged(int)), this, SLOT(currentTabChanged()));
+//support for localized structure commands
+    LatexEditor::localizedStructureCommands.insert("part", confDlg->ui.partLineEdit->text().simplified());
+    LatexEditor::localizedStructureCommands.insert("chapter", confDlg->ui.chapterLineEdit->text().simplified());
+    LatexEditor::localizedStructureCommands.insert("section", confDlg->ui.sectionLineEdit->text().simplified());
+    LatexEditor::localizedStructureCommands.insert("subsection", confDlg->ui.subsectionLineEdit->text().simplified());
+    LatexEditor::localizedStructureCommands.insert("subsubsection", confDlg->ui.subsubsectionLineEdit->text().simplified());
 	/////////////////////////////////////////////////
 	
 	completion=confDlg->ui.checkBoxCompletion->isChecked();
