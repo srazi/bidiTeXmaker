@@ -83,16 +83,21 @@ StructItem newItem=StructItem(i,"",-1,QTextCursor());
 bool found=false;
 int tagStart, tagEnd,offset;
 QString s;
-QString struct_level_fa1=QString::fromLocal8Bit("ﬁ”„ ");//+QObject::tr("part", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level_fa2=QString::fromLocal8Bit("›’·");//+QObject::tr("chapter", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level_fa3=QString::fromLocal8Bit("»Œ‘");//+QObject::tr("section", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level_fa4=QString::fromUtf8("“Ì—»Œ‘");//+QObject::tr("subsection", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level_fa5=QString::fromLocal8Bit("“Ì—“Ì—»Œ‘");
-QString struct_level1="(part|"+struct_level_fa1+")";//+QObject::tr("part", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level2="(chapter|"+struct_level_fa2+")";//+QObject::tr("chapter", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level3="(section|"+struct_level_fa3+")";//+QObject::tr("section", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level4="(subsection|"+struct_level_fa4+")";//+QObject::tr("subsection", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level5="(subsubsection|"+struct_level_fa5+")";//+QObject::tr("subsubsection", "Translate it to localized latex command or leave it empty")+")";
+
+QMap<QString, QString>::const_iterator it = LatexEditor::localizedStructureCommands.constBegin();
+while (it != LatexEditor::localizedStructureCommands.constEnd()) {
+    QString val = QString(it.value());
+    if (!val.isEmpty() && !val.startsWith("|")) {
+        LatexEditor::localizedStructureCommands.insert(it.key(), "|"+val);
+    }
+    ++it;
+}
+
+QString struct_level1="(part"+LatexEditor::localizedStructureCommands.value("part")+")";//+QObject::tr("part", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level2="(chapter"+LatexEditor::localizedStructureCommands.value("chapter")+")";//+QObject::tr("chapter", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level3="(section"+LatexEditor::localizedStructureCommands.value("section")+")";//+QObject::tr("section", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level4="(subsection"+LatexEditor::localizedStructureCommands.value("subsection")+")";//+QObject::tr("subsection", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level5="(subsubsection"+LatexEditor::localizedStructureCommands.value("subsubsection")+")";//+QObject::tr("subsubsection", "Translate it to localized latex command or leave it empty")+")";
 
 tagStart=tagEnd=offset=0;
 s=text; 
@@ -383,6 +388,7 @@ newstruct.list=templist;
 return newstruct;
 }
 
+QMap<QString,QString> LatexEditor::localizedStructureCommands;
 
 LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QList<QColor> edcolors, QList<QColor> hicolors,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces,int tabwidth,const QKeySequence viewfocus, QString name) : QTextEdit(parent),c(0)
 {

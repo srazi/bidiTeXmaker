@@ -99,7 +99,7 @@ void unfold(int start, int end);
 QMap<int,int> foldedLines;
 QMap<int,int> foldableLines;
 
-
+static QMap<QString,QString> localizedStructureCommands;
 
 QStringList structlist, structitem;
 //QList<int> structtype, structpos, structlen;
@@ -132,7 +132,7 @@ void setHightLightLine();
 void clearHightLightLine();
 virtual void paste();
 virtual void cut();
-void setCursorVisible() {ensureCursorVisible ();};
+void setCursorVisible() {ensureCursorVisible ();}
 void setColors(QList<QColor> colors);
 
 private:

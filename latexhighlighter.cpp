@@ -86,8 +86,9 @@ rehighlight();
 
 void LatexHighlighter::highlightBlock(const QString &text)
 {
-	if (text.isEmpty())
-		return;
+    // structure cleared with empty text!!!
+//	if (text.isEmpty())
+//		return;
 
 QRegExp rxSweave("<<(.*)>>=");
 QStringList types;
