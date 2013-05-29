@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+      <file>image/BiDi-Logo.png</file>
+	  <file>image/format_text_direction_ltr.png</file>
+	  <file>image/format_text_direction_rtl.png</file>
+    </qresource>
+</RCC>
