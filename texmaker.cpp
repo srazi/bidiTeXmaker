@@ -2530,7 +2530,8 @@ connect(edit->editor, SIGNAL(copyStateChanged(bool)), this, SLOT(setCopyEnabled(
 if (QBiDiExtender::bidiEnabled && QBiDiExtender::ptdSupportFlag)
 	text = LatexEditor::BiDiBase->openPtdFile(f, QTextCodec::codecForName(edit->editor->getEncoding().toLatin1()), text );
 
-if ( QBiDiExtender::ptdOpenFlag )
+bool textIsHtml = text.startsWith("<!DOCTYPE HTML PUBLIC") || text.startsWith("<html>");
+if (textIsHtml)
 	{
 	edit->editor->setHtml(text);
 	//qDebug() << "PTD Loaded, HTML.";
@@ -2545,7 +2546,7 @@ if (QBiDiExtender::bidiEnabled)
 	{
 	edit->editor->BiDiForEditor->initBiDi();//new
 	
-	if (edit->editor->BiDiForEditor && !QBiDiExtender::ptdOpenFlag)
+    if (edit->editor->BiDiForEditor && !textIsHtml)
 		edit->editor->BiDiForEditor->applyBiDiModeToEditor(edit->editor->BiDiForEditor->editorLastBiDiModeApplied);
 	}
 /////////////////////////////////////////////////
@@ -9757,6 +9758,9 @@ else
 //added by S. R. Alavizadeh
 //start of codes
 //Extra Features: Location Commands
+#ifdef Q_OS_WIN
+#include "Shellapi.h"
+#endif
 void Texmaker::locationCommand()
 {
 if (!currentEditorView())	return;
@@ -9782,8 +9786,17 @@ if (commandName=="CMD Here")
 	}
 	else if (commandName=="Open File Location")
 		{
-		QUrl docUrl("file:///"+docLocation.left( docLocation.lastIndexOf(QChar('/')) ));
-		QDesktopServices::openUrl(docUrl);
+        QString path = docLocation.left( docLocation.lastIndexOf(QChar('/')) );
+        // docUrl("file:///"+docLocation.left( docLocation.lastIndexOf(QChar('/')) ));
+#ifdef Q_OS_WIN
+        QString winFileName = docLocation;
+        winFileName.replace(QLatin1Char('/'), "\\");
+        QString shExArg = "/e,/select,\"" + winFileName + "\"";
+        ShellExecute(NULL, NULL, TEXT("explorer.exe"), shExArg.toStdWString().c_str(), NULL, SW_SHOW);
+#else
+        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+        //QDesktopServices::openUrl(docUrl);
+#endif
 		}
 }
 /////////////////////////////////////////////////

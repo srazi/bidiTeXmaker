@@ -8,7 +8,7 @@ CONFIG	+= qt
 #warn_off
 TEXMAKERVERSION=3.2.2
 DEFINES += TEXMAKERVERSION=\\\"$${TEXMAKERVERSION}\\\"
-bidiTEXMAKERVERSION=2013r1
+bidiTEXMAKERVERSION=2013r2
 DEFINES += bidiTEXMAKERVERSION=\\\"$${bidiTEXMAKERVERSION}\\\"
 DEFINES += HAVE_SPLASH
 ###############################
@@ -672,7 +672,7 @@ QMAKE_INFO_PLIST =Info.plist
 
 ###################################################################
 win32 {
-LIBS += -luser32
+LIBS += -luser32 -lshell32
 win32-msvc*{
 DEFINES      += D_MSVC_CC
 #INCLUDEPATH += "I:/Program Files/Microsoft SDKs/Windows/v6.0A/Include"

@@ -62,6 +62,8 @@ bool QBiDiExtender::flagAutoLRM=true, QBiDiExtender::canChangesInputLang=true, Q
 bool QBiDiExtender::forceSkiped = false;
 bool QBiDiExtender::applicationViewerLoadIt = false;
 
+const QString PTD_VERSION = "2";
+
 QBiDiExtender::QBiDiExtender(QTextEdit *qeditor, QBiDiInitializer *qBiDiLoader)
     : QObject(qeditor),
 	editorForBiDi(qeditor), BiDiLoader(qBiDiLoader)
@@ -644,7 +646,7 @@ QString word, tmpWord;
 int prevWordFlag=-1,lastLatinIndex=-1;
 text.remove(QChar(LRM), Qt::CaseInsensitive);
 text.replace( "\n", " \n ", Qt::CaseInsensitive );
-QStringList splittedDoc = text.split(" ");
+QStringList splittedDoc = text.split(" ", QString::SkipEmptyParts);
 
 for (int i = 0; i < splittedDoc.size(); ++i)
 	{
@@ -774,6 +776,48 @@ text.replace( " \n ", "\n", Qt::CaseInsensitive );
 QRegExp lrmExpCommand("\n"+QString(LRM)+"*\\\\"+QString(LRM)+"+",  Qt::CaseInsensitive);
 text.replace( lrmExpCommand, "\n\\");
 
+
+QStringList lineList = text.split("\n", QString::SkipEmptyParts);
+bool changed = false;
+for (int lineIndex = 0; lineIndex < lineList.size(); ++lineIndex) {
+    QString line = lineList.at(lineIndex);
+    QString tmp = CLEAR_CONTROL_CHARS(line);
+    tmp = tmp.remove("\\");
+    TeXtrimmed(&tmp);
+    if (tmp.isEmpty()) {
+        continue;
+    }
+    if (tmp.isRightToLeft() && !line.isRightToLeft() || (!tmp.isRightToLeft() && line.isRightToLeft())) {
+        int index = 0;
+        while (index < line.size() &&
+               (line.at(index) == QChar(LRM) || line.at(index) == QChar(RLM))) {
+                ++index;
+                continue;
+        }
+        if (index < line.size()) {
+            if (index>1) {
+                line = line.remove(0, index - 1);
+                //QMessageBox::information(0,"blockText.remove",QString("index=%1").arg(index));
+            }
+
+            if (tmp.isRightToLeft()) {
+                if (line.at(0) != QChar(RLM)) {
+                    line.prepend(QChar(RLM));
+                }
+            }
+            else {
+                if (line.at(0) != QChar(LRM)) {
+                    line.prepend(QChar(LRM));
+                }
+            }
+            lineList[lineIndex] = line;
+            changed = true;
+        }
+    }
+}
+if (changed) {
+    text = lineList.join("\n");
+}
 //this function removes all LRMs, we don't need the following lines!
 //QRegExp lrmExp("\n"+QString(LRM)+"+",  Qt::CaseInsensitive);
 //text.replace(lrmExp, "\n");
@@ -940,9 +984,9 @@ if (tmpCursor.hasSelection())
 void QBiDiExtender::savePtdFile(const QString &f, QTextCodec* codec)
 {
 if (!editorForBiDi) return;
-
+QString fileType = QFileInfo(f).suffix().toLower() == "tex" ? "" : ("_"+QFileInfo(f).suffix().toLower());
 QDateTime fileLastModification=QFileInfo(f).lastModified();
-QString ptdFileName=f.left(f.size()-4)+".ptd";
+QString ptdFileName=f.left(f.size()-4)+fileType+".ptd";
 ptdFileName.replace(QChar('\\'),QChar('/'));
 QString tmpName = ptdFileName.right( ptdFileName.size()-ptdFileName.lastIndexOf(QChar('/'))-1 );
 ptdFileName = ptdFileName.left( ptdFileName.lastIndexOf(QChar('/'))+1 )+"."+tmpName;
@@ -954,24 +998,99 @@ if ( !ptdFile.open( QIODevice::WriteOnly ) )
     }
 QTextStream ptdTS( &ptdFile );
 ptdTS.setCodec(codec ? codec : QTextCodec::codecForLocale());
-QString tmpHtml=editorForBiDi->document()->toHtml("utf-8");
+QTextDocument *tmpDoc = editorForBiDi->document()->clone();
+//QTextBlock b(tmpDoc->firstBlock());
+//while (b.isValid()) {
+QTextCursor tc(tmpDoc);
+while (!tc.atEnd()) {
+    QTextBlock b(tc.block());
+    if (!b.isValid()) {
+        if (tc.movePosition(QTextCursor::NextBlock))
+            continue;
+        else
+            break;
+    }
+    //QTextCursor tc(b);
+    // QMessageBox::information(0,"pos",QString::number(tc.position()));
+
+//    QTextBlock b = tc.block();
+    Qt::LayoutDirection blockDirection = b.blockFormat().layoutDirection();
+    if (blockDirection != Qt::LayoutDirectionAuto) {
+        if (blockDirection == Qt::LeftToRight && b.text().isRightToLeft() ||
+                blockDirection == Qt::RightToLeft && !b.text().isRightToLeft()) {
+            // apply
+            QString blockText = b.text();
+            if (!removeUnicodeControlCharacters(blockText).isEmpty()) {
+                //int anchor = tc.position();
+                int index = 0;
+                while (index < blockText.size() &&
+                       (blockText.at(index) == QChar(LRM) || blockText.at(index) == QChar(RLM))) {
+                        ++index;
+                        continue;
+                }
+                if (index < blockText.size()) {
+                    if (index>1) {
+                        blockText = blockText.remove(0, index - 1);
+                        //QMessageBox::information(0,"blockText.remove",QString("index=%1").arg(index));
+                    }
+                    if (blockDirection == Qt::LeftToRight) {
+                        if (blockText.at(0) != QChar(LRM)) {
+                            blockText = blockText.prepend(QChar(LRM));
+//                            QMessageBox::information(0,"LRM",QString("text=%1\nb.blockFormat().layoutDirection=%2\n"
+//                                                                     "b.text().layoutDirection=%3\nb.textDirection=%4")
+//                                                     .arg(b.text()).arg(b.blockFormat().layoutDirection()).arg((b.text().isRightToLeft() ? "RightToLeft" : "LeftToRight")).arg(b.textDirection()));
+                        }
+                    }
+                    else {
+                        if (blockText.at(0) != QChar(RLM)) {
+                           blockText = blockText.prepend(QChar(RLM));
+//                           QMessageBox::information(0,"RLM",QString("text=%1\nb.blockFormat().layoutDirection=%2\n"
+//                                                                    "b.text().layoutDirection=%3\nb.textDirection=%4")
+//                                                    .arg(b.text()).arg(b.blockFormat().layoutDirection()).arg((b.text().isRightToLeft() ? "RightToLeft" : "LeftToRight")).arg(b.textDirection()));
+                        }
+                    }
+                    QTextBlockFormat bF = b.blockFormat();
+                    bF.setLayoutDirection(Qt::LayoutDirectionAuto);
+                    tc.setBlockFormat(bF);
+                    tc.movePosition(QTextCursor::StartOfBlock);
+                    tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+                    //QMessageBox::information(0,"selectedText",tc.selectedText());
+                    tc.removeSelectedText();
+                    tc.insertText(blockText);
+                }
+            }
+        }
+    }
+    //b = b.next();
+    if (!tc.movePosition(QTextCursor::NextBlock)) {
+        break;
+    }
+    //tc.setPosition(b.position());
+}
+//while (b.isValid()) {
+//    b
+//    b = b.next();
+//}
+QString tmpHtml=tmpDoc->toHtml("utf-8");
+delete tmpDoc;
+
 int index1=tmpHtml.indexOf("<body")+5;
 int index2=tmpHtml.indexOf("<p")-2;
 tmpHtml.remove(index1, index2-index1);
-ptdTS << "<!"+QString::number(QBiDiExtender::bidiMode)+","+fileLastModification.toString("yyyyMMddhh:mm:ss")+">\n" << tmpHtml;
+ptdTS << "<!"+QString::number(QBiDiExtender::bidiMode)+","+fileLastModification.toString("yyyyMMddhh:mm:ss")+",V."+PTD_VERSION+">\n" << tmpHtml;
 ptdFile.close();
 
 #if defined(Q_WS_WIN)
-////It sets true hidden flag of file true
-//ptdFileName.replace(QChar('/'), QChar('\\'));
-//ptdFileName="\\\\?\\"+ptdFileName;
-//const ushort *winFileName=ptdFileName.utf16();
-//DWORD dwAttrs= GetFileAttributes(winFileName);
-//if (dwAttrs==INVALID_FILE_ATTRIBUTES) return;
-// if (!(dwAttrs & FILE_ATTRIBUTE_HIDDEN))
-//	{
-//	SetFileAttributes(winFileName, dwAttrs | FILE_ATTRIBUTE_HIDDEN); 
-//	}
+//It sets true hidden flag of file true
+ptdFileName.replace(QChar('/'), QChar('\\'));
+ptdFileName="\\\\?\\"+ptdFileName;
+const ushort *winFileName=ptdFileName.utf16();
+DWORD dwAttrs= GetFileAttributes(winFileName);
+if (dwAttrs==INVALID_FILE_ATTRIBUTES) return;
+ if (!(dwAttrs & FILE_ATTRIBUTE_HIDDEN))
+    {
+    SetFileAttributes(winFileName, dwAttrs | FILE_ATTRIBUTE_HIDDEN);
+    }
 #endif
 }
 
@@ -1114,8 +1233,39 @@ void QBiDiExtender::RTL( QTextCursor *tmpCursor )
 {
 if (!editorForBiDi || !tmpCursor) return;
 QTextBlockFormat tmpBlockFormat = tmpCursor->blockFormat();
+//if (tmpBlockFormat.layoutDirection() == Qt::RightToLeft) {
+//    return;
+//}
+//#ifndef TEXMAKERVERSION
 tmpBlockFormat.setLayoutDirection( Qt::RightToLeft );
 tmpCursor->setBlockFormat( tmpBlockFormat );
+//#else
+//if (tmpBlockFormat.layoutDirection() != Qt::LayoutDirectionAuto) {
+//    tmpBlockFormat.setLayoutDirection( Qt::RightToLeft );
+//    tmpCursor->setBlockFormat( tmpBlockFormat );
+//}
+//else {
+//    if (!tmpCursor->hasSelection()) {
+//        int oldPos = tmpCursor->position();
+//        QTextBlock b(tmpCursor->block());
+//        if (b.isValid()) {
+//            BlockData* blockData = BlockData::data(b);
+//            if (!blockData) {
+//                blockData = new BlockData;
+//            }
+
+//            QString blockText = b.text();
+//            if (blockText.isEmpty() || blockText.at(0) != QChar(RLM) ) {
+//                tmpCursor->setPosition(b.position());
+//                tmpCursor->
+//            }
+//        }
+//    }
+//    else {
+
+//    }
+//}
+//#endif
 forceDisableBiDirector=true;//new//setTextCursor(tmpCursor) emits verticalSlider()::valueChanged(int) Signal
 editorForBiDi->setTextCursor(*tmpCursor);//new//added for selection bug
 forceDisableBiDirector=false;
@@ -1136,7 +1286,7 @@ void QBiDiExtender::currentLineLTR()
 {
 if (!editorForBiDi) return;
 QTextCursor tmpCursor = editorForBiDi->textCursor();
-QTextBlock currentBlock = tmpCursor.block();
+//QTextBlock currentBlock = tmpCursor.block();
 LTR(&tmpCursor);
 editorForBiDi->setTextCursor(tmpCursor);
 }
@@ -1145,7 +1295,7 @@ void QBiDiExtender::currentLineRTL()
 {
 if (!editorForBiDi) return;
 QTextCursor tmpCursor = editorForBiDi->textCursor();
-QTextBlock currentBlock = tmpCursor.block();
+//QTextBlock currentBlock = tmpCursor.block();
 RTL(&tmpCursor);
 editorForBiDi->setTextCursor(tmpCursor);
 }
@@ -1178,22 +1328,38 @@ else if (mode==3)
 	tmpCur.clearSelection();
 	editorForBiDi->setTextCursor(tmpCur);
 	}
-else //mode == 1
+else if (mode == 1) //mode == 1
 	{
-	editorForBiDi->setLayoutDirection(Qt::LeftToRight);
+    //if (!QBiDiExtender::ptdOpenFlag)
+    {
+        //QMessageBox::information(0,"editorForBiDi->layoutDirection()",QString::number((int)editorForBiDi->layoutDirection()));
+        editorForBiDi->setLayoutDirection(Qt::LayoutDirectionAuto);
 
 #if QT_VERSION >= 0x040700
-	QTextCursor tmpCur=editorForBiDi->textCursor();
-	tmpCur.select(QTextCursor::Document);
-QTextBlockFormat tmpBlockFormat = tmpCur.blockFormat();
-tmpBlockFormat.setLayoutDirection( Qt::LayoutDirectionAuto );
-tmpCur.setBlockFormat( tmpBlockFormat );
-forceDisableBiDirector=true;//new//setTextCursor(tmpCursor) emits verticalSlider()::valueChanged(int) Signal
-//editorForBiDi->setTextCursor(tmpCur);//new//added for selection bug
-forceDisableBiDirector=false;
-	tmpCur.clearSelection();
-	editorForBiDi->setTextCursor(tmpCur);
+        QTextCursor tmpCur=editorForBiDi->textCursor();
+        tmpCur.select(QTextCursor::Document);
+    QTextBlockFormat tmpBlockFormat = tmpCur.blockFormat();
+    tmpBlockFormat.setLayoutDirection( Qt::LayoutDirectionAuto );
+    tmpCur.setBlockFormat( tmpBlockFormat );
+    forceDisableBiDirector=true;//new//setTextCursor(tmpCursor) emits verticalSlider()::valueChanged(int) Signal
+    //editorForBiDi->setTextCursor(tmpCur);//new//added for selection bug
+    forceDisableBiDirector=false;
+        tmpCur.clearSelection();
+        editorForBiDi->setTextCursor(tmpCur);
 #endif
+        }
+//        else {
+//#if QT_VERSION >= 0x040700
+//            editorForBiDi->setLayoutDirection(Qt::LayoutDirectionAuto);
+//            QTextCursor tmpCur=editorForBiDi->textCursor();
+//            tmpCur.select(QTextCursor::Document);
+//            QTextBlockFormat tmpBlockFormat = tmpCur.blockFormat();
+//            tmpBlockFormat.setLayoutDirection( Qt::LayoutDirectionAuto );
+//            tmpCur.mergeBlockFormat(tmpBlockFormat);
+//            tmpCur.clearSelection();
+//            editorForBiDi->setTextCursor(tmpCur);
+//#endif
+//        }
 	}
 if( MODIFIED ) 
 	editorForBiDi->document()->setModified(TRUE );
@@ -1836,15 +2002,53 @@ QPainter painter(pixmap);
 painter.drawPixmap(targetRect, bidiLogoPixmap, bidiLogoRect);
 }
 
+bool QBiDiExtender::isUnicodeControlCharacters(const QChar &ch)
+{
+    if (!unicodeControlCharacters().contains(QString(ch))) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
 QString QBiDiExtender::removeUnicodeControlCharacters(const QString &str)
 {
 	QString text(str);
-	QChar lrm(0x200E); 
-	QChar rlm(0x200F);
-	QChar lre(0x202A);
-	QChar rle(0x202B);
-	QChar pdf(0x202C);
-	return text.remove(lrm).remove(rlm).remove(lre).remove(rle).remove(pdf);
+    return text.remove(QRegExp("["+unicodeControlCharacters().join("")+"]+"));
+}
+
+QStringList QBiDiExtender::unicodeControlCharacters()
+{
+    QStringList controlChars;
+    QString lrm(QChar(LRM));
+    QString rlm(QChar(RLM));
+    QString lre(QChar(LRE));
+    QString rle(QChar(RLE));
+    QString pdf(QChar(PDF));
+    QString lro(QChar(LRO));
+    QString rlo(QChar(RLO));
+    controlChars << lrm << rlm << lre << rle << pdf << lro << rlo;
+
+    return controlChars;
+}
+
+QString QBiDiExtender::toPatternWithUnicodeControlCharacters(const QString &str)
+{
+    QString result;
+    QString controlCharacters = "["+unicodeControlCharacters().join("")+"]*";
+    QStringList characterlist = str.split("", QString::SkipEmptyParts);
+    const QString special = "[]{}\\()\"\'.*?^$";
+    foreach (QString character, characterlist) {
+        if (special.contains(character)) {
+            character.prepend("\\");
+        }
+        character.append(controlCharacters);
+        result.append(character);
+    }
+    result.prepend(controlCharacters);
+
+    return result;
 }
 
 /*******************************************************/
@@ -1879,9 +2083,12 @@ QBiDiInitializer::~QBiDiInitializer()
 
 QString QBiDiInitializer::openPtdFile(const QString &f, QTextCodec* codec, const QString &plainContent)
 {
+QString ptdFileVersion = "1";
 QBiDiExtender::ptdOpenFlag = false;
 QString tmpContent=plainContent;
-QString ptdName=QFile( f ).fileName().left(QFile( f ).fileName().size()-4)+".ptd";
+QString fileType = QFileInfo(f).suffix().toLower() == "tex" ? "" : ("_"+QFileInfo(f).suffix().toLower());
+
+QString ptdName=QFile( f ).fileName().left(QFile( f ).fileName().size()-4)+fileType+".ptd";
 ptdName.replace(QChar('\\'),QChar('/'));
 QString tmpName = ptdName.right( ptdName.size()-ptdName.lastIndexOf(QChar('/'))-1 );
 ptdName = ptdName.left( ptdName.lastIndexOf(QChar('/'))+1 )+"."+tmpName;
@@ -1904,7 +2111,11 @@ if (ptdFile.exists())
 			}
 		QTextStream ptdTS( &ptdFile );
 		ptdTS.setCodec(codec);
-		QString datedate=ptdTS.readLine(0).trimmed();
+        QString metaDataLine=ptdTS.readLine(0).trimmed();
+        QRegExp ptdVersionRegExp("[Vv]\\.([0-9]+)");
+        if (metaDataLine.contains(ptdVersionRegExp)) {
+            ptdFileVersion = ptdVersionRegExp.cap(1);
+        }
 		QString htmlContent = ptdTS.readAll();//from second line to the EOF
 		//qDebug() << htmlContent;
 		//qDebug() << QTextDocumentFragment::fromHtml(htmlContent).toPlainText();
@@ -1914,17 +2125,17 @@ if (ptdFile.exists())
 //			qDebug() << "HTML == PLAIN";
 //		else
 //			qDebug() << "HTML NOT PLAIN";
-		datedate.remove("<!").remove(">");
-		if (datedate.contains(","))
+        metaDataLine.remove("<!").remove(">");
+        if (metaDataLine.contains(","))
 			{
-			QBiDiExtender::ptdFileBiDimode=(QBiDiExtender::LineBiDiMode)QString(datedate.at(0)).toInt();
-			datedate.remove(0,2);
+            QBiDiExtender::ptdFileBiDimode=(QBiDiExtender::LineBiDiMode)QString(metaDataLine.at(0)).toInt();
+            metaDataLine.remove(0,2);
 			}
 		else
 			QBiDiExtender::ptdFileBiDimode = QBiDiExtender::Undefined;//maybe bidiMode be better
 		QDateTime lMod=QFileInfo(f).lastModified();
 		QString lMOD_ST=lMod.toString("yyyyMMddhh:mm:ss");
-		if ( /*datedate == lMOD_ST*/
+        if ( /*metaDataLine == lMOD_ST*/
 			QBiDiExtender::removeUnicodeControlCharacters(QTextDocumentFragment::fromHtml(htmlContent).toPlainText())
 						==	QBiDiExtender::removeUnicodeControlCharacters(tmpContent)
 			 && QBiDiExtender::ptdFileBiDimode == QBiDiExtender::bidiMode )//The saved bidiMode must be equal to application's bidiMode
@@ -1935,6 +2146,12 @@ if (ptdFile.exists())
 		ptdFile.close();
 		}
 	}
+
+    if (ptdFileVersion == "2" && QBiDiExtender::ptdOpenFlag) {
+       tmpContent = QTextDocumentFragment::fromHtml(tmpContent).toPlainText();
+       //QBiDiExtender::ptdOpenFlag = false;
+       //QMessageBox::information(0, "Version", ("ptdVersion="+ptdFileVersion));
+    }
 return tmpContent;
 }
 
@@ -1985,22 +2202,22 @@ if (type=="BIDI_MAIN_MENU")
 	//// BidiMode Menu [end]
 	
 	actRTL = new QAction(QIcon(":/image/format_text_direction_rtl.png"), tr("Text Direction &Right to Left"), editorWidget);
-	actRTL->setShortcut(QKeySequence(Qt::CTRL+Qt::ALT+Qt::Key_B,Qt::CTRL+Qt::ALT+Qt::Key_R));
+    actRTL->setShortcut(QKeySequence(Qt::CTRL+Qt::ALT+Qt::Key_B,Qt::CTRL+Qt::ALT+Qt::Key_R));
 	connect(actRTL, SIGNAL(triggered()), this, SIGNAL(doCurrentLineRTL()));
-	connect(this, SIGNAL(changeEditorActionState(bool)), actRTL, SLOT(setEnabled(bool)));
+//	connect(this, SIGNAL(changeEditorActionState(bool)), actRTL, SLOT(setEnabled(bool)));
 	menu->addAction(actRTL);
 qDebug() << "actRTL";
 	actLTR = new QAction(QIcon(":/image/format_text_direction_ltr.png"), tr("Text Direction &Left to Right"), editorWidget);
-	actLTR->setShortcut(QKeySequence(Qt::CTRL+Qt::ALT+Qt::Key_B,Qt::CTRL+Qt::ALT+Qt::Key_L));
+    actLTR->setShortcut(QKeySequence(Qt::CTRL+Qt::ALT+Qt::Key_B,Qt::CTRL+Qt::ALT+Qt::Key_L));
 	connect(actLTR, SIGNAL(triggered()), this, SIGNAL(doCurrentLineLTR()));
-	connect(this, SIGNAL(changeEditorActionState(bool)), actLTR, SLOT(setEnabled(bool)));
+//	connect(this, SIGNAL(changeEditorActionState(bool)), actLTR, SLOT(setEnabled(bool)));
 	menu->addAction(actLTR);
 qDebug() << "actLTR";
 	//QAction *
 	Act = new QAction(tr("Insert LTR Text"), editorWidget);
 	Act->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Period));
 	connect(Act, SIGNAL(triggered()), this, SIGNAL(insertedLTR()));
-	connect(this, SIGNAL(changeEditorActionState(bool)), Act, SLOT(setEnabled(bool)));
+//	connect(this, SIGNAL(changeEditorActionState(bool)), Act, SLOT(setEnabled(bool)));
 	menu->addAction(Act);
 	//actInsertLTR = Act;
 
@@ -2021,7 +2238,7 @@ qDebug() << "actLTR";
 #endif
 #endif EDITOR_SUPPORT_MATHMODE
 	QBiDiExtender::noReverseArrowKeys=false;
-	emit changeEditorActionState(false);
+    emit changeEditorActionState(false);
 	}
 if (type=="BIDI_HELP_MENU")
 	{
