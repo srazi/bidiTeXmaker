@@ -16,6 +16,10 @@
 #include "latexeditor.h"
 #include "blockdata.h"
 
+static bool stringGreaterSize(QString str1, QString str2) {
+    return str1.size() > str2.size();
+}
+
 LatexHighlighter::LatexHighlighter(QTextDocument *parent,bool spelling,QString ignoredWords,Hunspell *spellChecker)
     : QSyntaxHighlighter(parent)
 {
@@ -30,8 +34,21 @@ ColorTodo=QColor("#FF0000");
 ColorKeywordGraphic=QColor("#006699");
 ColorNumberGraphic=QColor("#660066");
 KeyWords= QString("section{,subsection{,subsubsection{,chapter{,part{,paragraph{,subparagraph{,section*{,subsection*{,subsubsection*{,chapter*{,part*{,paragraph*{,subparagraph*{,label{,includegraphics{,includegraphics[,includegraphics*{,includegraphics*[,include{,input{,begin{,end{").split(",");
+QMap<QString, QString>::const_iterator it = LatexEditor::localizedStructureCommands.constBegin();
+while (it != LatexEditor::localizedStructureCommands.constEnd()) {
+    QStringList alternativeList = QString(it.value()).split("|", QString::SkipEmptyParts);
+    foreach (const QString &alternative, alternativeList) {
+        KeyWords << (alternative+"{");
+        KeyWords << (alternative+"*{");
+    }
+    ++it;
+}
 KeyWordsGraphic=QString("void bool bool3 int real pair triple string").split(" ");
 KeyWordsGraphicBis=QString("and controls tension atleast curl if else while for do return break continue struct typedef new access import unravel from include quote static public private restricted this explicit true false null cycle newframe operator").split(" ");
+qSort(KeyWords.begin(), KeyWords.end(), stringGreaterSize);
+qSort(KeyWordsGraphic.begin(), KeyWordsGraphic.end(), stringGreaterSize);
+qSort(KeyWordsGraphicBis.begin(), KeyWordsGraphicBis.end(), stringGreaterSize);
+
 //spellingErrorFormat.setFontUnderline(true);
 spellingErrorFormat.setUnderlineColor(QColor(Qt::red));
 spellingErrorFormat.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
@@ -152,7 +169,7 @@ while ( rightPos != -1 )
   rightPos = text.indexOf( '}', rightPos+1 );
   }
   
-leftPos = text.indexOf( "\\begin{" );
+leftPos = text.indexOf( REGEXP_BY_CONTROL_CHARS("\\begin{") );
 while ( leftPos != -1 ) 
   {
   LatexBlockInfo *info = new LatexBlockInfo;
@@ -160,10 +177,10 @@ while ( leftPos != -1 )
   info->position = leftPos;
 
   blockData->insertLat( info );
-  leftPos = text.indexOf("\\begin{", leftPos+1 );
+  leftPos = text.indexOf(REGEXP_BY_CONTROL_CHARS("\\begin{"), leftPos+1 );
   }
 
-rightPos = text.indexOf("\\end{");
+rightPos = text.indexOf(REGEXP_BY_CONTROL_CHARS("\\end{"));
 while ( rightPos != -1 ) 
   {
   LatexBlockInfo *info = new LatexBlockInfo;
@@ -171,7 +188,7 @@ while ( rightPos != -1 )
   info->position = rightPos;
 
   blockData->insertLat( info );
-  rightPos = text.indexOf("\\end{", rightPos+1 );
+  rightPos = text.indexOf(REGEXP_BY_CONTROL_CHARS("\\end{"), rightPos+1 );
   }
 
 setCurrentBlockUserData(blockData);
@@ -180,8 +197,8 @@ setCurrentBlockUserData(blockData);
 /////////////////////
 
 /////////////////
-QRegExp rxverb("verb\\*?([^\\*])");
-QRegExp rxlst("lstinline(.)");
+QRegExp rxverb(PATTERN_BY_CONTROL_CHARS("verb")+"\\*?([^\\*])");
+QRegExp rxlst(PATTERN_BY_CONTROL_CHARS("lstinline")+"(.)");
 QTextCharFormat structFormat;
 structFormat.setFontWeight(QFont::Bold);
 structFormat.setForeground(ColorKeyword);
@@ -204,7 +221,7 @@ while (i < text.length())
 		//added by S. R. Alavizadeh
 		if (QBiDiExtender::bidiEnabled)
 			{
-			if ( QBiDiExtender::removeUnicodeControlCharacters(ch).isEmpty() )
+            if ( QBiDiExtender::isUnicodeControlCharacters(ch) )
 				{
 				buffer += ch;
 				++i;
@@ -222,7 +239,7 @@ while (i < text.length())
 			{
 			if ( i < text.length()-1 )
 				{
-				while ( k<text.length()-2 && QBiDiExtender::removeUnicodeControlCharacters(QString(text.at( k+1 ))).isEmpty() )
+                while ( k<text.length()-2 && QBiDiExtender::isUnicodeControlCharacters(text.at(k+1)))
 					{
 					++k;
 					}
@@ -273,7 +290,7 @@ while (i < text.length())
 			buffer = QString::null;
 		} else
 		if (tmp== '%' ){
-			setFormat( i, 1,ColorComment);
+            setFormat( i, 1,ColorComment);
 			state=StateComment;
 			blockData->code[i]=1;
 			buffer = QString::null;
@@ -287,14 +304,14 @@ while (i < text.length())
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorStandard);
 			state=StateStandard;
-			if(buffer.indexOf("begin{verbatim}") != -1) {state=StateVerbatim;}
-			else if(buffer.indexOf("begin{verbatim*}") != -1) {state=StateVerbatim;}
-			else if(buffer.indexOf("begin{lstlisting}") != -1) {state=StateVerbatim;}
-			else if(buffer.indexOf("begin{gnuplot}") != -1) {state=StateVerbatim;}
-			else if(buffer.indexOf("begin{asy}") != -1) {state=StateGraphicAsy;}
-			else if(buffer.indexOf("begin{tikzpicture}") != -1) {state=StateGraphic;}
-			else if(buffer.indexOf("begin{pspicture}") != -1) {state=StateGraphic;}
-			else if(buffer.indexOf("begin{pspicture*}") != -1) {state=StateGraphic;}
+            if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{verbatim}")) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{verbatim*}")) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{lstlisting}")) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{gnuplot}")) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{asy}")) != -1) {state=StateGraphicAsy;}
+            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{tikzpicture}")) != -1) {state=StateGraphic;}
+            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{pspicture}")) != -1) {state=StateGraphic;}
+            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{pspicture*}")) != -1) {state=StateGraphic;}
 			buffer = QString::null;
 		} else
 		if (tmp== '<' ){
@@ -311,12 +328,12 @@ while (i < text.length())
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorStandard);
 			state=StateStandard;
-			if(buffer.indexOf(rxBib) != -1) {state=StateBib;buffer = QString::null;}
+            if(CLEAR_CONTROL_CHARS(buffer).indexOf(rxBib) != -1) {state=StateBib;buffer = QString::null;}
 		} else
 		if (tmp== '=' ){
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorStandard);
-			if(buffer.indexOf(rxSweave) != -1) {state=StateSweave;buffer = QString::null;}
+            if(CLEAR_CONTROL_CHARS(buffer).indexOf(rxSweave) != -1) {state=StateSweave;buffer = QString::null;}
 		} else
 		if (tmp== '(' ){
 			blockData->code[i]=1;
@@ -520,9 +537,9 @@ while (i < text.length())
 	} break;
 	case StateCommand:{
 		tmp=text.at( i );
-		if (rxverb.exactMatch(buffer))
+        if (rxverb.exactMatch(buffer))
 				{
-				 verbflag=rxverb.cap(1).at(0);
+                 verbflag=rxverb.cap(1).at(0);
 				 blockData->code[i]=1;
 				 setFormat( i, 1,ColorCommand);
 				 state=StateVerbatim;
@@ -573,8 +590,7 @@ while (i < text.length())
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorStandard);
 			state=StateStandard;
-			if ( buffer.length() > 0 )
-				{
+            if ( buffer.length() > 0 ) {
 				/////////////////////////////////////////////////
 				//added by S. R. Alavizadeh
 				//Bi-Di Support
@@ -583,16 +599,28 @@ while (i < text.length())
 				if (QBiDiExtender::bidiEnabled)
 					tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
 				/////////////////////////////////////////////////
-				for ( QStringList::Iterator it = KeyWords.begin(); it != KeyWords.end(); ++it ) 
-					{
-        				if (( *it ).indexOf( tmpBuffer )!=-1) 
-						{
-						if (*it!="begin{" && *it!="end{") setFormat( i - tmpBuffer.length(), tmpBuffer.length(),structFormat);
-						else setFormat( i - tmpBuffer.length(), tmpBuffer.length(),ColorKeyword);
-						blockData->code[i]=1;
-						}
-					}
-				}
+                for ( QStringList::Iterator it = KeyWords.begin(); it != KeyWords.end(); ++it ) {
+                    if (( *it ).indexOf( tmpBuffer )!=-1)
+                    {
+                        QString keyword(*it);
+                        keyword.remove(keyword.size()-1, 1);
+                        keyword.prepend("\\");
+                        QRegExp kewordsRegExp(REGEXP_BY_CONTROL_CHARS(keyword));
+                        int index = text.lastIndexOf(kewordsRegExp, i);
+                        if (index != -1) {
+                            if (*it!="begin{" && *it!="end{") {
+                                setFormat(index, kewordsRegExp.cap(0).length(),structFormat);
+                            }
+                            else {
+                                setFormat(index, kewordsRegExp.cap(0).length(),ColorKeyword);
+                            }
+                            blockData->code[i]=1;
+
+                            break;
+                        }
+                    }
+                }
+            }
 		} else
 		if (tmp=='\\' || tmp==',' || tmp==';' /*|| tmp=='\''*/ || tmp=='\"' || tmp=='`' || tmp=='^' || tmp=='~') {
 			blockData->code[i]=1;
@@ -670,34 +698,19 @@ while (i < text.length())
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorVerbatim);
 			state=StateVerbatim;
-			int pos=buffer.indexOf("\\end{verbatim}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,10,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{verbatim*}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,11,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{lstlisting}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,12,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{gnuplot}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,9,ColorStandard);
-			}
+            QStringList envs = QStringList() << "verbatim" << "verbatim\*"
+                                             << "lstlisting" << "gnuplot";
+            foreach (const QString &env, envs) {
+                QRegExp eVerb("("+PATTERN_BY_CONTROL_CHARS("\\end")+")("+
+                              PATTERN_BY_CONTROL_CHARS("{"+env+"}")+")");
+                int pos=buffer.indexOf(eVerb);
+                if( pos!= -1)
+                {
+                    state=StateStandard;
+                    setFormat(pos,eVerb.cap(1).size(),ColorKeyword);
+                    setFormat(pos+eVerb.cap(1).size(),eVerb.cap(2).size(),ColorStandard);
+                }
+            }
 			buffer = QString::null;
 		} else
 		if (tmp== '(' ){
@@ -843,34 +856,19 @@ while (i < text.length())
 		  	blockData->code[i]=1;
 			setFormat( i, 1,ColorVerbatim);
 			state=StateGraphic;
-			int pos=buffer.indexOf("\\end{asy}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,5,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{tikzpicture}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,13,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{pspicture}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,11,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{pspicture*}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,12,ColorStandard);
-			}
+            QStringList envs = QStringList() << "asy" << "tikzpicture"
+                                             << "pspicture" << "pspicture*";
+            foreach (const QString &env, envs) {
+                QRegExp eVerb("("+PATTERN_BY_CONTROL_CHARS("\\end")+")("+
+                              PATTERN_BY_CONTROL_CHARS("{"+env+"}")+")");
+                int pos=buffer.indexOf(eVerb);
+                if( pos!= -1)
+                {
+                    state=StateStandard;
+                    setFormat(pos,eVerb.cap(1).size(),ColorKeyword);
+                    setFormat(pos+eVerb.cap(1).size(),eVerb.cap(2).size(),ColorStandard);
+                }
+            }
 			buffer = QString::null;
 		} else
 		if (tmp== '(' ){
@@ -943,34 +941,19 @@ while (i < text.length())
 		  	blockData->code[i]=1;
 			setFormat( i, 1,ColorVerbatim);
 			state=StateGraphicAsy;
-			int pos=buffer.indexOf("\\end{asy}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,5,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{tikzpicture}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,13,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{pspicture}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,11,ColorStandard);
-			}
-			pos=buffer.indexOf("\\end{pspicture*}");
-			if( pos!= -1) 
-			{
-			    state=StateStandard;
-			    setFormat(pos,4,ColorKeyword);
-			    setFormat(pos+4,12,ColorStandard);
-			}
+            QStringList envs = QStringList() << "asy" << "tikzpicture"
+                                             << "pspicture" << "pspicture*";
+            foreach (const QString &env, envs) {
+                QRegExp eVerb("("+PATTERN_BY_CONTROL_CHARS("\\end")+")("+
+                              PATTERN_BY_CONTROL_CHARS("{"+env+"}")+")");
+                int pos=buffer.indexOf(eVerb);
+                if( pos!= -1)
+                {
+                    state=StateStandard;
+                    setFormat(pos,eVerb.cap(1).size(),ColorKeyword);
+                    setFormat(pos+eVerb.cap(1).size(),eVerb.cap(2).size(),ColorStandard);
+                }
+            }
 			buffer = QString::null;
 		} else
 		if (tmp== '(' ){
@@ -1309,7 +1292,7 @@ while (i < text.length())
 	} break;
 	}
 	last = ch;
-	i++;
+    i = k+1;//i++;
 	}
 if ( state == StateComment ) 
  	{
@@ -1396,56 +1379,80 @@ todoFormat.setForeground(ColorTodo);
 todoFormat.setBackground(Qt::yellow);
 if (state == StateComment)
 {
-	i=0;
-	while (i < text.length())
-		{
-		buffer = QString::null;
-		ch = text.at( i );
-		while (!isSpace(ch) || ch=='%')
-		      {
-		      buffer += ch;
-		      ++i;
-		      if (i < text.length()) ch = text.at( i );
-		      else break;
-		      }
-		if ((buffer.length() > 0) && (format(i - buffer.length()).foreground()==brushcomment)) 
-		    {
-				/////////////////////////////////////////////////
-				//added by S. R. Alavizadeh
-				//Bi-Di Support
-				QString tmpBuffer = buffer;
-				//This just skips Unicode Control Characters.
-				if (QBiDiExtender::bidiEnabled)
-					tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
-				/////////////////////////////////////////////////
+    int pos = 0;
+    while (pos < text.length() && pos != -1) {
+        if (CLEAR_CONTROL_CHARS(text).indexOf("%TODO", pos) != -1) {
+            QRegExp todoRegExp(REGEXP_BY_CONTROL_CHARS("%TODO"));
+            int pos1 = text.indexOf(todoRegExp, pos);
+            pos = text.indexOf("%", pos1);
 
-        				if (tmpBuffer=="%TODO") 
-						{
-						setFormat( i - tmpBuffer.length()+1, tmpBuffer.length()-1,todoFormat);
-						}
+            if (format(pos).foreground() == brushcomment) {
+                setFormat(pos1, todoRegExp.cap(0).size(), todoFormat);
+                pos=pos1+todoRegExp.cap(0).size();
+            }
+            else {
+                ++pos;
+            }
+        }
+        else {
+            break;
+        }
+    }
 
-		    }
-		++i;
-		}
+//	i=0;
+//	while (i < text.length())
+//		{
+//		buffer = QString::null;
+//		ch = text.at( i );
+//		while (!isSpace(ch) || ch=='%')
+//		      {
+//		      buffer += ch;
+//		      ++i;
+//		      if (i < text.length()) ch = text.at( i );
+//		      else break;
+//		      }
+//        if ((CLEAR_CONTROL_CHARS(buffer).length() > 0) /*&& (format(i - buffer.length()).foreground()==brushcomment)*/)
+//		    {
+//            if ((format(i - buffer.length()).foreground()==brushcomment)) {
+//                QMessageBox::information(0,"ttttttttt",QString("foreground()==brushcomment"));
+//            }
+//            QMessageBox::information(0,"Aiiiiiiiii",QString("i=%1\nbuffer.length()=%2").arg(i).arg(buffer.length()));
+//            /////////////////////////////////////////////////
+//            //added by S. R. Alavizadeh
+//            //Bi-Di Support
+//            QString tmpBuffer = buffer;
+//            //This just skips Unicode Control Characters.
+//            if (QBiDiExtender::bidiEnabled)
+//                tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
+//            /////////////////////////////////////////////////
+
+//            if (tmpBuffer=="%TODO")
+//                {
+//                setFormat( i - buffer.length()+1, buffer.length()-1,todoFormat);
+//                }
+//            // QMessageBox::information(0,"ttttttttt",QString("buffer=%1\ntmpBuffer=%2").arg(buffer).arg(tmpBuffer));
+//		    }
+//		++i;
+//		}
 }
 
 if (state == StateGraphic || state == StateGraphicCommand || state == StateGraphicComment || state == StateGraphicAsy || state == StateGraphicAsyCommand || state == StateGraphicAsyComment)
 {
 	QRegExp number("[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?");
-	int index = number.indexIn(text);
+    int index = number.indexIn(CLEAR_CONTROL_CHARS(text));
         while (index >= 0) {
             int length = number.matchedLength();
             if (blockData->code[index]!=1) setFormat(index, length, ColorNumberGraphic);
-            index = number.indexIn(text, index + length);
+            index = number.indexIn(CLEAR_CONTROL_CHARS(text), index + length);
         }
 	if (state == StateGraphicAsy || state == StateGraphicAsyCommand || state == StateGraphicAsyComment)
 	{
-		QRegExp expression("\\b[A-Za-z0-9_]+(?=\\()");
-		index = expression.indexIn(text);
+        QRegExp expression("\\b[A-Za-z0-9_"+UNICODE_CONTROL_CHARS.join("")+"]+(?=\\()");
+        index = expression.indexIn(text);
 		while (index >= 0) {
 		    int length = expression.matchedLength();
 		    if (blockData->code[index]!=1) setFormat(index, length, ColorKeyword);
-		    index = expression.indexIn(text, index + length);
+            index = expression.indexIn(text, index + length);
 		}
 	i=0;
 	while (i < text.length())
@@ -1473,30 +1480,32 @@ if (state == StateGraphic || state == StateGraphicCommand || state == StateGraph
 					{
         				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),ColorKeywordGraphic);
-						}
+                        setFormat( i - buffer.length(), buffer.length(),ColorKeywordGraphic);
+                        break;
+                        }
 					}
 		    for ( QStringList::Iterator it = KeyWordsGraphicBis.begin(); it != KeyWordsGraphicBis.end(); ++it ) 
 					{
         				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),asyFormat);
-						}
+                        setFormat( i - buffer.length(), buffer.length(),asyFormat);
+                        break;
+                        }
 					}
 		    }
 
 		++i;
 		}
 	}
-	else if ((text.indexOf("pspicture") == -1) && (text.indexOf("tikzpicture") == -1))
+    else if ((CLEAR_CONTROL_CHARS(text).indexOf("pspicture") == -1) && (CLEAR_CONTROL_CHARS(text).indexOf("tikzpicture") == -1))
 	{
-		QRegExp expression("\\\\[A-Za-z]+");
-		index = expression.indexIn(text);
+        QRegExp expression("\\\\[A-Za-z"+UNICODE_CONTROL_CHARS.join("")+"]+");
+        index = expression.indexIn(text);
 		while (index >= 0) {
 		    int length = expression.matchedLength();
 		    if ((format(index).foreground()!=brushmath) && (format(index).foreground()!=brushcomment)) setFormat(index, length, ColorKeywordGraphic);
-		    index = expression.indexIn(text, index + length);
-		}	  
+            index = expression.indexIn(text, index + length);
+        }
 	}
 
 }
@@ -1530,24 +1539,25 @@ if (pChecker && state!=StateGraphic && state!=StateGraphicCommand && state!=Stat
 		  buffer.chop(1);
 		  offset++;
 		  }
-		if ( (buffer.length() > 1) && (!ignoredwordList.contains(buffer)) && (!hardignoredwordList.contains(buffer)))
+
+        /////////////////////////////////////////////////
+        //added by S. R. Alavizadeh
+        //Bi-Di Support
+        QString tmpBuffer = buffer;
+        //This just skips Unicode Control Characters.
+        if (QBiDiExtender::bidiEnabled)
+            tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
+        /////////////////////////////////////////////////
+        if ( (tmpBuffer.length() > 1) && (!ignoredwordList.contains(tmpBuffer)) && (!hardignoredwordList.contains(tmpBuffer)))
 		      {
-			  /////////////////////////////////////////////////
-			  //added by S. R. Alavizadeh
-			  //Bi-Di Support
-			  QString tmpBuffer = buffer;
-			  //This just skips Unicode Control Characters.
-			  if (QBiDiExtender::bidiEnabled)
-				  tmpBuffer = QBiDiExtender::removeUnicodeControlCharacters(buffer);
-			  /////////////////////////////////////////////////
-		      if (format(i - tmpBuffer.length()-offset).foreground()==brushverbatim) spellingErrorFormat.setForeground(brushverbatim);
+              if (format(i - buffer.length()-offset).foreground()==brushverbatim) spellingErrorFormat.setForeground(brushverbatim);
 		      else spellingErrorFormat.setForeground(brushstandard);
 		      encodedString = codec->fromUnicode(tmpBuffer);
 		      check = pChecker->spell(encodedString.data());
 		      if (!check) 
 			{
-			if (checkSpelling) setFormat(i - tmpBuffer.length()-offset, tmpBuffer.length(), spellingErrorFormat);
-			for (int k=i - tmpBuffer.length()-offset;  k< i-offset; k++) blockData->misspelled[k]=true;
+            if (checkSpelling) setFormat(i - buffer.length()-offset, buffer.length(), spellingErrorFormat);
+            for (int k=i - buffer.length()-offset;  k< i-offset; k++) blockData->misspelled[k]=true;
 			}
 		      }
 		++i;
@@ -1571,7 +1581,7 @@ while (i < text.length())
 	//added by S. R. Alavizadeh
 	if (QBiDiExtender::bidiEnabled)
 		{
-		if ( QBiDiExtender::removeUnicodeControlCharacters(ch).isEmpty() )
+        if ( QBiDiExtender::isUnicodeControlCharacters(ch) )
 			{
 			buffer += ch;
 			++i;
@@ -1589,7 +1599,7 @@ while (i < text.length())
 		{
 		if ( i < text.length()-1 )
 			{
-			while ( k<text.length()-2 && QBiDiExtender::removeUnicodeControlCharacters(QString(text.at( k+1 ))).isEmpty() )
+            while ( k<text.length()-2 && QBiDiExtender::isUnicodeControlCharacters(text.at(k+1)) )
 				{
 				++k;
 				}
@@ -1803,7 +1813,7 @@ while (i < text.length())
 
 	}
 	last = ch;
-	i++;
+    i = k+1;i++;
 	}
 if ( state == StateGraphicMath ) 
 	{
@@ -1827,18 +1837,18 @@ else
 	state=StateGraphic;
     	}
 
-if (text.isEmpty()) return;
+if (CLEAR_CONTROL_CHARS(text).isEmpty()) return;
 if (state == StateGraphic || state == StateGraphicCommand || state == StateGraphicComment)
 {
 	QRegExp number("[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?");
-	int index = number.indexIn(text);
+    int index = number.indexIn(CLEAR_CONTROL_CHARS(text));
         while (index >= 0) {
             int length = number.matchedLength();
             if (blockData->code[index]!=1) setFormat(index, length, ColorNumberGraphic);
-            index = number.indexIn(text, index + length);
+            index = number.indexIn(CLEAR_CONTROL_CHARS(text), index + length);
         }
-	QRegExp expression("\\b[A-Za-z0-9_]+(?=\\()");
-	index = expression.indexIn(text);
+        QRegExp expression("\\b[A-Za-z0-9_"+UNICODE_CONTROL_CHARS.join("")+"]+(?=\\()");
+    index = expression.indexIn(text);
         while (index >= 0) {
             int length = expression.matchedLength();
             if (blockData->code[index]!=1) setFormat(index, length, ColorKeyword);
@@ -1871,14 +1881,14 @@ if (state == StateGraphic || state == StateGraphicCommand || state == StateGraph
 					{
         				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),ColorKeywordGraphic);
+                        setFormat( i - buffer.length(), buffer.length(),ColorKeywordGraphic);
 						}
 					}
 		    for ( QStringList::Iterator it = KeyWordsGraphicBis.begin(); it != KeyWordsGraphicBis.end(); ++it ) 
 					{
         				if (*it==tmpBuffer ) 
 						{
-						setFormat( i - tmpBuffer.length(), tmpBuffer.length(),asyFormat);
+                        setFormat( i - buffer.length(), buffer.length(),asyFormat);
 						}
 					}
 		    }

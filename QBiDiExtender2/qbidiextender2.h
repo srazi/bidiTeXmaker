@@ -54,6 +54,8 @@
 #define LRE 0x202A
 #define RLE 0x202B
 #define PDF 0x202C
+#define LRO 0x202D
+#define RLO 0x202E
 
  #include <QtCore/QtGlobal>
  #if defined(QBIDIEXTENDER_EMBED)
@@ -66,6 +68,10 @@
 	 #endif
 #endif
 
+#define CLEAR_CONTROL_CHARS(x) QBiDiExtender::removeUnicodeControlCharacters(x)
+#define UNICODE_CONTROL_CHARS QBiDiExtender::unicodeControlCharacters()
+#define PATTERN_BY_CONTROL_CHARS(x) QBiDiExtender::toPatternWithUnicodeControlCharacters(x)
+#define REGEXP_BY_CONTROL_CHARS(x) QRegExp(QBiDiExtender::toPatternWithUnicodeControlCharacters(x))
 
 class QBIDIEXTENDER_EXPORT QBiDiInitializer : public QObject
 {
@@ -153,8 +159,11 @@ public:
 	static void readBiDiSettings(QSettings *settingsObject);
 	static void saveBiDiSettings(QSettings *settingsObject);
 	static void stampedBiDiLogoToImage(QPixmap *pixmap);
+    static bool isUnicodeControlCharacters(const QChar &ch);
 	static QString removeUnicodeControlCharacters(const QString &str);
-	
+    static QStringList unicodeControlCharacters();
+    static QString toPatternWithUnicodeControlCharacters(const QString &str);
+
 	#if defined( Q_WS_WIN )
 	HKL lastInputLang;
 	//static 

@@ -84,20 +84,25 @@ bool found=false;
 int tagStart, tagEnd,offset;
 QString s;
 
-QMap<QString, QString>::const_iterator it = LatexEditor::localizedStructureCommands.constBegin();
-while (it != LatexEditor::localizedStructureCommands.constEnd()) {
-    QString val = QString(it.value());
-    if (!val.isEmpty() && !val.startsWith("|")) {
-        LatexEditor::localizedStructureCommands.insert(it.key(), "|"+val);
-    }
-    ++it;
-}
+//QMap<QString, QString>::const_iterator it = LatexEditor::localizedStructureCommands.constBegin();
+//while (it != LatexEditor::localizedStructureCommands.constEnd()) {
+//    QString val = QString(it.value());
+//    if (!val.isEmpty() && !val.startsWith("|")) {
+//        LatexEditor::localizedStructureCommands.insert(it.key(), "|"+val);
+//    }
+//    ++it;
+//}
 
-QString struct_level1="(part"+LatexEditor::localizedStructureCommands.value("part")+")";//+QObject::tr("part", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level2="(chapter"+LatexEditor::localizedStructureCommands.value("chapter")+")";//+QObject::tr("chapter", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level3="(section"+LatexEditor::localizedStructureCommands.value("section")+")";//+QObject::tr("section", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level4="(subsection"+LatexEditor::localizedStructureCommands.value("subsection")+")";//+QObject::tr("subsection", "Translate it to localized latex command or leave it empty")+")";
-QString struct_level5="(subsubsection"+LatexEditor::localizedStructureCommands.value("subsubsection")+")";//+QObject::tr("subsubsection", "Translate it to localized latex command or leave it empty")+")";
+QString struct_level1="(part"+(LatexEditor::localizedStructureCommands.value("part").isEmpty()
+                               ? "" : ("|"+LatexEditor::localizedStructureCommands.value("part")))+")";
+QString struct_level2="(chapter"+(LatexEditor::localizedStructureCommands.value("chapter").isEmpty()
+                                  ? "" : ("|"+LatexEditor::localizedStructureCommands.value("chapter")))+")";
+QString struct_level3="(section"+(LatexEditor::localizedStructureCommands.value("section").isEmpty()
+                                  ? "" : ("|"+LatexEditor::localizedStructureCommands.value("section")))+")";
+QString struct_level4="(subsection"+(LatexEditor::localizedStructureCommands.value("subsection").isEmpty()
+                                     ? "" : ("|"+LatexEditor::localizedStructureCommands.value("subsection")))+")";
+QString struct_level5="(subsubsection"+(LatexEditor::localizedStructureCommands.value("subsubsection").isEmpty()
+                                        ? "" : ("|"+LatexEditor::localizedStructureCommands.value("subsubsection")))+")";
 
 tagStart=tagEnd=offset=0;
 s=text; 
