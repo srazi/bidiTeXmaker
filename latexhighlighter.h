@@ -43,6 +43,7 @@ public:
     QTextCharFormat spellingErrorFormat;
 QStringList alwaysignoredwordList;
 
+void reComputeKeywords();
 inline void setHighlighterEnabled(bool enable) { m_highlighterEnabled = enable; }
 
 public slots:
@@ -55,6 +56,15 @@ void setModeGraphic(bool m);
 private :
 QHash<QString, QRegExp> kewordsRegExpList;
 QHash<QString, QString> envsPatternList;
+
+QTextCharFormat structFormat;
+QTextCharFormat asyFormat;
+QTextCharFormat todoFormat;
+
+QBrush brushstandard;
+QBrush brushverbatim;
+QBrush brushmath;
+QBrush brushcomment;
 
 bool m_highlighterEnabled;
 QString spell_dic, spell_encoding;
