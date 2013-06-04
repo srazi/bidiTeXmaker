@@ -2512,6 +2512,7 @@ if (hasDecodingError)
 	  }
   else return;
   }
+
 LatexEditorView *edit = new LatexEditorView(0,EditorFont,showline,edcolors(),hicolors(),inlinespellcheck,spell_ignored_words,spellChecker,tabspaces,tabwidth,QKeySequence(keyToggleFocus),f);
 EditorView->addWidget( edit);
 ComboFilesInsert(f);
@@ -2524,6 +2525,8 @@ if (completion) edit->editor->setCompleter(completer);
 else edit->editor->setCompleter(0);
 
 /////////////////////////////////////////////////
+edit->editor->highlighter->setHighlighterEnabled(false);
+
 connect(edit->editor, SIGNAL(copyStateChanged(bool)), this, SLOT(setCopyEnabled(bool)));
 //added by S. R. Alavizadeh
 //Bi-Di Support
@@ -2531,24 +2534,62 @@ if (QBiDiExtender::bidiEnabled && QBiDiExtender::ptdSupportFlag)
 	text = LatexEditor::BiDiBase->openPtdFile(f, QTextCodec::codecForName(edit->editor->getEncoding().toLatin1()), text );
 
 bool textIsHtml = text.startsWith("<!DOCTYPE HTML PUBLIC") || text.startsWith("<html>");
-if (textIsHtml)
-	{
-	edit->editor->setHtml(text);
-	//qDebug() << "PTD Loaded, HTML.";
-	}
-else
-	{
-	edit->editor->setPlainText(text);
-	//qDebug() << "TeX Loaded, PLAIN.";
-	}
+//if (textIsHtml)
+//	{
+//	edit->editor->setHtml(text);
+//	//qDebug() << "PTD Loaded, HTML.";
+//	}
+//else
+//	{
+//	edit->editor->setPlainText(text);
+//	//qDebug() << "TeX Loaded, PLAIN.";
+//	}
 //moved from section after connections
+qint64 start = QDateTime::currentDateTime().toMSecsSinceEpoch();
 if (QBiDiExtender::bidiEnabled)
 	{
-	edit->editor->BiDiForEditor->initBiDi();//new
+    if (textIsHtml)
+        {
+        edit->editor->setHtml(text);
+        //qDebug() << "PTD Loaded, HTML.";
+        edit->editor->BiDiForEditor->initBiDi();
+        }
+    else
+        {
+        // PTD Version 2 just uses plainText!
+        //edit->editor->setPlainText(text);
+        //qDebug() << "TeX Loaded, PLAIN.";
+        edit->editor->BiDiForEditor->initBiDi(text);
+        }
 	
     if (edit->editor->BiDiForEditor && !textIsHtml)
 		edit->editor->BiDiForEditor->applyBiDiModeToEditor(edit->editor->BiDiForEditor->editorLastBiDiModeApplied);
 	}
+else {
+if (textIsHtml)
+    {
+    edit->editor->setHtml(text);
+    //qDebug() << "PTD Loaded, HTML.";
+    }
+else
+    {
+    edit->editor->setPlainText(text);
+    //qDebug() << "TeX Loaded, PLAIN.";
+    }
+}
+////////////////////////////////////////////////////////////
+//edit->lineNumberWidgetVisible()->repaint();
+//QApplication::processEvents();
+QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+edit->editor->highlighter->setHighlighterEnabled(true);
+////edit->editor->installHighlighter(hicolors());
+//edit->editor->highlighter->rehighlight();
+////reset text cursor
+QTextCursor tc(edit->editor->document());
+edit->editor->setTextCursor(tc);
+QApplication::restoreOverrideCursor();
+qint64 end = QDateTime::currentDateTime().toMSecsSinceEpoch();
+//QMessageBox::information(0, "Load Time", QString("Load Time= %1 ms").arg(end-start));
 /////////////////////////////////////////////////
 
 filenames.remove( edit);

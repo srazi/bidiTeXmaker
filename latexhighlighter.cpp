@@ -16,12 +16,29 @@
 #include "latexeditor.h"
 #include "blockdata.h"
 
+const QRegExp beginRegExp = REGEXP_BY_CONTROL_CHARS("\\begin{");
+const QRegExp endRegExp = REGEXP_BY_CONTROL_CHARS("\\end{");
+const QRegExp beginVerbRegExp = REGEXP_BY_CONTROL_CHARS("begin{verbatim}");
+const QRegExp beginVerbStarRegExp = REGEXP_BY_CONTROL_CHARS("begin{verbatim*}");
+const QRegExp beginLstListRegExp = REGEXP_BY_CONTROL_CHARS("begin{lstlisting}");
+const QRegExp beginGnuPlotRegExp = REGEXP_BY_CONTROL_CHARS("begin{gnuplot}");
+const QRegExp beginAsyRegExp = REGEXP_BY_CONTROL_CHARS("begin{asy}");
+const QRegExp beginTikzPicRegExp = REGEXP_BY_CONTROL_CHARS("begin{tikzpicture}");
+const QRegExp beginPsPicRegExp = REGEXP_BY_CONTROL_CHARS("begin{pspicture}");
+const QRegExp beginPsPicStarRegExp = REGEXP_BY_CONTROL_CHARS("begin{pspicture*}");
+const QRegExp todoRegExp = REGEXP_BY_CONTROL_CHARS("%TODO");
+// patterns
+const QString endPattern = PATTERN_BY_CONTROL_CHARS("\\end");
+const QString verbPattern = PATTERN_BY_CONTROL_CHARS("verb");
+const QString lstPattern = PATTERN_BY_CONTROL_CHARS("lstinline");
+
 static bool stringGreaterSize(QString str1, QString str2) {
     return str1.size() > str2.size();
 }
 
 LatexHighlighter::LatexHighlighter(QTextDocument *parent,bool spelling,QString ignoredWords,Hunspell *spellChecker)
     : QSyntaxHighlighter(parent)
+    , m_highlighterEnabled(true)
 {
 isGraphic=false;
 ColorStandard = QColor("#FFFFFF");
@@ -48,6 +65,24 @@ KeyWordsGraphicBis=QString("and controls tension atleast curl if else while for 
 qSort(KeyWords.begin(), KeyWords.end(), stringGreaterSize);
 qSort(KeyWordsGraphic.begin(), KeyWordsGraphic.end(), stringGreaterSize);
 qSort(KeyWordsGraphicBis.begin(), KeyWordsGraphicBis.end(), stringGreaterSize);
+// fill list of redexp
+kewordsRegExpList.clear();
+for ( QStringList::Iterator it = KeyWords.begin(); it != KeyWords.end(); ++it ) {
+    QString keyword(*it);
+    keyword.remove(keyword.size()-1, 1);
+    keyword.prepend("\\");
+    kewordsRegExpList.insert(*it, REGEXP_BY_CONTROL_CHARS(keyword));
+}
+
+QStringList allEnvironments = QStringList()
+        << "verbatim" << "verbatim*" << "lstlisting" << "gnuplot"
+        << "asy" << "tikzpicture" << "pspicture" << "pspicture*";
+envsPatternList.clear();
+for ( QStringList::Iterator it = allEnvironments.begin(); it != allEnvironments.end(); ++it ) {
+    //QString env(*it);
+    envsPatternList.insert(*it, PATTERN_BY_CONTROL_CHARS("{"+*it+"}"));
+}
+/////////////////////////////////////////////////////////////
 
 //spellingErrorFormat.setFontUnderline(true);
 spellingErrorFormat.setUnderlineColor(QColor(Qt::red));
@@ -102,11 +137,14 @@ rehighlight();
 }
 
 void LatexHighlighter::highlightBlock(const QString &text)
-{
+{//2013r2
     // structure cleared with empty text!!!
 //	if (text.isEmpty())
 //		return;
 
+//    if (Q_UNLIKELY(!m_highlighterEnabled)) {
+//        return ;
+//    }
 QRegExp rxSweave("<<(.*)>>=");
 QStringList types;
 types << QLatin1String("article") << QLatin1String("book")
@@ -169,7 +207,7 @@ while ( rightPos != -1 )
   rightPos = text.indexOf( '}', rightPos+1 );
   }
   
-leftPos = text.indexOf( REGEXP_BY_CONTROL_CHARS("\\begin{") );
+leftPos = text.indexOf( beginRegExp );
 while ( leftPos != -1 ) 
   {
   LatexBlockInfo *info = new LatexBlockInfo;
@@ -177,10 +215,10 @@ while ( leftPos != -1 )
   info->position = leftPos;
 
   blockData->insertLat( info );
-  leftPos = text.indexOf(REGEXP_BY_CONTROL_CHARS("\\begin{"), leftPos+1 );
+  leftPos = text.indexOf(beginRegExp, leftPos+1 );
   }
 
-rightPos = text.indexOf(REGEXP_BY_CONTROL_CHARS("\\end{"));
+rightPos = text.indexOf(endRegExp);
 while ( rightPos != -1 ) 
   {
   LatexBlockInfo *info = new LatexBlockInfo;
@@ -188,7 +226,7 @@ while ( rightPos != -1 )
   info->position = rightPos;
 
   blockData->insertLat( info );
-  rightPos = text.indexOf(REGEXP_BY_CONTROL_CHARS("\\end{"), rightPos+1 );
+  rightPos = text.indexOf(endRegExp, rightPos+1 );
   }
 
 setCurrentBlockUserData(blockData);
@@ -197,8 +235,8 @@ setCurrentBlockUserData(blockData);
 /////////////////////
 
 /////////////////
-QRegExp rxverb(PATTERN_BY_CONTROL_CHARS("verb")+"\\*?([^\\*])");
-QRegExp rxlst(PATTERN_BY_CONTROL_CHARS("lstinline")+"(.)");
+QRegExp rxverb(verbPattern+"\\*?([^\\*])");
+QRegExp rxlst(lstPattern+"(.)");
 QTextCharFormat structFormat;
 structFormat.setFontWeight(QFont::Bold);
 structFormat.setForeground(ColorKeyword);
@@ -304,14 +342,14 @@ while (i < text.length())
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorStandard);
 			state=StateStandard;
-            if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{verbatim}")) != -1) {state=StateVerbatim;}
-            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{verbatim*}")) != -1) {state=StateVerbatim;}
-            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{lstlisting}")) != -1) {state=StateVerbatim;}
-            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{gnuplot}")) != -1) {state=StateVerbatim;}
-            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{asy}")) != -1) {state=StateGraphicAsy;}
-            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{tikzpicture}")) != -1) {state=StateGraphic;}
-            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{pspicture}")) != -1) {state=StateGraphic;}
-            else if(buffer.indexOf(REGEXP_BY_CONTROL_CHARS("begin{pspicture*}")) != -1) {state=StateGraphic;}
+            if(buffer.indexOf(beginVerbRegExp) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(beginVerbStarRegExp) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(beginLstListRegExp) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(beginGnuPlotRegExp) != -1) {state=StateVerbatim;}
+            else if(buffer.indexOf(beginAsyRegExp) != -1) {state=StateGraphicAsy;}
+            else if(buffer.indexOf(beginTikzPicRegExp) != -1) {state=StateGraphic;}
+            else if(buffer.indexOf(beginPsPicRegExp) != -1) {state=StateGraphic;}
+            else if(buffer.indexOf(beginPsPicStarRegExp) != -1) {state=StateGraphic;}
 			buffer = QString::null;
 		} else
 		if (tmp== '<' ){
@@ -602,10 +640,10 @@ while (i < text.length())
                 for ( QStringList::Iterator it = KeyWords.begin(); it != KeyWords.end(); ++it ) {
                     if (( *it ).indexOf( tmpBuffer )!=-1)
                     {
-                        QString keyword(*it);
-                        keyword.remove(keyword.size()-1, 1);
-                        keyword.prepend("\\");
-                        QRegExp kewordsRegExp(REGEXP_BY_CONTROL_CHARS(keyword));
+                       // QString keyword(*it);
+                      //  keyword.remove(keyword.size()-1, 1);
+                      //  keyword.prepend("\\");
+                        QRegExp kewordsRegExp( kewordsRegExpList.value(*it)   /*REGEX P_BY_CONTROL_CHARS(keyword)*/);
                         int index = text.lastIndexOf(kewordsRegExp, i);
                         if (index != -1) {
                             if (*it!="begin{" && *it!="end{") {
@@ -698,17 +736,22 @@ while (i < text.length())
 			blockData->code[i]=1;
 			setFormat( i, 1,ColorVerbatim);
 			state=StateVerbatim;
-            QStringList envs = QStringList() << "verbatim" << "verbatim\*"
+            QStringList envs = QStringList() << "verbatim" << "verbatim*"
                                              << "lstlisting" << "gnuplot";
             foreach (const QString &env, envs) {
-                QRegExp eVerb("("+PATTERN_BY_CONTROL_CHARS("\\end")+")("+
-                              PATTERN_BY_CONTROL_CHARS("{"+env+"}")+")");
+                QRegExp eVerb("("+endPattern+")("+envsPatternList.value(env)+")");
+                //QRegExp eVerb("(\\end)({"+env+"})");
+                //QMessageBox::information(0, "111", QString("buff=%1\nenv=%2").arg(buffer).arg(env));
+//                if (!CLEAR_CONTROL_CHARS(buffer).contains("\\end{"+env+"}")) {
+//                    continue;
+//                }
                 int pos=buffer.indexOf(eVerb);
                 if( pos!= -1)
                 {
                     state=StateStandard;
                     setFormat(pos,eVerb.cap(1).size(),ColorKeyword);
                     setFormat(pos+eVerb.cap(1).size(),eVerb.cap(2).size(),ColorStandard);
+                    //break;
                 }
             }
 			buffer = QString::null;
@@ -859,14 +902,19 @@ while (i < text.length())
             QStringList envs = QStringList() << "asy" << "tikzpicture"
                                              << "pspicture" << "pspicture*";
             foreach (const QString &env, envs) {
-                QRegExp eVerb("("+PATTERN_BY_CONTROL_CHARS("\\end")+")("+
-                              PATTERN_BY_CONTROL_CHARS("{"+env+"}")+")");
+                QRegExp eVerb("("+endPattern+")("+envsPatternList.value(env)+")");
+               // QRegExp eVerb("(\\end)({"+env+"})");
+               // QMessageBox::information(0, "222", QString("buff=%1\nenv=%2").arg(buffer).arg(env));
+//                if (!CLEAR_CONTROL_CHARS(buffer).contains("\\end{"+env+"}")) {
+//                    continue;
+//                }
                 int pos=buffer.indexOf(eVerb);
                 if( pos!= -1)
                 {
                     state=StateStandard;
                     setFormat(pos,eVerb.cap(1).size(),ColorKeyword);
                     setFormat(pos+eVerb.cap(1).size(),eVerb.cap(2).size(),ColorStandard);
+                    //break;
                 }
             }
 			buffer = QString::null;
@@ -944,14 +992,19 @@ while (i < text.length())
             QStringList envs = QStringList() << "asy" << "tikzpicture"
                                              << "pspicture" << "pspicture*";
             foreach (const QString &env, envs) {
-                QRegExp eVerb("("+PATTERN_BY_CONTROL_CHARS("\\end")+")("+
-                              PATTERN_BY_CONTROL_CHARS("{"+env+"}")+")");
+                QRegExp eVerb("("+endPattern+")("+envsPatternList.value(env)+")");
+                 // QRegExp eVerb("(\\end)({"+env+"})");
+                // QMessageBox::information(0, "333", QString("buff=%1\nenv=%2").arg(buffer).arg(env));
+//                if (!CLEAR_CONTROL_CHARS(buffer).contains("\\end{"+env+"}")) {
+//                    continue;
+//                }
                 int pos=buffer.indexOf(eVerb);
                 if( pos!= -1)
                 {
                     state=StateStandard;
                     setFormat(pos,eVerb.cap(1).size(),ColorKeyword);
                     setFormat(pos+eVerb.cap(1).size(),eVerb.cap(2).size(),ColorStandard);
+                    //break;
                 }
             }
 			buffer = QString::null;
@@ -1382,13 +1435,13 @@ if (state == StateComment)
     int pos = 0;
     while (pos < text.length() && pos != -1) {
         if (CLEAR_CONTROL_CHARS(text).indexOf("%TODO", pos) != -1) {
-            QRegExp todoRegExp(REGEXP_BY_CONTROL_CHARS("%TODO"));
-            int pos1 = text.indexOf(todoRegExp, pos);
+            QRegExp todoQRegExp(todoRegExp);
+            int pos1 = text.indexOf(todoQRegExp, pos);
             pos = text.indexOf("%", pos1);
 
             if (format(pos).foreground() == brushcomment) {
-                setFormat(pos1, todoRegExp.cap(0).size(), todoFormat);
-                pos=pos1+todoRegExp.cap(0).size();
+                setFormat(pos1, todoQRegExp.cap(0).size(), todoFormat);
+                pos=pos1+todoQRegExp.cap(0).size();
             }
             else {
                 ++pos;

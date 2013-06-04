@@ -395,9 +395,11 @@ return newstruct;
 
 QMap<QString,QString> LatexEditor::localizedStructureCommands;
 
-LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QList<QColor> edcolors, QList<QColor> hicolors,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces,int tabwidth,const QKeySequence viewfocus, QString name) : QTextEdit(parent),c(0)
+LatexEditor::LatexEditor(QWidget *parent,QFont & efont, QList<QColor> edcolors, QList<QColor> hicolors,bool inlinespelling,QString ignoredWords,Hunspell *spellChecker,bool tabspaces,int tabwidth,const QKeySequence viewfocus, QString name)
+    : QTextEdit(parent)
+    , c(0)
+    , highlighter(0)
 {
- 
 fname=name;
 vfocus=viewfocus;
 /***********************/
@@ -494,7 +496,18 @@ emit poshaschanged(1,1);
 
 }
 LatexEditor::~LatexEditor(){
-//delete pChecker;
+    //delete pChecker;
+}
+
+void LatexEditor::installHighlighter(const QList<QColor> &hiColors)
+{
+    highlighter = new LatexHighlighter(document(), inlinecheckSpelling, alwaysignoredwordList.join(","), pChecker);
+    highlighter->SetEditor(this);
+    highlighter->setColors(hiColors);
+    QFileInfo fi(fname);
+    if (!fname.startsWith("untitled") && (fi.suffix()=="asy" || fi.suffix()=="mp")) {
+        highlighter->setModeGraphic(true);
+    }
 }
 
 void LatexEditor::setColors(QList<QColor> colors)
@@ -1717,7 +1730,7 @@ if (QBiDiExtender::bidiEnabled)
 		e->ignore();
 		return;
 		}
-	}
+    }
 //end of codes
 //added by S. R. Alavizadeh
 /////////////////////////////////////////////////
@@ -2365,8 +2378,6 @@ struct updateStruct newstruct=result;
 StructItemsList=newstruct.list;
 if (newstruct.isdirty) {emit requestUpdateStructure();}
 }
-
-
 
 void LatexEditor::ensureFinalNewLine()//Qt 4.7.1 bug
 {

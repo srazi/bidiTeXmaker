@@ -42,6 +42,9 @@ public:
     QStringList KeyWords, KeyWordsGraphic, KeyWordsGraphicBis;
     QTextCharFormat spellingErrorFormat;
 QStringList alwaysignoredwordList;
+
+inline void setHighlighterEnabled(bool enable) { m_highlighterEnabled = enable; }
+
 public slots:
 void SetAlwaysIgnoredWords(QString ignoredWords);
 void setColors(QList<QColor> colors);
@@ -50,6 +53,10 @@ void activateInlineSpell(bool enable);
 void SetEditor(LatexEditor *ed);
 void setModeGraphic(bool m);
 private :
+QHash<QString, QRegExp> kewordsRegExpList;
+QHash<QString, QString> envsPatternList;
+
+bool m_highlighterEnabled;
 QString spell_dic, spell_encoding;
 QStringList ignoredwordList, hardignoredwordList;
 Hunspell * pChecker;

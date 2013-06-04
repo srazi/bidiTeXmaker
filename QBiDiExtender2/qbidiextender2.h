@@ -73,6 +73,9 @@
 #define PATTERN_BY_CONTROL_CHARS(x) QBiDiExtender::toPatternWithUnicodeControlCharacters(x)
 #define REGEXP_BY_CONTROL_CHARS(x) QRegExp(QBiDiExtender::toPatternWithUnicodeControlCharacters(x))
 
+#define PATTERN_BY_CONTROL_CHARS_FAST(x) QBiDiExtender::toPatternWithUnicodeControlCharactersFast(x)
+#define REGEXP_BY_CONTROL_CHARS_FAST(x) QRegExp(QBiDiExtender::toPatternWithUnicodeControlCharactersFast(x))
+
 class QBIDIEXTENDER_EXPORT QBiDiInitializer : public QObject
 {
 	Q_OBJECT
@@ -163,6 +166,7 @@ public:
 	static QString removeUnicodeControlCharacters(const QString &str);
     static QStringList unicodeControlCharacters();
     static QString toPatternWithUnicodeControlCharacters(const QString &str);
+    static QString toPatternWithUnicodeControlCharactersFast(const QString &str);
 
 	#if defined( Q_WS_WIN )
 	HKL lastInputLang;
@@ -197,7 +201,7 @@ private slots:
 
 //MY_BIDI_ALGORITHM METHODS
 public:
-	void initBiDi();
+    void initBiDi(const QString &documentContents = QString());
 	void unInitBiDi();
 	int whatIsDir(const QChar &ch);
 	int whatIsDir(const QChar &ch, bool extendedMode);
@@ -219,7 +223,7 @@ private slots:
 	void contextMenuAddLRM();
 	void contextMenuAddLRE();
 	void remLRMfromSelection();
-	void addLRMToLatinWords();
+    void addLRMToLatinWords(const QString &text = QString());
 	void insertLTR();
 	void ptdSaveEnabled(bool checked);
 	void remLRMfromDocument();

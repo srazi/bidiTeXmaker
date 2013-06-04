@@ -64,6 +64,8 @@ class LatexEditor : public QTextEdit  {
 public:
 LatexEditor(QWidget *parent,QFont & efont, QList<QColor> edcolors, QList<QColor> hicolors,bool inlinespelling=false, QString ignoredWords="",Hunspell *spellChecker=0,bool tabspaces=false,int tabwidth=4,const QKeySequence viewfocus=QKeySequence("Ctrl+Space"), QString name="");
 ~LatexEditor();
+
+void installHighlighter(const QList<QColor> &hiColors);
 static void clearMarkerFormat(const QTextBlock &block, int markerId);
 void gotoLine( int line );
 bool search( const QString &expr, bool cs, bool wo, bool forward, bool startAtCursor );
