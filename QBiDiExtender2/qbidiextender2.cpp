@@ -64,6 +64,9 @@ bool QBiDiExtender::applicationViewerLoadIt = false;
 
 const QString PTD_VERSION = "2";
 
+//const QString unicodeCChRegExp = "[\u200E\u200F\u202A\u202B\u202C\u202D\u202E]*";
+
+
 QBiDiExtender::QBiDiExtender(QTextEdit *qeditor, QBiDiInitializer *qBiDiLoader)
     : QObject(qeditor),
 	editorForBiDi(qeditor), BiDiLoader(qBiDiLoader)
@@ -829,8 +832,9 @@ if (changed) {
 return text;
 }
 
-void QBiDiExtender::addLRMToLatinWords()
+void QBiDiExtender::addLRMToLatinWords(const QString &text)
 {
+    //QMessageBox::information(0,"333::addLRMToLatinWords",QString::number(text.size()));
 if (!editorForBiDi || !QBiDiExtender::bidiEnabled) return;
 bool  MODIFIED = editorForBiDi->document()->isModified();
 disconnect(editorForBiDi->document(), SIGNAL(contentsChanged()), this, SLOT(addLRMinTyping()));
@@ -840,17 +844,22 @@ QTextCursor curCursor = editorForBiDi->textCursor();
 QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 selFlag=curCursor.hasSelection();
 
-if (selFlag)
-	{
-	wholeDoc = curCursor.selectedText();
-	}
-else
-	{
-	wholeDoc = editorForBiDi->toPlainText();
-	}
+if (text.isEmpty()) {
+    if (selFlag)
+        {
+        wholeDoc = curCursor.selectedText();
+        }
+    else
+        {
+        wholeDoc = editorForBiDi->toPlainText();
+        }
+}
+else {
+    wholeDoc = text;
+}
 ///////////////////////////////////////////////////////////////
 if (!QBiDiExtender::ptdOpenFlag)
-	{
+    {
 	wholeDoc = insertLRMtoString(wholeDoc);
 	}
 ///////////////////////////////////////////////////////////////
@@ -860,10 +869,15 @@ if (!selFlag)
 		{
 		//editorForBiDi->textCursor().beginEditBlock();
 		//editorForBiDi->clear();
+
 		editorForBiDi->setPlainText( wholeDoc );
 		//editorForBiDi->textCursor().endEditBlock();
 		}
-		QApplication::restoreOverrideCursor();
+        else if (!text.isEmpty()) {
+       // QMessageBox::information(0,"BEF-333::addLRMToLatinWords",QString::number(text.size()));
+            editorForBiDi->setPlainText( wholeDoc );
+      //      QMessageBox::information(0,"AFT-333::addLRMToLatinWords",QString::number(text.size()));
+        }
 	}
 else
     {
@@ -887,8 +901,6 @@ else
 		startcheck = endSel;
 		}
     editorForBiDi->textCursor().endEditBlock();
-
-	QApplication::restoreOverrideCursor();
 	}
 QApplication::restoreOverrideCursor();
 editorForBiDi->document()->setModified( MODIFIED );
@@ -898,6 +910,8 @@ if (QBiDiExtender::flagAutoLRM && QBiDiExtender::bidiEnabled)
 	connect(editorForBiDi->document(), SIGNAL(contentsChanged()), this, SLOT(addLRMinTyping()));
 else 
 	disconnect(editorForBiDi->document(), SIGNAL(contentsChanged()), this, SLOT(addLRMinTyping()));
+
+QApplication::restoreOverrideCursor();
 }
 
 void QBiDiExtender::insertLTR()
@@ -909,7 +923,7 @@ if (editorForBiDi)
 	}
 }
 
-void QBiDiExtender::initBiDi()
+void QBiDiExtender::initBiDi(const QString &documentContents)
 {
 if (!editorForBiDi) return;
 connect(this, SIGNAL(removeLRM()), this, SLOT(remLRMfromDocument()));
@@ -920,9 +934,9 @@ else
 
 flagBigDoc=false;
 
-if (autoBiDiEnabled)
+//if (autoBiDiEnabled) // it's always true
 	{
-	addLRMToLatinWords();
+    addLRMToLatinWords(documentContents);
 	}
 }
 
@@ -1413,6 +1427,44 @@ else
 		//lastInputLang=0;
 		}
 	}
+#if defined(Q_WS_WIN)
+if ( e->modifiers() & Qt::ControlModifier)
+    {
+    if ( editorForBiDi && e->modifiers() & Qt::ShiftModifier )
+    {
+        QTextCursor tc(editorForBiDi->textCursor());
+        int tcAnchor = tc.anchor();
+        int tcPosition = tc.position();
+        if (e->nativeScanCode() == 42 /*VK_LSHIFT*/) {
+            //QMessageBox::information(0, "nativeScanCode", QString("Ctrl+L_shift\nnSC=%1\nnVK=%2\nVK_LSHIFT=%3").arg(e->nativeScanCode()).arg(e->nativeVirtualKey()).arg(VK_LSHIFT));
+            LTR(&tc);
+            if (tcAnchor != tcPosition) {
+                tc.setPosition(tcAnchor);
+                tc.setPosition(tcPosition, QTextCursor::KeepAnchor);
+                forceDisableBiDirector=true;
+                editorForBiDi->setTextCursor(tc);
+                forceDisableBiDirector=false;
+            }
+            return false;
+        }
+        else if (e->nativeScanCode() == 54 /*VK_RSHIFT*/) {
+            //QMessageBox::information(0, "nativeVirtualKey", QString("Ctrl+L_shift\nnSC=%1\nnVK=%2\nVK_LSHIFT=%3").arg(e->nativeScanCode()).arg(e->nativeVirtualKey()).arg(VK_LSHIFT));
+            RTL(&tc);
+            if (tcAnchor != tcPosition) {
+                tc.setPosition(tcAnchor);
+                tc.setPosition(tcPosition, QTextCursor::KeepAnchor);
+                forceDisableBiDirector=true;
+                editorForBiDi->setTextCursor(tc);
+                forceDisableBiDirector=false;
+            }
+            return false;
+        }
+//        else {
+//            QMessageBox::information(0, "ELSE", QString("Ctrl+L_shift\nnSC=%1\nnVK=%2\nVK_LSHIFT=%3\nHOOM=%4").arg(e->nativeScanCode()).arg(e->nativeVirtualKey()).arg(VK_LSHIFT).arg((e->nativeScanCode() | 0xfff) << 16 ));
+//        }
+    }
+}
+#endif
 
 if ( e->modifiers()==Qt::ShiftModifier /*&& QBiDiExtender::canChangesInputLang*/)
 	{
@@ -2034,9 +2086,9 @@ QStringList QBiDiExtender::unicodeControlCharacters()
 }
 
 QString QBiDiExtender::toPatternWithUnicodeControlCharacters(const QString &str)
-{
+{//slow
     QString result;
-    QString controlCharacters = "["+unicodeControlCharacters().join("")+"]*";
+    QString controlCharacters = "["+unicodeControlCharacters().join("")+"]*";//"["+QString(QChar(LRM))+"]*";//
     QStringList characterlist = str.split("", QString::SkipEmptyParts);
     const QString special = "[]{}\\()\"\'.*?^$";
     foreach (QString character, characterlist) {
@@ -2047,6 +2099,25 @@ QString QBiDiExtender::toPatternWithUnicodeControlCharacters(const QString &str)
         result.append(character);
     }
     result.prepend(controlCharacters);
+
+    return result;
+}
+
+QString QBiDiExtender::toPatternWithUnicodeControlCharactersFast(const QString &str)
+{//fast
+    QString result;
+    QString controlCharacters = "["+QString(QChar(LRM))+"]*";// "["+unicodeControlCharacters().join("")+"]*";
+    QStringList characterlist = str.split("", QString::SkipEmptyParts);
+    const QString special = "[]{}\\()\"\'.*?^$";
+    foreach (QString character, characterlist) {
+        if (special.contains(character)) {
+            character.prepend("\\");
+        }
+       // character.append(controlCharacters);
+        result.append(character);
+    }
+    //result.prepend(controlCharacters);
+    result.prepend(controlCharacters).append(controlCharacters);
 
     return result;
 }
@@ -2086,6 +2157,7 @@ QString QBiDiInitializer::openPtdFile(const QString &f, QTextCodec* codec, const
 QString ptdFileVersion = "1";
 QBiDiExtender::ptdOpenFlag = false;
 QString tmpContent=plainContent;
+QString ptdPlainContent;
 QString fileType = QFileInfo(f).suffix().toLower() == "tex" ? "" : ("_"+QFileInfo(f).suffix().toLower());
 
 QString ptdName=QFile( f ).fileName().left(QFile( f ).fileName().size()-4)+fileType+".ptd";
@@ -2135,8 +2207,9 @@ if (ptdFile.exists())
 			QBiDiExtender::ptdFileBiDimode = QBiDiExtender::Undefined;//maybe bidiMode be better
 		QDateTime lMod=QFileInfo(f).lastModified();
 		QString lMOD_ST=lMod.toString("yyyyMMddhh:mm:ss");
+        ptdPlainContent = QTextDocumentFragment::fromHtml(htmlContent).toPlainText();
         if ( /*metaDataLine == lMOD_ST*/
-			QBiDiExtender::removeUnicodeControlCharacters(QTextDocumentFragment::fromHtml(htmlContent).toPlainText())
+            QBiDiExtender::removeUnicodeControlCharacters(ptdPlainContent)
 						==	QBiDiExtender::removeUnicodeControlCharacters(tmpContent)
 			 && QBiDiExtender::ptdFileBiDimode == QBiDiExtender::bidiMode )//The saved bidiMode must be equal to application's bidiMode
 			{
@@ -2148,7 +2221,7 @@ if (ptdFile.exists())
 	}
 
     if (ptdFileVersion == "2" && QBiDiExtender::ptdOpenFlag) {
-       tmpContent = QTextDocumentFragment::fromHtml(tmpContent).toPlainText();
+       tmpContent = ptdPlainContent;
        //QBiDiExtender::ptdOpenFlag = false;
        //QMessageBox::information(0, "Version", ("ptdVersion="+ptdFileVersion));
     }
@@ -2200,15 +2273,25 @@ if (type=="BIDI_MAIN_MENU")
 	connect(bidiModes, SIGNAL(triggered(QAction *)), this, SLOT(toggleBiDiMode(QAction *)));
 	bidiModeMenu->addAction(Act);
 	//// BidiMode Menu [end]
-	
 	actRTL = new QAction(QIcon(":/image/format_text_direction_rtl.png"), tr("Text Direction &Right to Left"), editorWidget);
+//    if (QKeySequence(Qt::Key_Direction_R).isEmpty()) {
     actRTL->setShortcut(QKeySequence(Qt::CTRL+Qt::ALT+Qt::Key_B,Qt::CTRL+Qt::ALT+Qt::Key_R));
+//    }
+//    else {
+//        actRTL->setShortcut(QKeySequence(Qt::Key_Direction_R));
+//    }
 	connect(actRTL, SIGNAL(triggered()), this, SIGNAL(doCurrentLineRTL()));
 //	connect(this, SIGNAL(changeEditorActionState(bool)), actRTL, SLOT(setEnabled(bool)));
 	menu->addAction(actRTL);
 qDebug() << "actRTL";
 	actLTR = new QAction(QIcon(":/image/format_text_direction_ltr.png"), tr("Text Direction &Left to Right"), editorWidget);
+    //if (QKeySequence(Qt::Key_Direction_L).isEmpty())
+    //{
     actLTR->setShortcut(QKeySequence(Qt::CTRL+Qt::ALT+Qt::Key_B,Qt::CTRL+Qt::ALT+Qt::Key_L));
+    //}
+//    else {
+//        actLTR->setShortcut(QKeySequence(Qt::Key_Direction_L));
+//    }
 	connect(actLTR, SIGNAL(triggered()), this, SIGNAL(doCurrentLineLTR()));
 //	connect(this, SIGNAL(changeEditorActionState(bool)), actLTR, SLOT(setEnabled(bool)));
 	menu->addAction(actLTR);
