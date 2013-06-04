@@ -8546,7 +8546,6 @@ if (confDlg->exec())
     LatexEditor::localizedStructureCommands.insert("subsection", confDlg->ui.subsectionLineEdit->text().simplified());
     LatexEditor::localizedStructureCommands.insert("subsubsection", confDlg->ui.subsubsectionLineEdit->text().simplified());
 	/////////////////////////////////////////////////
-	
 	completion=confDlg->ui.checkBoxCompletion->isChecked();
 	showline=confDlg->ui.checkBoxLinenumber->isChecked();
 	inlinespellcheck=confDlg->ui.checkBoxInlineSpell->isChecked();
@@ -8661,6 +8660,7 @@ if (confDlg->exec())
 			currentEditorView()->changeSettings(EditorFont,showline);
 			currentEditorView()->editor->highlighter->setColors(hicolors());
 			currentEditorView()->editor->setColors(edcolors());
+            currentEditorView()->editor->highlighter->reComputeKeywords();
 
 			QTextStream ts( &tmp,QIODevice::ReadOnly );
 			ts.setCodec(codec);

@@ -16,21 +16,58 @@
 #include "latexeditor.h"
 #include "blockdata.h"
 
-const QRegExp beginRegExp = REGEXP_BY_CONTROL_CHARS("\\begin{");
-const QRegExp endRegExp = REGEXP_BY_CONTROL_CHARS("\\end{");
-const QRegExp beginVerbRegExp = REGEXP_BY_CONTROL_CHARS("begin{verbatim}");
-const QRegExp beginVerbStarRegExp = REGEXP_BY_CONTROL_CHARS("begin{verbatim*}");
-const QRegExp beginLstListRegExp = REGEXP_BY_CONTROL_CHARS("begin{lstlisting}");
-const QRegExp beginGnuPlotRegExp = REGEXP_BY_CONTROL_CHARS("begin{gnuplot}");
-const QRegExp beginAsyRegExp = REGEXP_BY_CONTROL_CHARS("begin{asy}");
-const QRegExp beginTikzPicRegExp = REGEXP_BY_CONTROL_CHARS("begin{tikzpicture}");
-const QRegExp beginPsPicRegExp = REGEXP_BY_CONTROL_CHARS("begin{pspicture}");
-const QRegExp beginPsPicStarRegExp = REGEXP_BY_CONTROL_CHARS("begin{pspicture*}");
-const QRegExp todoRegExp = REGEXP_BY_CONTROL_CHARS("%TODO");
+static const int StateStandard = 0;
+static const int StateComment = 1;
+static const int StateMath = 2;
+static const int StateCommand=3;
+static const int StateVerbatim =4;
+static const int StateVerbatimCommand =5;
+static const int StateSweave =6;
+static const int StateSweaveCommand =7;
+static const int StateGraphic =8;
+static const int StateGraphicCommand =9;
+static const int StateGraphicMath =10;
+static const int StateBib =11;
+static const int StateGraphicComment =12;
+static const int StateGraphicAsy =13;
+static const int StateGraphicAsyCommand =14;
+static const int StateGraphicAsyMath =15;
+static const int StateGraphicAsyComment =16;
+
+static const QStringList types = QStringList()
+  << QLatin1String("article") << QLatin1String("book")
+  << QLatin1String("booklet") << QLatin1String("inbook")
+  << QLatin1String("incollection") << QLatin1String("inproceedings")
+  << QLatin1String("manual") << QLatin1String("mastersthesis")
+  << QLatin1String("misc") << QLatin1String("phdthesis")
+  << QLatin1String("proceedings") << QLatin1String("techreport")
+  << QLatin1String("unpublished") << QLatin1String("periodical")
+  << QLatin1String("conference");
+
 // patterns
-const QString endPattern = PATTERN_BY_CONTROL_CHARS("\\end");
-const QString verbPattern = PATTERN_BY_CONTROL_CHARS("verb");
-const QString lstPattern = PATTERN_BY_CONTROL_CHARS("lstinline");
+static const QString endPattern = PATTERN_BY_CONTROL_CHARS("\\end");
+static const QString verbPattern = PATTERN_BY_CONTROL_CHARS("verb");
+static const QString lstPattern = PATTERN_BY_CONTROL_CHARS("lstinline");
+
+// regexp
+static const QRegExp beginRegExp = REGEXP_BY_CONTROL_CHARS("\\begin{");
+static const QRegExp endRegExp = REGEXP_BY_CONTROL_CHARS("\\end{");
+static const QRegExp beginVerbRegExp = REGEXP_BY_CONTROL_CHARS("begin{verbatim}");
+static const QRegExp beginVerbStarRegExp = REGEXP_BY_CONTROL_CHARS("begin{verbatim*}");
+static const QRegExp beginLstListRegExp = REGEXP_BY_CONTROL_CHARS("begin{lstlisting}");
+static const QRegExp beginGnuPlotRegExp = REGEXP_BY_CONTROL_CHARS("begin{gnuplot}");
+static const QRegExp beginAsyRegExp = REGEXP_BY_CONTROL_CHARS("begin{asy}");
+static const QRegExp beginTikzPicRegExp = REGEXP_BY_CONTROL_CHARS("begin{tikzpicture}");
+static const QRegExp beginPsPicRegExp = REGEXP_BY_CONTROL_CHARS("begin{pspicture}");
+static const QRegExp beginPsPicStarRegExp = REGEXP_BY_CONTROL_CHARS("begin{pspicture*}");
+static const QRegExp todoRegExp = REGEXP_BY_CONTROL_CHARS("%TODO");
+static const QRegExp rxverb(verbPattern+"\\*?([^\\*])");
+static const QRegExp rxlst(lstPattern+"(.)");
+static const QRegExp rxSweave("<<(.*)>>=");
+static QRegExp rxBib("@("+types.join("|")+")\\s*\\{\\s*(.*),", Qt::CaseInsensitive);
+
+
+
 
 static bool stringGreaterSize(QString str1, QString str2) {
     return str1.size() > str2.size();
@@ -40,6 +77,7 @@ LatexHighlighter::LatexHighlighter(QTextDocument *parent,bool spelling,QString i
     : QSyntaxHighlighter(parent)
     , m_highlighterEnabled(true)
 {
+rxBib.setMinimal(true);
 isGraphic=false;
 ColorStandard = QColor("#FFFFFF");
 ColorComment = QColor("#606060");
@@ -50,29 +88,13 @@ ColorVerbatim = QColor("#9A4D00");
 ColorTodo=QColor("#FF0000");
 ColorKeywordGraphic=QColor("#006699");
 ColorNumberGraphic=QColor("#660066");
-KeyWords= QString("section{,subsection{,subsubsection{,chapter{,part{,paragraph{,subparagraph{,section*{,subsection*{,subsubsection*{,chapter*{,part*{,paragraph*{,subparagraph*{,label{,includegraphics{,includegraphics[,includegraphics*{,includegraphics*[,include{,input{,begin{,end{").split(",");
-QMap<QString, QString>::const_iterator it = LatexEditor::localizedStructureCommands.constBegin();
-while (it != LatexEditor::localizedStructureCommands.constEnd()) {
-    QStringList alternativeList = QString(it.value()).split("|", QString::SkipEmptyParts);
-    foreach (const QString &alternative, alternativeList) {
-        KeyWords << (alternative+"{");
-        KeyWords << (alternative+"*{");
-    }
-    ++it;
-}
+
 KeyWordsGraphic=QString("void bool bool3 int real pair triple string").split(" ");
 KeyWordsGraphicBis=QString("and controls tension atleast curl if else while for do return break continue struct typedef new access import unravel from include quote static public private restricted this explicit true false null cycle newframe operator").split(" ");
-qSort(KeyWords.begin(), KeyWords.end(), stringGreaterSize);
 qSort(KeyWordsGraphic.begin(), KeyWordsGraphic.end(), stringGreaterSize);
 qSort(KeyWordsGraphicBis.begin(), KeyWordsGraphicBis.end(), stringGreaterSize);
-// fill list of redexp
-kewordsRegExpList.clear();
-for ( QStringList::Iterator it = KeyWords.begin(); it != KeyWords.end(); ++it ) {
-    QString keyword(*it);
-    keyword.remove(keyword.size()-1, 1);
-    keyword.prepend("\\");
-    kewordsRegExpList.insert(*it, REGEXP_BY_CONTROL_CHARS(keyword));
-}
+
+reComputeKeywords();
 
 QStringList allEnvironments = QStringList()
         << "verbatim" << "verbatim*" << "lstlisting" << "gnuplot"
@@ -103,10 +125,49 @@ if (wordsfile.open(QFile::ReadOnly))
 	    if (!line.isEmpty()) hardignoredwordList.append(line.trimmed());
 	    }
     }
+
+structFormat.setFontWeight(QFont::Bold);
+structFormat.setForeground(ColorKeyword);
+
+asyFormat.setFontWeight(QFont::Bold);
+asyFormat.setForeground(ColorCommand);
+
+todoFormat.setFontWeight(QFont::Bold);
+todoFormat.setForeground(ColorTodo);
+todoFormat.setBackground(Qt::yellow);
+
+brushstandard.setColor(ColorStandard);
+brushverbatim.setColor(ColorVerbatim);
+brushmath.setColor(ColorMath);
+brushcomment.setColor(ColorComment);
 }
 
 LatexHighlighter::~LatexHighlighter(){
-//delete pChecker;
+    //delete pChecker;
+}
+
+void LatexHighlighter::reComputeKeywords()
+{
+    KeyWords= QString("section{,subsection{,subsubsection{,chapter{,part{,paragraph{,subparagraph{,section*{,subsection*{,subsubsection*{,chapter*{,part*{,paragraph*{,subparagraph*{,label{,includegraphics{,includegraphics[,includegraphics*{,includegraphics*[,include{,input{,begin{,end{").split(",");
+    QMap<QString, QString>::const_iterator it = LatexEditor::localizedStructureCommands.constBegin();
+    while (it != LatexEditor::localizedStructureCommands.constEnd()) {
+        QStringList alternativeList = QString(it.value()).split("|", QString::SkipEmptyParts);
+        foreach (const QString &alternative, alternativeList) {
+            KeyWords << (alternative+"{");
+            KeyWords << (alternative+"*{");
+        }
+        ++it;
+    }
+    qSort(KeyWords.begin(), KeyWords.end(), stringGreaterSize);
+
+    // fill list of redexp
+    kewordsRegExpList.clear();
+    for ( QStringList::Iterator it = KeyWords.begin(); it != KeyWords.end(); ++it ) {
+        QString keyword(*it);
+        keyword.remove(keyword.size()-1, 1);
+        keyword.prepend("\\");
+        kewordsRegExpList.insert(*it, REGEXP_BY_CONTROL_CHARS(keyword));
+    }
 }
 
 void LatexHighlighter::SetEditor(LatexEditor *ed)
@@ -133,6 +194,15 @@ ColorVerbatim=colors.at(5);
 ColorTodo=colors.at(6);
 ColorKeywordGraphic=colors.at(7);
 ColorNumberGraphic=colors.at(8);
+
+structFormat.setForeground(ColorKeyword);
+asyFormat.setForeground(ColorCommand);
+todoFormat.setForeground(ColorTodo);
+
+brushstandard.setColor(ColorStandard);
+brushverbatim.setColor(ColorVerbatim);
+brushmath.setColor(ColorMath);
+brushcomment.setColor(ColorComment);
 rehighlight();
 }
 
@@ -145,36 +215,6 @@ void LatexHighlighter::highlightBlock(const QString &text)
 //    if (Q_UNLIKELY(!m_highlighterEnabled)) {
 //        return ;
 //    }
-QRegExp rxSweave("<<(.*)>>=");
-QStringList types;
-types << QLatin1String("article") << QLatin1String("book")
-  << QLatin1String("booklet") << QLatin1String("inbook")
-  << QLatin1String("incollection") << QLatin1String("inproceedings")
-  << QLatin1String("manual") << QLatin1String("mastersthesis")
-  << QLatin1String("misc") << QLatin1String("phdthesis")
-  << QLatin1String("proceedings") << QLatin1String("techreport")
-  << QLatin1String("unpublished") << QLatin1String("periodical")
-  << QLatin1String("conference");
-QRegExp rxBib("@("+types.join("|")+")\\s*\\{\\s*(.*),", Qt::CaseInsensitive);
-rxBib.setMinimal(true);
-
-const int StateStandard = 0;
-const int StateComment = 1;
-const int StateMath = 2;
-const int StateCommand=3;
-const int StateVerbatim =4;
-const int StateVerbatimCommand =5;
-const int StateSweave =6;
-const int StateSweaveCommand =7;
-const int StateGraphic =8;
-const int StateGraphicCommand =9;
-const int StateGraphicMath =10;
-const int StateBib =11;
-const int StateGraphicComment =12;
-const int StateGraphicAsy =13;
-const int StateGraphicAsyCommand =14;
-const int StateGraphicAsyMath =15;
-const int StateGraphicAsyComment =16;
 
 int i = 0;
 int state = previousBlockState();
@@ -230,20 +270,6 @@ while ( rightPos != -1 )
   }
 
 setCurrentBlockUserData(blockData);
-
-
-/////////////////////
-
-/////////////////
-QRegExp rxverb(verbPattern+"\\*?([^\\*])");
-QRegExp rxlst(lstPattern+"(.)");
-QTextCharFormat structFormat;
-structFormat.setFontWeight(QFont::Bold);
-structFormat.setForeground(ColorKeyword);
-
-QTextCharFormat asyFormat;
-asyFormat.setFontWeight(QFont::Bold);
-asyFormat.setForeground(ColorCommand);
 
 if (!isGraphic)
 {
@@ -1422,14 +1448,7 @@ editor->checkStructUpdate(document(),currentBlock().position(),text,i);
 ////////////////////
 
 if (text.isEmpty()) return;
-QBrush brushstandard(ColorStandard);
-QBrush brushverbatim(ColorVerbatim);
-QBrush brushmath(ColorMath);
-QBrush brushcomment(ColorComment);
-QTextCharFormat todoFormat;
-todoFormat.setFontWeight(QFont::Bold);
-todoFormat.setForeground(ColorTodo);
-todoFormat.setBackground(Qt::yellow);
+
 if (state == StateComment)
 {
     int pos = 0;
