@@ -353,9 +353,9 @@ while (i < text.length())
 				}
 			buffer = QString::null;
 		} else
-		if (tmp== '%' ){
+        if (tmp== '%' ){
             setFormat( i, 1,ColorComment);
-			state=StateComment;
+            state=StateComment;
 			blockData->code[i]=1;
 			buffer = QString::null;
 		} else
@@ -1371,7 +1371,8 @@ while (i < text.length())
 	} break;
 	}
 	last = ch;
-    i = k+1;//i++;
+    // using i = k+1 creates bug!
+    i++;
 	}
 if ( state == StateComment ) 
  	{
@@ -1453,18 +1454,26 @@ if (state == StateComment)
 {
     int pos = 0;
     while (pos < text.length() && pos != -1) {
-        if (CLEAR_CONTROL_CHARS(text).indexOf("%TODO", pos) != -1) {
-            QRegExp todoQRegExp(todoRegExp);
-            int pos1 = text.indexOf(todoQRegExp, pos);
-            pos = text.indexOf("%", pos1);
+        //int ind = CLEAR_CONTROL_CHARS(text).indexOf("%TODO", pos);
+        ///////////////////////////
+        QRegExp todoQRegExp(todoRegExp);
+        int pos1 = text.indexOf(todoQRegExp, pos);
+        pos = text.indexOf("%", pos1);
+        //QMessageBox::information(0, "=======", QString("ind=%1\npos=%2\ntext=%3").arg(ind).arg(pos).arg(text));
+        //////////////////////////////
+        if (pos1 != -1) {
+//            QRegExp todoQRegExp(todoRegExp);
+//            int pos1 = text.indexOf(todoQRegExp, pos);
+//            pos = text.indexOf("%", pos1);
 
-            if (format(pos).foreground() == brushcomment) {
+           // if (format(pos).foreground() == brushcomment)
+            {
                 setFormat(pos1, todoQRegExp.cap(0).size(), todoFormat);
                 pos=pos1+todoQRegExp.cap(0).size();
             }
-            else {
-                ++pos;
-            }
+//            else {
+//                ++pos;
+//            }
         }
         else {
             break;
@@ -1885,7 +1894,8 @@ while (i < text.length())
 
 	}
 	last = ch;
-    i = k+1;i++;
+    // i = k+1; creates bug
+    i++;
 	}
 if ( state == StateGraphicMath ) 
 	{
