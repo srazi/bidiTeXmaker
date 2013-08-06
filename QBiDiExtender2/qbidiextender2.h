@@ -1,5 +1,5 @@
 /***************************************************************************
- *   copyright       : (C) 2009-2012 by S. Razi Alavizadeh                 *
+ *   copyright       : (C) 2009-2013 by S. Razi Alavizadeh                 *
  *   WWW: http://pozh.org                                                  *
  *   email: S.R.Alavizadeh@gmail.com                                       *
  *                                                                         *

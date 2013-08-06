@@ -1,5 +1,5 @@
 ﻿/***************************************************************************
- *   copyright       : (C) 2009-2012 by S. Razi Alavizadeh                 *
+ *   copyright       : (C) 2009-2013 by S. Razi Alavizadeh                 *
  *   WWW: http://pozh.org                                                  *
  *   email: S.R.Alavizadeh@gmail.com                                       *
  *                                                                         *
@@ -649,7 +649,8 @@ QString word, tmpWord;
 int prevWordFlag=-1,lastLatinIndex=-1;
 text.remove(QChar(LRM), Qt::CaseInsensitive);
 text.replace( "\n", " \n ", Qt::CaseInsensitive );
-QStringList splittedDoc = text.split(" ", QString::SkipEmptyParts);
+// don't use QString::SkipEmptyParts here, it will skip empty lines!!!
+QStringList splittedDoc = text.split(" ");
 
 for (int i = 0; i < splittedDoc.size(); ++i)
 	{

@@ -22,4 +22,6 @@ unix:!macx {
 HEADERS	+= $$PWD/xkb/XKeyboard.h \
            $$PWD/xkb/X11Exception.h
 SOURCES	+= $$PWD/xkb/XKeyboard.cpp
+
+LIBS += -L/usr/lib -lX11
 }
