@@ -9812,11 +9812,14 @@ if (docLocation.isEmpty()) return;
 QString commandName = action->text();
 docLocation.replace(QChar('\\'), QChar('/'));
 if (commandName=="CMD Here")
-	{
+    {
 	QString curDir = QDir::toNativeSeparators(docLocation.left( docLocation.lastIndexOf(QChar('/')) ));
 	QProcess process;
 #if defined(Q_WS_WIN)
-	process.startDetached("cmd", QStringList()<< "/k" << "cd" << curDir << "&" << curDir.left(2) );
+    if (!process.startDetached("%ComSpec%", QStringList()<< "/k" << "cd" << curDir << "&" << curDir.left(2)))
+    {
+        process.startDetached("cmd", QStringList()<< "/k" << "cd" << curDir << "&" << curDir.left(2) );
+    }
 #endif
 #if defined( Q_WS_X11 )
 	if (!process.startDetached("gnome-terminal --working-directory=\""+curDir+"\""))

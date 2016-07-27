@@ -8,11 +8,11 @@ CONFIG	+= qt
 #warn_off
 TEXMAKERVERSION=3.2.2
 DEFINES += TEXMAKERVERSION=\\\"$${TEXMAKERVERSION}\\\"
-bidiTEXMAKERVERSION=2013r4
+bidiTEXMAKERVERSION=2013r6
 DEFINES += bidiTEXMAKERVERSION=\\\"$${bidiTEXMAKERVERSION}\\\"
 DEFINES += HAVE_SPLASH
 ###############################
-DEFINES += QT_NO_WARNING_OUTPUT
+DEFINES += QT_NO_WARNING_OUTPUT\
 DEFINES += QT_NO_DEBUG_OUTPUT
 ###############################
 HEADERS	+= texmaker.h \
@@ -677,10 +677,10 @@ win32-msvc*{
 DEFINES      += D_MSVC_CC
 #INCLUDEPATH += "I:/Program Files/Microsoft SDKs/Windows/v6.0A/Include"
 #INCLUDEPATH += "C:/Program Files/Microsoft SDKs/Windows/v6.0A/Include"
-INCLUDEPATH  += D:/Z[Work]/A-TeXworks/KDE/include/poppler/qt4
-INCLUDEPATH  += D:/z[other]/cross-tools/usr/local/include/zlib-1.2.3
-LIBS         += -LD:/Z[Work]/A-TeXworks/KDE/lib/ -lpoppler-qt4
-LIBS         += -LD:/Z[Work]/A-TeXworks/KDE/lib/ -lpoppler
+INCLUDEPATH  += i:/Z[Work]/A-TeXworks/KDE/include/poppler/qt4
+INCLUDEPATH  += i:/z[other]/cross-tools/usr/local/include/zlib-1.2.3
+LIBS         += -Li:/Z[Work]/A-TeXworks/KDE/lib/ -lpoppler-qt4
+LIBS         += -Li:/Z[Work]/A-TeXworks/KDE/lib/ -lpoppler
 }
 
 win32-g++{
