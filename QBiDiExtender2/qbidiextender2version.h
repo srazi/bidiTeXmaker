@@ -15,12 +15,12 @@ namespace Version
 
 	inline const char* versionDate()
 	{
-		return "03Jun2013, 14:17:04";
+		return "11Dec2013, 12:43:00";
 	}
 
 	inline const char* globalRevision()
 	{
-		return "f9428b252c2a";
+		return "798634712e2a";
 	}
 }
 

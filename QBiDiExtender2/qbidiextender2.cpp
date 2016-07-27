@@ -780,8 +780,8 @@ text.replace( " \n ", "\n", Qt::CaseInsensitive );
 QRegExp lrmExpCommand("\n"+QString(LRM)+"*\\\\"+QString(LRM)+"+",  Qt::CaseInsensitive);
 text.replace( lrmExpCommand, "\n\\");
 
-
-QStringList lineList = text.split("\n", QString::SkipEmptyParts);
+// don't use QString::SkipEmptyParts here, it will skip empty lines!!!
+QStringList lineList = text.split("\n");
 bool changed = false;
 for (int lineIndex = 0; lineIndex < lineList.size(); ++lineIndex) {
     QString line = lineList.at(lineIndex);
