@@ -12,7 +12,7 @@ bidiTEXMAKERVERSION=2013r6
 DEFINES += bidiTEXMAKERVERSION=\\\"$${bidiTEXMAKERVERSION}\\\"
 DEFINES += HAVE_SPLASH
 ###############################
-DEFINES += QT_NO_WARNING_OUTPUT\
+DEFINES += QT_NO_WARNING_OUTPUT
 DEFINES += QT_NO_DEBUG_OUTPUT
 ###############################
 HEADERS	+= texmaker.h \
