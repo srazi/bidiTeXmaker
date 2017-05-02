@@ -268,7 +268,7 @@ UI_DIR = .ui
 MOC_DIR = .moc
 OBJECTS_DIR = .obj
 isEmpty( PREFIX ) {
-    PREFIX=/usr
+    PREFIX=/usr/local
 }
 isEmpty( DESKTOPDIR ) {
     DESKTOPDIR=/usr/share/applications
@@ -292,7 +292,7 @@ SOURCES	+= x11fontdialog.cpp \
 	  singleapp/qtlockedfile_unix.cpp
 FORMS += x11fontdialog.ui
 
-utilities.path = $${PREFIX}/share/texmaker
+utilities.path = $${PREFIX}/share/biditexmaker
 
 utilities.files = doc/doc1.png \
 	doc/doc10.png \
@@ -403,12 +403,12 @@ INSTALLS += utilities
 
 desktop.path = $${DESKTOPDIR}
 
-desktop.files = utilities/texmaker.desktop
+desktop.files = utilities/biditexmaker.desktop
 INSTALLS += desktop
 
 icon.path = $${ICONDIR}
 
-icon.files = utilities/texmaker.png
+icon.files = utilities/biditexmaker.png
 INSTALLS += icon
 }
 ################################
