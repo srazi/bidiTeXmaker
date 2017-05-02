@@ -11,7 +11,7 @@ DYLD_LIBRARY_PATH=$QTDIR/lib:$DYLD_LIBRARY_PATH
 export QTDIR PATH LD_LIBRARY_PATH DYLD_LIBRARY_PATH
 if [ "$SYSTEM" = 1 ] 
 then
-echo "Enter PREFIX (/usr , /usr/local or /opt) :"
+echo "Enter PREFIX (/usr/local , /usr or /opt) :"
 read PREFIX
 echo "Enter  DIRECTORY for the desktop file (/usr/share/applications) :"
 read DESKTOPDIR
