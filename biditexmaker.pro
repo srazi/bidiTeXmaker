@@ -346,12 +346,12 @@ utilities.files = doc/doc1.png \
 	utilities/AUTHORS \
 	utilities/COPYING \
 	utilities/CHANGELOG.txt \
-	utilities/texmaker16x16.png \
-	utilities/texmaker22x22.png \
-	utilities/texmaker32x32.png \
-	utilities/texmaker48x48.png \
-	utilities/texmaker64x64.png \
-	utilities/texmaker128x128.png \
+        utilities/biditexmaker16x16.png \
+        utilities/biditexmaker22x22.png \
+        utilities/biditexmaker32x32.png \
+        utilities/biditexmaker48x48.png \
+        utilities/biditexmaker64x64.png \
+        utilities/biditexmaker128x128.png \
 	utilities/texmaker.svg \
 	locale/qt_cs.qm \
 	locale/qt_de.qm \
